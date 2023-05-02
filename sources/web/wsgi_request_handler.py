@@ -140,6 +140,7 @@ class VDOM_wsgi_request_handler(object):
         return env
 
     def handle_wsgi_request(self, environ, start_response):
+        #print("===========================")
         try:
             self.command = environ['REQUEST_METHOD']
             mname = 'do_' + self.command

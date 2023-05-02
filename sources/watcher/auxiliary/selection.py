@@ -56,6 +56,7 @@ def search_object(string):
 
 def select_objects(selector=None, server=True, unknown=True, source=None, filter=None):
     if source is None:
+        print('Watcher==========================')
         if managers.server.watcher.snapshot.exists:
             source = managers.server.watcher.snapshot.recent
         else:

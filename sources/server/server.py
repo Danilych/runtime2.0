@@ -6,6 +6,7 @@ from web import WebServer
 from utils.properties import roproperty
 
 
+
 class Server(SmartServer):
 
     watcher = roproperty("_watcher")
