@@ -114,10 +114,10 @@ class VDOM_request(object):
         args["sid"] = sid
         self.__session = managers.session_manager[sid]
         self.__arguments = VDOM_request_arguments(args)
-        self.__server = handler.server
+#        self.__server = handler.server
         self._handler = handler
         self.app_vhname = env["HTTP_HOST"].lower()
-        vh = handler.server.virtual_hosting()
+        vh = arguments["vhosting"]
         self.__app_id = vh.get_site(self.app_vhname)
         if not self.__app_id:
             self.__app_id = vh.get_def_site()
@@ -142,6 +142,7 @@ class VDOM_request(object):
         # special flags
         self.redirect_to = None
         self.wfile = handler.wfile
+        self.wfile["response"].append("Test")
         self.__nocache = False
         self.nokeepalive = False
         self.__binary = False
@@ -221,9 +222,9 @@ class VDOM_request(object):
         self.__stdout = StringIO()
         return value
 
-    def server(self, server=None):
+#    def server(self, server=None):
         """ server object """
-        return self.__server
+#       return self.__server
 
     def session(self):
         """session object"""

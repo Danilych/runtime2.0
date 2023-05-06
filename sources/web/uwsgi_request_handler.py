@@ -19,6 +19,8 @@ from version import *
 #import soap.SOAPBuilder
 #from soap.wsdl import methods as soap_methods
 from utils.exception import VDOM_exception
+#from server import VDOM_WSGI_Vhosting
+from server.uwsgi_vhosting import VDOM_WSGI_Vhosting
 
 
 # A class to describe how header messages are handled
@@ -44,14 +46,13 @@ class HeaderHandler:
 # for the soap handler
 _contexts = dict()
 #class VDOM_http_request_handler(SimpleHTTPServer.SimpleHTTPRequestHandler):
-class VDOM_wsgi_request_handler(object):
+class VDOM_uwsgi_request_handler(object):
     """VDOM wsgi request handler"""
 
     """server version string"""
     server_version = SERVER_NAME
 
-    def __init__(self, request, client_address, server, args=None):
-        print("================================================2")
+    def __init__(self, request, client_address, args=None):
         """constructor"""
         self.__reject = args["reject"]
         self.__deny = args["deny"]
@@ -60,7 +61,8 @@ class VDOM_wsgi_request_handler(object):
         self.__connections = args["connections"]
         self.request = request
         self.client_address = client_address
-        self.server = server
+        self.wfile = {"response":[]}
+       # self.server = server
 
 
 
@@ -141,20 +143,20 @@ class VDOM_wsgi_request_handler(object):
         return env
 
     def handle_wsgi_request(self, environ, start_response):
-        print("================================================3")
-        start_response('200 OK', [('Content-Type', 'text/html')])
-        return [b"Hello World"]
-        """
-        #print("===========================")
-        try:
+        #start_response('200 OK', [('Content-Type', 'text/html')])
+        #return [b"Hello World"]
+#        try:
             self.command = environ['REQUEST_METHOD']
             mname = 'do_' + self.command
             self.headers = environ
             self.path = environ["PATH_INFO"]
             host = environ["HTTP_HOST"]
+#            print(str(environ["SERVER_PORT"]))
 
             
             self.wsgidav_app = None
+  #          print("=====================")
+  #          print(mname + " = " + host)
         
             #try:
                 #appl = managers.memory.get_application(app_id)
@@ -176,16 +178,29 @@ class VDOM_wsgi_request_handler(object):
             if not hasattr(self, mname):
                 self.send_error(501, "Unsupported method (%r)" % self.command)
                 return
-            method = getattr(self, mname)
-            method()
-            self.wfile.flush() #actually send the response if not already done.
-        except socket.timeout, e:
-            #a read or a write timed out.  Discard this connection
-            self.log_error("Request timed out: %r", e)
-            self.close_connection = 1
-            return	
-            """
+            
+            response = {'code': '', 'response_body': []}
 
+            method = getattr(self, mname)
+            method(response)
+#            response["body"]
+#            response["code"]
+#            response["response_body"]
+#            print("++++++++++++++++++++++++++++++++")
+#            print("test = " + str(response))
+           # self.wfile["response"].append("test123")
+           # self.wfile["response"].append("test123")
+#            print(response['response_body'])
+ #           print(str(response['response_body']))
+            start_response(response['code'], response['response_body'])
+            
+            return self.wfile["response"] #actually send the response if not already done.
+#        except socket.timeout, e:
+            #a read or a write timed out.  Discard this connection
+#            self.log_error("Request timed out: %r", e)
+#            self.close_connection = 1
+#            start_response('200 OK', [('Content-Type', 'text/html')])
+ #           return	[b"Hello World"]
 
 
     def do_WebDAV(self):
@@ -211,21 +226,24 @@ class VDOM_wsgi_request_handler(object):
                 self.wfile.write(v)
 
 
-    def do_GET(self):
+    def do_GET(self, response):
         """serve a GET request"""
         # create request object
         #debug("DO GET %s"%self)
         self.create_request("get")
-        f = self.on_request("get")
+        f = self.on_request("get", response)
         if f:
             sys.setcheckinterval(0)
-            shutil.copyfileobj(f, self.wfile)
+            for line in f:
+#                print("line = " + line)
+                self.wfile["response"].append(line)
+#            shutil.copyfileobj(f, self.wfile)
             sys.setcheckinterval(100)
             #self.copyfile(f, self.wfile)
             f.close()
-        if not self.wfile.closed:
-            if self.__request.nokeepalive:
-                self.close_connection = 1
+#        if not self.wfile.closed:
+#            if self.__request.nokeepalive:
+#                self.close_connection = 1
 
     def do_HEAD(self):
         """serve a HEAD request"""
@@ -265,7 +283,10 @@ class VDOM_wsgi_request_handler(object):
         args = {}
         args["headers"] = self.headers
         args["handler"] = self
+        vh = VDOM_WSGI_Vhosting()
+        args["vhosting"] = vh.virtual_hosting()
         args["method"] = method
+#        print("==========================")
         self.__request = VDOM_request(args)
         self.__request.number_of_connections = self.__connections
         #debug("Creating request object complete")
@@ -275,7 +296,7 @@ class VDOM_wsgi_request_handler(object):
         if "127.0.0.1" != self.client_address[0]:
             debug("Session is " + self.__request.sid)
 
-    def on_request(self, method):
+    def on_request(self, method, response):
         """request handling code the method <method>"""
         #debug("ON REQUEST %s"%self)
         #check if we should send 503 or 403 errors
@@ -340,12 +361,15 @@ class VDOM_wsgi_request_handler(object):
             self.send_error(500, excinfo=fe)
             return None
 
-
         # check redirect
         if self.__request.redirect_to:
-            return self.redirect(self.__request.redirect_to)
+            #return self.redirect(self.__request.redirect_to, response)
+            response['code'] = '302'
+            response['response_body'] = [('Location', str(self.__request.redirect_to))]
+            return
         elif ret:
-            self.send_response(200)
+#            self.send_response(200)
+            response['code'] = '200'
             ret_len = None
             if isinstance(ret, file):
                 ret.seek(0,2)
@@ -358,6 +382,11 @@ class VDOM_wsgi_request_handler(object):
                 self.__request.add_header("Connection", "Close")
             else:
                 self.__request.add_header("Connection", "Keep-Alive")
+            for hh in self.__request.headers_out().headers():
+                print("test header = " + str(hh) + " : " + str(self.__request.headers_out().headers()[hh]))
+                response['response_body'].append((str(hh), str(self.__request.headers_out().headers()[hh])))
+
+            #print(str(self.__request.headers().headers()))
             # cookies
             #if len(self.__request.cookies())>0:
             #	for key in self.__request.cookies():
@@ -365,8 +394,11 @@ class VDOM_wsgi_request_handler(object):
                 #self.__request.add_header("Set-cookie",self.__request.cookies().output())
             #if len(self.__request.cookies().cookies()) > 0:
                 #self.__request.add_header("Set-cookie", self.__request.cookies().get_string())
-            self.send_headers()
-            self.end_headers()
+
+#            response['response_body'] = self.__request.headers_out().headers().items()
+            self.wfile['response'] = []
+#            self.send_headers()
+#            self.end_headers()
             if isinstance(ret, file):
                 if sys.platform.startswith("freebsd"):
                     vdomlib.sendres(self.wfile.fileno(), ret.fileno(), int(ret_len))
@@ -375,6 +407,7 @@ class VDOM_wsgi_request_handler(object):
                 else:
                     return ret
             else:
+ ####               print("test4444")
                 return StringIO(ret)
         elif "" == ret:
             return None
@@ -389,6 +422,7 @@ class VDOM_wsgi_request_handler(object):
         """send all headers"""
         headers = self.__request.headers_out().headers()
         cookies = self.__request.cookies().output()
+        print(str(headers))
         #debug("Outgoing headers---")
         #for h in headers:
         #	debug(h + ": " + headers[h])
@@ -412,18 +446,24 @@ class VDOM_wsgi_request_handler(object):
             del(self.__request)
         except: pass
 
-    def redirect(self, to):
-        self.send_response(302)
+    def redirect(self, to, response):
+        #start_response('302', [('Location', str(to))])
+        print("redirect!")
+#        response['body'] = []
+        response['code'] = '302'
+        response['response_body'] = [('Location', str(to))]
+
+#        self.send_response(302)
         #if len(self.__request.cookies)>0:
         #	for key in self.__request.cookies():
         #			self.__request.add_header("Set-cookie",self.__request.cookies()[key].output())
             #self.__request.add_header(self.__request.cookies.output())		
         #if len(self.__request.cookies().cookies()) > 0:
         #	self.__request.add_header("Set-cookie", self.__request.cookies().get_string())
-        self.__request.add_header("Location", to)
-        self.send_headers()
-        self.end_headers()
-        return StringIO()
+#        self.__request.add_header("Location", to)
+#        self.send_headers()
+#        self.end_headers()
+#        return StringIO()
 
     def log_message(self, format, *args):
         """log an arbitrary message to stderr"""
@@ -492,6 +532,7 @@ class VDOM_wsgi_request_handler(object):
         self.send_header("Content-Length", str(length))
         self.end_headers()
         return f
+    
 
     def do_SOAP(self):
         global _contexts

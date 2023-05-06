@@ -18,7 +18,8 @@ from memory import VDOM_memory
 from engine import VDOM_engine
 
 from server import myapplication
-#from server import VDOM_wsgi_server
+from server import VDOM_WSGI_Vhosting
+#from server import VDOM_server
 # from mailing import VDOM_email_manager
 from session import VDOM_session_manager
 from module import VDOM_module_manager
@@ -50,8 +51,9 @@ managers.register("soap_server", VDOM_soap_server)
 managers.register("webdav_manager", VDOM_webdav_manager)
 #managers.register("server", VDOM_server)
 
-#on_prepare = (lambda: managers.memory.applications.default) if settings.PRELOAD_DEFAULT_APPLICATION else None #none
+on_prepare = (lambda: managers.memory.applications.default) if settings.PRELOAD_DEFAULT_APPLICATION else None #none
 #managers.server.start(on_prepare)
-print("=======================")
+#print("=======================")
+VDOM_WSGI_Vhosting()
 application = myapplication
 

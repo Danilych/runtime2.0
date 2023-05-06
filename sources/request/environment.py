@@ -33,7 +33,7 @@ class VDOM_environment:
 		else: hh = self.__environment["HTTP_HOST"]
 		hh = hh.split(":")[0]
 		self.__environment["HTTP_HOST"] = hh
-		self.__environment["SERVER_PORT"] = str(handler.server.server_address[1])
+		self.__environment["SERVER_PORT"] = headers["SERVER_PORT"]
 		self.__environment["SERVER_NAME"] = SERVER_NAME
 		self.__environment["SERVER_VERSION"] = SERVER_VERSION
 		self.__environment["SERVER_PROTOCOL"] = str("HTTP/1.1")
