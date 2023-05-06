@@ -1,7 +1,7 @@
 """server request handler module"""
 
 import sys, os, posixpath, urllib, shutil, mimetypes, thread, re, socket, threading, time, SOAPpy, traceback, select, cgi
-
+import io
 if sys.platform.startswith("freebsd"):
     import vdomlib
 
@@ -347,8 +347,11 @@ class VDOM_uwsgi_request_handler(object):
             return self.redirect("/index.py")
         # process requested URI, call module manager
         try:
+            print("requesting url = " + str(self.__request))
             (code, ret) = managers.module_manager.process_request(self.__request)
             self.__request.collect_files()
+            print("request result = " + str(ret))
+            print("=================================")
         except Exception as e:
             requestline = "<br>"
             if hasattr(self, "requestline"):
@@ -371,12 +374,14 @@ class VDOM_uwsgi_request_handler(object):
 #            self.send_response(200)
             response['code'] = '200'
             ret_len = None
-            if isinstance(ret, file):
+
+            if isinstance(ret, (file, io.IOBase)):
                 ret.seek(0,2)
                 ret_len = str(ret.tell())
                 ret.seek(0)
             else:
                 ret_len = str(len(ret))
+
             self.__request.add_header("Content-Length", ret_len)
             if self.__request.nokeepalive:
                 self.__request.add_header("Connection", "Close")
@@ -399,9 +404,9 @@ class VDOM_uwsgi_request_handler(object):
             self.wfile['response'] = []
 #            self.send_headers()
 #            self.end_headers()
-            if isinstance(ret, file):
+            if isinstance(ret, (file, io.IOBase)):
                 if sys.platform.startswith("freebsd"):
-                    vdomlib.sendres(self.wfile.fileno(), ret.fileno(), int(ret_len))
+#                    vdomlib.sendres(self.wfile.fileno(), ret.fileno(), int(ret_len))
                     ret.close()
                     return None
                 else:
@@ -412,7 +417,10 @@ class VDOM_uwsgi_request_handler(object):
         elif "" == ret:
             return None
         elif code:
-            self.send_error(code, self.responses[code][0])
+            print("response code = " + str(code))
+            response['code'] = str(code)
+            self.wfile["response"].append('Not Found')
+#            self.send_error(code, self.responses[code][0])
             return None
         else:
             self.send_error(404, self.responses[404][0])
