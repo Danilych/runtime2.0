@@ -47,22 +47,30 @@ class VDOM_request(object):
         self.files = {}
         args = {}
         env = self.__environment.environment()
+<<<<<<< Updated upstream
+=======
+#        print("+_+_+_+_+_+_+_+_")
+#        print(str(self.__headers))
+#        print("+_+_+_+_+_+_+_+_")
+#        print(str(self.__headers.header('CONTENT_LENGTH', push=False))) 
+#        print("+_+_+_+_+_+_+_+_")
+>>>>>>> Stashed changes
         #parse request data depenging on the request method
         if arguments["method"] == "post":
             try:
                 if env["HTTP_CONTENT-TYPE"] == r'application/json':
                     import json
                     try:
-                        request_body_size = int(env.get('HTTP_CONTENT-LENGTH', 0))
+                        request_body_size = int(env.get('HTTP_CONTENT_LENGTH', 0))
                     except ValueError:
                         request_body_size = 0
 
-                    request_body = handler.rfile.read(request_body_size)
+                    request_body = self.__headers['wsgi.input'].read(request_body_size)
                     params = json.loads(request_body)
                     args = {key: params[key] for key in params}
 
                 elif env["REQUEST_URI"] != VDOM_CONFIG["SOAP-POST-URL"]:  # TODO: check situation with SOAP and SOAP-POST-URL
-                    storage = MFSt(handler.rfile, headers, "", env, True)
+                    storage = MFSt(self.__headers['wsgi.input'], headers, "", env, True)
                     for key in storage.keys():
                         #Access to file name after uploading
                         filename = getattr(storage[key], "filename", "")
@@ -74,7 +82,12 @@ class VDOM_request(object):
                         if filename:
                             args[key+"_filename"] = [filename]
                 else:
+<<<<<<< Updated upstream
                     self.postdata = handler.rfile.read(int(self.__headers.header("Content-length")))
+=======
+#                    print(str(headers['CONTENT_LENGTH']))
+                    self.postdata = self.__headers['wsgi.input'].read(int(self.__headers["CONTENT_LENGTH"]))
+>>>>>>> Stashed changes
             except Exception as e:
                 debug("Error while reading socket: %s"%e)
 
@@ -86,12 +99,15 @@ class VDOM_request(object):
             debug("Error while Query String reading: %s"%e)
 
         self.fault_type_http_code = 500
-        if "user-agent" in self.__headers.headers():
-            if "adobeair" in self.__headers.headers()["user-agent"].lower():
+        if "HTTP_USER_AGENT" in self.__headers:
+            if "adobeair" in self.__headers["HTTP_USER_AGENT"].lower():
                 self.fault_type_http_code = 200
 
         # session
         sid = ""
+#        print("+_+_+_+_+_+_+_+_")
+#        print(str(self.__headers))
+#        print("+_+_+_+_+_+_+_+_")
         if "sid" in args:
             #debug("Got session from arguments "+str(args["sid"]))
             sid = args["sid"][0]
