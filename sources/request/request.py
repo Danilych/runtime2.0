@@ -37,8 +37,8 @@ class VDOM_request(object):
         #for h in headers:
         #	debug(h + ": " + headers[h])
         #debug('-'*40)
-
-        self.__headers = VDOM_headers(headers)
+#        self.__headers = VDOM_headers(headers)
+        self.__headers = headers
         self.__headers_out = VDOM_headers({})
 
         self.__cookies = BaseCookie(headers.get("cookie"))
@@ -47,10 +47,15 @@ class VDOM_request(object):
         self.files = {}
         args = {}
         env = self.__environment.environment()
+#        print("+_+_+_+_+_+_+_+_")
+#        print(str(self.__headers.headers()))
+#        print("+_+_+_+_+_+_+_+_")
+#        print(str(self.__headers.header('CONTENT_LENGTH', push=False))) 
+#        print("+_+_+_+_+_+_+_+_")
         #parse request data depenging on the request method
         if arguments["method"] == "post":
             try:
-                if env["HTTP_CONTENT-TYPE"] == r'application/json':
+                if env["HTTP_CONTENT_TYPE"] == r'application/json':
                     import json
                     try:
                         request_body_size = int(env.get('HTTP_CONTENT-LENGTH', 0))
@@ -74,7 +79,8 @@ class VDOM_request(object):
                         if filename:
                             args[key+"_filename"] = [filename]
                 else:
-                    self.postdata = handler.rfile.read(int(self.__headers.header("Content-length")))
+                    print(str(headers['CONTENT_LENGTH']))
+                    self.postdata = self.__headers['wsgi.input'].read(int(self.__headers["CONTENT_LENGTH"]))
             except Exception as e:
                 debug("Error while reading socket: %s"%e)
 

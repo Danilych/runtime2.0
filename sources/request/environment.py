@@ -8,9 +8,12 @@ class VDOM_environment:
 
 	def __init__(self, headers, handler):
 		""" Constructor """
+		print("_)_)_)_)_)_)_)_)_)_)")
 		self.__environment = {}
 		for k in headers.keys():
+			print("HTTP_%s" % k.upper() + " = " + str(headers[k]))
 			self.__environment["HTTP_%s" % k.upper()] = str(headers[k])
+		print("_)_)_)_)_)_)_)_)_)_)")
 
 		self.__environment["REQUEST_METHOD"] = str(handler.command)
 		self.__environment["DOCUMENT_ROOT"] = str(os.getcwd())

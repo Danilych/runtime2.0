@@ -155,8 +155,8 @@ class VDOM_uwsgi_request_handler(object):
             self.headers = environ
             self.path = environ["PATH_INFO"]
             host = environ["HTTP_HOST"]
-            print("content length = " + str(environ))
-            print("input " + str(environ['wsgi.input'].read(int(environ["CONTENT_LENGTH"]))))
+#            print("content length = " + str(environ))
+#            print("input " + str(environ['wsgi.input'].read(int(environ["CONTENT_LENGTH"]))))
 
  #           print("Request = " + mname)
 
