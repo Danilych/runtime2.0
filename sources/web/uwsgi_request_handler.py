@@ -63,6 +63,9 @@ class VDOM_uwsgi_request_handler(object):
         self.request = request
         self.client_address = client_address
         self.wfile = {"response":[]}
+        print("request = " + str(request))
+        print("request2 = " + str(uwsgi.connection_fd()))
+        print("request3 = " + str(socket.fromfd(uwsgi.connection_fd(), socket.AF_INET, socket.SOCK_STREAM)))
        # self.server = server
 
 
@@ -152,6 +155,8 @@ class VDOM_uwsgi_request_handler(object):
             self.headers = environ
             self.path = environ["PATH_INFO"]
             host = environ["HTTP_HOST"]
+            print("content length = " + str(environ))
+            print("input " + str(environ['wsgi.input'].read(int(environ["CONTENT_LENGTH"]))))
 
  #           print("Request = " + mname)
 
@@ -729,7 +734,7 @@ class VDOM_uwsgi_request_handler(object):
                     thread_id = thread.get_ident()
                     _contexts[thread_id] = SOAPpy.SOAPContext(header, body,
                                                               attrs, data,
-                                                              self.connection,
+                                                              socket.fromfd(uwsgi.connection_fd(), socket.AF_INET, socket.SOCK_STREAM),
                                                               self.headers,
                                                               self.headers["SOAPAction"])
 
@@ -782,15 +787,15 @@ class VDOM_uwsgi_request_handler(object):
 
 
                     if type(fr) == type(self) and \
-                       isinstance(fr, voidType):
+                       isinstance(fr, SOAPpy.voidType):
                         resp = SOAPpy.buildSOAP(kw = {'%sResponse xmlns="http://services.vdom.net/VDOMServices"' % method: fr},
-                                                encoding = self.server.encoding,
-                                                config = self.server.config)
+                                                encoding = managers.module_manager.getSOAPModule().encoding,
+                                                config = managers.module_manager.getSOAPModule().config)
                     else:
                         resp = SOAPpy.buildSOAP(kw =
                                                 {'Result': fr},
-                                                encoding = self.server.encoding,
-                                                config = self.server.config,
+                                                encoding = managers.module_manager.getSOAPModule().encoding,
+                                                config = managers.module_manager.getSOAPModule().config,
                                                 method = method + "Response",
                                                 namespace = ('', "http://services.vdom.net/VDOMServices"))
 
@@ -803,7 +808,7 @@ class VDOM_uwsgi_request_handler(object):
                     info = sys.exc_info()
 
                     try:
-                        if self.server.config.dumpFaultInfo and not isinstance(e, SOAPpy.faultType):
+                        if managers.module_manager.getSOAPModule().config.dumpFaultInfo and not isinstance(e, SOAPpy.faultType):
                             s = 'Method %s exception' % nsmethod
                             SOAPpy.debugHeader(s)
                             traceback.print_exception(info[0], info[1],
@@ -817,7 +822,7 @@ class VDOM_uwsgi_request_handler(object):
                                                  "Method Failed",
                                                  "%s" % nsmethod)
 
-                        if self.server.config.returnFaultInfo:
+                        if managers.module_manager.getSOAPModule().config.returnFaultInfo:
                             f._setDetail("".join(traceback.format_exception(
                                 info[0], info[1], info[2])))
                         elif not hasattr(f, 'detail'):
@@ -827,38 +832,45 @@ class VDOM_uwsgi_request_handler(object):
 
 
                     #method failed - return soap fault (no method tag needed)
-                    resp = SOAPpy.buildSOAP(f, encoding = self.server.encoding,
-                                            config = self.server.config, namespace = "http://services.vdom.net/VDOMServices")
+                    resp = SOAPpy.buildSOAP(f, encoding = managers.module_manager.getSOAPModule().encoding,
+                                            config = managers.module_manager.getSOAPModule().config, namespace = "http://services.vdom.net/VDOMServices")
                     status = self.__request.fault_type_http_code
                 else:
                     status = 200
-        except SOAPpy.faultType, e:
+        except SOAPpy.faultType as e:
             import traceback
             info = sys.exc_info()
             try:
-                if self.server.config.dumpFaultInfo:
-                    s = 'Received fault exception'
+                if managers.module_manager.getSOAPModule().config.dumpFaultInfo and not isinstance(e, SOAPpy.faultType):
+                    s = 'Method %s exception' % nsmethod
                     SOAPpy.debugHeader(s)
                     traceback.print_exception(info[0], info[1],
-                                              info[2])
+                                                info[2])
                     SOAPpy.debugFooter(s)
 
-                if self.server.config.returnFaultInfo:
-                    e._setDetail("".join(traceback.format_exception(
+                if isinstance(e, SOAPpy.faultType):
+                    f = e
+                else:
+                    f = SOAPpy.faultType("%s:Server" % SOAPpy.NS.ENV_T,
+                                            "Method Failed",
+                                            "%s" % nsmethod)
+
+                if managers.module_manager.getSOAPModule().config.returnFaultInfo:
+                    f._setDetail("".join(traceback.format_exception(
                         info[0], info[1], info[2])))
-                elif not hasattr(e, 'detail'):
-                    e._setDetail("%s %s" % (info[0], info[1]))
+                elif not hasattr(f, 'detail'):
+                    f._setDetail("%s %s" % (info[0], info[1]))
             finally:
                 del info
 
-            #method failed - return soap fault (no method tag needed)
-            resp = SOAPpy.buildSOAP(e, encoding = self.server.encoding,
-                                    config = self.server.config, namespace = "http://services.vdom.net/VDOMServices" )
+            # method failed - return soap fault (no method tag needed)
+            resp = SOAPpy.buildSOAP(f, encoding=managers.module_manager.getSOAPModule().encoding,
+                                    config=managers.module_manager.getSOAPModule().config, namespace="http://services.vdom.net/VDOMServices")
             status = self.__request.fault_type_http_code
-        except Exception, e:
+        except Exception as e:
             # internal error, report as HTTP server error
 
-            if self.server.config.dumpFaultInfo:
+            if managers.module_manager.getSOAPModule().config.dumpFaultInfo:
                 s = 'Internal exception %s' % e
                 import traceback
                 SOAPpy.debugHeader(s)
@@ -889,8 +901,8 @@ class VDOM_uwsgi_request_handler(object):
             # got a valid SOAP response
             self.send_response(status)
             t = 'text/xml';
-            if self.server.encoding != None:
-                t += '; charset="%s"' % self.server.encoding
+            if managers.module_manager.getSOAPModule().encoding != None:
+                t += '; charset="%s"' % managers.module_manager.getSOAPModule().encoding
             self.send_header("Content-type", t)
             self.send_header("Content-length", str(len(resp)))
             self.end_headers()
@@ -928,7 +940,7 @@ class VDOM_uwsgi_request_handler(object):
             # SSL connections drops the output, so this work-around.
             # This should be investigated more someday.
 
-            if self.server.config.SSLserver and \
+            if managers.module_manager.getSOAPModule().config.SSLserver and \
                isinstance(self.connection, SSL.Connection):
                 self.connection.set_shutdown(SSL.SSL_SENT_SHUTDOWN |
                                              SSL.SSL_RECEIVED_SHUTDOWN)
