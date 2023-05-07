@@ -132,6 +132,7 @@ class VDOM_uwsgi_request_handler(object):
         self.request = request
         self.client_address = client_address
         self.wfile = {"response":[]}
+        self.response = {'code': '', 'response_body': []}
 
 
 
@@ -228,6 +229,8 @@ class VDOM_uwsgi_request_handler(object):
 
             
             self.wsgidav_app = None
+
+            self.response = {'code': '', 'response_body': []}
   #          print("=====================")
   #          print(mname + " = " + host)
         
@@ -253,10 +256,9 @@ class VDOM_uwsgi_request_handler(object):
                 start_response(response['code'], response['response_body'])
                 return self.wfile["response"]
             
-            response = {'code': '', 'response_body': []}
 
             method = getattr(self, mname)
-            method(response)
+            method()
 #            response["body"]
 #            response["code"]
 #            response["response_body"]
@@ -271,7 +273,7 @@ class VDOM_uwsgi_request_handler(object):
  #           print("response body = " + str(response['response_body']))
  #           print("wfile = " + str(self.wfile["response"]))
  #           print("++++++++++++++++++")
-            start_response(response['code'], response['response_body'])
+            start_response(self.response['code'], self.response['response_body'])
             
             return self.wfile["response"] #actually send the response if not already done.
 #        except socket.timeout, e:
@@ -305,12 +307,12 @@ class VDOM_uwsgi_request_handler(object):
                 self.wfile.write(v)
 
 
-    def do_GET(self, response):
+    def do_GET(self):
         """serve a GET request"""
         # create request object
         #debug("DO GET %s"%self)
         self.create_request("get")
-        f = self.on_request("get", response)
+        f = self.on_request("get")
         if f:
             sys.setcheckinterval(0)
             for line in f:
@@ -332,7 +334,7 @@ class VDOM_uwsgi_request_handler(object):
         if f:
             f.close()
 
-    def do_POST(self, response):
+    def do_POST(self):
         """serve a POST request"""
         # create request object
         #debug("DO POST %s"%self)
@@ -340,7 +342,7 @@ class VDOM_uwsgi_request_handler(object):
         # if POST to SOAP-POST-URL call do_SOAP
         if self.__request.environment().environment()["REQUEST_URI"] == VDOM_CONFIG["SOAP-POST-URL"]:
             if self.__card:
-                self.do_SOAP(response)
+                self.do_SOAP()
             return
         f = self.on_request("post")
         if f:
@@ -374,7 +376,7 @@ class VDOM_uwsgi_request_handler(object):
         if "127.0.0.1" != self.client_address[0]:
             debug("Session is " + self.__request.sid)
 
-    def on_request(self, method, response):
+    def on_request(self, method):
         """request handling code the method <method>"""
         #debug("ON REQUEST %s"%self)
         #check if we should send 503 or 403 errors
@@ -401,9 +403,9 @@ class VDOM_uwsgi_request_handler(object):
         # check if requested for wsdl file - then return it
         if self.__request.environment().environment()["REQUEST_URI"] == VDOM_CONFIG["WSDL-FILE-URL"]:
             wsdl = managers.module_manager.getSOAPModule().get_wsdl()
-            response['code'] = '200'
-            response['response_body'].append(('Content-type', 'text/xml'))
-            response['response_body'].append(('Content-Length', str(len(wsdl))))
+            self.response['code'] = '200'
+            self.response['response_body'].append(('Content-type', 'text/xml'))
+            self.response['response_body'].append(('Content-Length', str(len(wsdl))))
  #           self.send_header("Content-type", "text/xml")
  #           self.send_header("Content-Length", str(len(wsdl)))
  #           print("WSDL = " + str(wsdl))
@@ -445,12 +447,12 @@ class VDOM_uwsgi_request_handler(object):
         # check redirect
         if self.__request.redirect_to:
             #return self.redirect(self.__request.redirect_to, response)
-            response['code'] = '302'
-            response['response_body'] = [('Location', str(self.__request.redirect_to))]
+            self.response['code'] = '302'
+            self.response['response_body'] = [('Location', str(self.__request.redirect_to))]
             return
         elif ret:
 #            self.send_response(200)
-            response['code'] = '200'
+            self.response['code'] = '200'
             ret_len = None
 
             if isinstance(ret, (file, io.IOBase)):
@@ -467,7 +469,7 @@ class VDOM_uwsgi_request_handler(object):
                 self.__request.add_header("Connection", "Keep-Alive")
             for hh in self.__request.headers_out().headers():
 #                print("test header = " + str(hh) + " : " + str(self.__request.headers_out().headers()[hh]))
-                response['response_body'].append((str(hh), str(self.__request.headers_out().headers()[hh])))
+                self.response['response_body'].append((str(hh), str(self.__request.headers_out().headers()[hh])))
 
             #print(str(self.__request.headers().headers()))
             # cookies
@@ -495,7 +497,7 @@ class VDOM_uwsgi_request_handler(object):
         elif "" == ret:
             return None
         elif code:
-            response['code'] = str(code)
+            self.response['code'] = str(code)
             self.wfile["response"].append('Not Found')
 #            self.send_error(code, self.responses[code][0])
             return None
@@ -530,11 +532,11 @@ class VDOM_uwsgi_request_handler(object):
             del(self.__request)
         except: pass
 
-    def redirect(self, to, response):
+    def redirect(self, to):
         #start_response('302', [('Location', str(to))])
 #        response['body'] = []
-        response['code'] = '302'
-        response['response_body'] = [('Location', str(to))]
+        self.response['code'] = '302'
+        self.response['response_body'] = [('Location', str(to))]
 
 #        self.send_response(302)
         #if len(self.__request.cookies)>0:
@@ -617,7 +619,7 @@ class VDOM_uwsgi_request_handler(object):
         return f
     
 
-    def do_SOAP(self, response):
+    def do_SOAP(self):
         global _contexts
         status = 500
 
@@ -967,15 +969,15 @@ class VDOM_uwsgi_request_handler(object):
                 SOAPpy.debugFooter(s)
         else:
             # got a valid SOAP response
-            response['code'] = str(status)
+            self.response['code'] = str(status)
 #            self.send_response(status)
             t = 'text/xml';
             if managers.module_manager.getSOAPModule().encoding != None:
                 t += '; charset="%s"' % managers.module_manager.getSOAPModule().encoding
  #           self.send_header("Content-type", t)
  #           self.send_header("Content-length", str(len(resp)))
-            response['response_body'].append(('Content-type', str(t)))
-            response['response_body'].append(('Content-length', str(len(resp))))
+            self.response['response_body'].append(('Content-type', str(t)))
+            self.response['response_body'].append(('Content-length', str(len(resp))))
  #           self.end_headers()
 
             if dumpHeadersOut and \
@@ -1036,9 +1038,8 @@ class VDOM_uwsgi_request_handler(object):
 
         self.log_error("code %d, message %s", code, message)
 
-        response = {'code': '', 'response_body': []}
-        response['code'] = str(code)
-        response['response_body'].append(("Conenction", "close"))
+        self.response['code'] = str(code)
+        self.response['response_body'].append(("Conenction", "close"))
         self.wfile["response"].append("Error " + str(code) + " " + message)
 
         if code < 200 or code in (204, 205, 304):
@@ -1047,7 +1048,7 @@ class VDOM_uwsgi_request_handler(object):
             content = compose_page(
                 explanation, title="Error", heading="Error %d: %s" % (code, message),
                 extra=compose_trace if settings.SHOW_PAGE_DEBUG else None)
-            response['response_body'].append(('Content-Type', "text/html"))
+            self.response['response_body'].append(('Content-Type', "text/html"))
 
         if self.command != "HEAD" and content:
             self.wfile["response"].append(str(content))
