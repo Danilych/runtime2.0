@@ -253,7 +253,7 @@ class VDOM_uwsgi_request_handler(object):
 
             if not hasattr(self, mname):
                 self.send_error(501, "Unsupported method (%r)" % self.command)
-                start_response(response['code'], response['response_body'])
+                start_response(self.response['code'], self.response['response_body'])
                 return self.wfile["response"]
             
 
@@ -409,7 +409,7 @@ class VDOM_uwsgi_request_handler(object):
  #           self.send_header("Content-type", "text/xml")
  #           self.send_header("Content-Length", str(len(wsdl)))
  #           print("WSDL = " + str(wsdl))
-            print("wsdl request return")
+
             return StringIO(wsdl)
         if self.__request.environment().environment()["REQUEST_URI"] == "/crossdomain.xml":
             data = """<?xml version="1.0"?>
@@ -426,6 +426,7 @@ class VDOM_uwsgi_request_handler(object):
             self.end_headers()
             return StringIO(data)
         # management
+
         if self.__request.environment().environment()["REQUEST_URI"] == VDOM_CONFIG["MANAGEMENT-URL"]:
             return self.redirect("/index.py")
         # process requested URI, call module manager
@@ -492,14 +493,11 @@ class VDOM_uwsgi_request_handler(object):
                 else:
                     return ret
             else:
- ####               print("test4444")
                 return StringIO(ret)
         elif "" == ret:
             return None
         elif code:
-            self.response['code'] = str(code)
-            self.wfile["response"].append('Not Found')
-#            self.send_error(code, self.responses[code][0])
+            self.send_error(code, self.responses[code][0])
             return None
         else:
             self.send_error(404, self.responses[404][0])
