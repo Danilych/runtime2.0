@@ -1,1 +1,1 @@
-uwsgi --http-socket 127.0.0.1:3031 --wsgi-file server.py # --master --processes 8 --threads 1
+uwsgi --http-socket 127.0.0.1:3031 --wsgi-file server.py #  --master --processes 4 --threads 4

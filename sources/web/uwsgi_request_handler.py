@@ -2,6 +2,7 @@
 
 import sys, os, posixpath, urllib, shutil, mimetypes, thread, re, socket, threading, time, SOAPpy, traceback, select, cgi
 import io
+import uwsgi
 if sys.platform.startswith("freebsd"):
     import vdomlib
 
@@ -17,10 +18,10 @@ from request.request import VDOM_request
 from storage.storage import VDOM_config
 from version import *
 #import soap.SOAPBuilder
-#from soap.wsdl import methods as soap_methods
+from soap.wsdl import methods as soap_methods
 from utils.exception import VDOM_exception
 #from server import VDOM_WSGI_Vhosting
-from server.uwsgi_vhosting import VDOM_WSGI_Vhosting
+#from server.uwsgi_vhosting import VDOM_WSGI_Vhosting
 
 
 # A class to describe how header messages are handled
@@ -151,7 +152,8 @@ class VDOM_uwsgi_request_handler(object):
             self.headers = environ
             self.path = environ["PATH_INFO"]
             host = environ["HTTP_HOST"]
-#            print(str(environ["SERVER_PORT"]))
+
+ #           print("Request = " + mname)
 
             
             self.wsgidav_app = None
@@ -192,6 +194,11 @@ class VDOM_uwsgi_request_handler(object):
            # self.wfile["response"].append("test123")
 #            print(response['response_body'])
  #           print(str(response['response_body']))
+ #           print("==================")
+ #           print("response code = " + response['code'])
+ #           print("response body = " + str(response['response_body']))
+ #           print("wfile = " + str(self.wfile["response"]))
+ #           print("++++++++++++++++++")
             start_response(response['code'], response['response_body'])
             
             return self.wfile["response"] #actually send the response if not already done.
@@ -253,7 +260,7 @@ class VDOM_uwsgi_request_handler(object):
         if f:
             f.close()
 
-    def do_POST(self):
+    def do_POST(self, response):
         """serve a POST request"""
         # create request object
         #debug("DO POST %s"%self)
@@ -261,7 +268,7 @@ class VDOM_uwsgi_request_handler(object):
         # if POST to SOAP-POST-URL call do_SOAP
         if self.__request.environment().environment()["REQUEST_URI"] == VDOM_CONFIG["SOAP-POST-URL"]:
             if self.__card:
-                self.do_SOAP()
+                self.do_SOAP(response)
             return
         f = self.on_request("post")
         if f:
@@ -283,8 +290,7 @@ class VDOM_uwsgi_request_handler(object):
         args = {}
         args["headers"] = self.headers
         args["handler"] = self
-        vh = VDOM_WSGI_Vhosting()
-        args["vhosting"] = vh.virtual_hosting()
+        args["vhosting"] = managers.module_manager.getVHosting().virtual_hosting()
         args["method"] = method
 #        print("==========================")
         self.__request = VDOM_request(args)
@@ -322,11 +328,14 @@ class VDOM_uwsgi_request_handler(object):
             return StringIO(data)
         # check if requested for wsdl file - then return it
         if self.__request.environment().environment()["REQUEST_URI"] == VDOM_CONFIG["WSDL-FILE-URL"]:
-            wsdl = self.server.get_wsdl()
-            self.send_response(200)
-            self.send_header("Content-type", "text/xml")
-            self.send_header("Content-Length", str(len(wsdl)))
-            self.end_headers()
+            wsdl = managers.module_manager.getSOAPModule().get_wsdl()
+            response['code'] = '200'
+            response['response_body'].append(('Content-type', 'text/xml'))
+            response['response_body'].append(('Content-Length', str(len(wsdl))))
+ #           self.send_header("Content-type", "text/xml")
+ #           self.send_header("Content-Length", str(len(wsdl)))
+ #           print("WSDL = " + str(wsdl))
+            print("wsdl request return")
             return StringIO(wsdl)
         if self.__request.environment().environment()["REQUEST_URI"] == "/crossdomain.xml":
             data = """<?xml version="1.0"?>
@@ -347,11 +356,8 @@ class VDOM_uwsgi_request_handler(object):
             return self.redirect("/index.py")
         # process requested URI, call module manager
         try:
-            print("requesting url = " + str(self.__request))
             (code, ret) = managers.module_manager.process_request(self.__request)
             self.__request.collect_files()
-            print("request result = " + str(ret))
-            print("=================================")
         except Exception as e:
             requestline = "<br>"
             if hasattr(self, "requestline"):
@@ -388,7 +394,7 @@ class VDOM_uwsgi_request_handler(object):
             else:
                 self.__request.add_header("Connection", "Keep-Alive")
             for hh in self.__request.headers_out().headers():
-                print("test header = " + str(hh) + " : " + str(self.__request.headers_out().headers()[hh]))
+#                print("test header = " + str(hh) + " : " + str(self.__request.headers_out().headers()[hh]))
                 response['response_body'].append((str(hh), str(self.__request.headers_out().headers()[hh])))
 
             #print(str(self.__request.headers().headers()))
@@ -417,7 +423,6 @@ class VDOM_uwsgi_request_handler(object):
         elif "" == ret:
             return None
         elif code:
-            print("response code = " + str(code))
             response['code'] = str(code)
             self.wfile["response"].append('Not Found')
 #            self.send_error(code, self.responses[code][0])
@@ -430,7 +435,6 @@ class VDOM_uwsgi_request_handler(object):
         """send all headers"""
         headers = self.__request.headers_out().headers()
         cookies = self.__request.cookies().output()
-        print(str(headers))
         #debug("Outgoing headers---")
         #for h in headers:
         #	debug(h + ": " + headers[h])
@@ -456,7 +460,6 @@ class VDOM_uwsgi_request_handler(object):
 
     def redirect(self, to, response):
         #start_response('302', [('Location', str(to))])
-        print("redirect!")
 #        response['body'] = []
         response['code'] = '302'
         response['response_body'] = [('Location', str(to))]
@@ -542,7 +545,7 @@ class VDOM_uwsgi_request_handler(object):
         return f
     
 
-    def do_SOAP(self):
+    def do_SOAP(self, response):
         global _contexts
         status = 500
 
@@ -586,8 +589,8 @@ class VDOM_uwsgi_request_handler(object):
             # and leave only the first element
 
             if SOAPpy.Config.simplify_objects:
-                args = simplify(args)
-                kw = simplify(kw)
+                args = SOAPpy.simplify(args)
+                kw = SOAPpy.simplify(kw)
 
             # Handle mixed named and unnamed arguments by assuming
             # that all arguments with names of the form "v[0-9]+"
@@ -628,7 +631,8 @@ class VDOM_uwsgi_request_handler(object):
 
             if len(self.path) > 1 and not ns:
                 ns = self.path.replace("/", ":")
-                if ns[0] == ":": ns = ns[1:]
+                if ns[0] == ":": 
+                    ns = ns[1:]
 
             # authorization method
             a = None
@@ -668,11 +672,11 @@ class VDOM_uwsgi_request_handler(object):
 
             try:
                 # First look for registered functions
-                if ns in self.server.funcmap and method in self.server.funcmap[ns]:
-                    f = self.server.funcmap[ns][method]
+                if ns in managers.module_manager.getSOAPModule().funcmap and method in managers.module_manager.getSOAPModule().funcmap[ns]:
+                    f = managers.module_manager.getSOAPModule().funcmap[ns][method]
 
                     # look for the authorization method
-                    if self.server.config.authMethod != None:
+                    if managers.module_manager.getSOAPModule().config.authMethod != None:
                         authmethod = self.server.config.authMethod
                         if ns in self.server.funcmap and authmethod in self.server.funcmap[ns]:
                             a = self.server.funcmap[ns][authmethod]
@@ -681,11 +685,11 @@ class VDOM_uwsgi_request_handler(object):
                     # Check for nested attributes. This works even if
                     # there are none, because the split will return
                     # [method]
-                    f = self.server.objmap[ns]
+                    f = managers.module_manager.getSOAPModule().objmap[ns]
 
                     # Look for the authorization method
-                    if self.server.config.authMethod != None:
-                        authmethod = self.server.config.authMethod
+                    if managers.module_manager.getSOAPModule().config.authMethod != None:
+                        authmethod = managers.module_manager.getSOAPModule().config.authMethod
                         if hasattr(f, authmethod):
                             a = getattr(f, authmethod)
 
@@ -701,8 +705,8 @@ class VDOM_uwsgi_request_handler(object):
                                                                                 info[0],
                                                                                 info[1],
                                                                                 info[2])),
-                                            encoding = self.server.encoding,
-                                            config = self.server.config)
+                                            encoding = managers.module_manager.getSOAPModule().encoding,
+                                            config = managers.module_manager.getSOAPModule().config)
                 finally:
                     del info
                 status = self.__request.fault_type_http_code
@@ -794,7 +798,7 @@ class VDOM_uwsgi_request_handler(object):
                     if thread_id in _contexts:
                         del _contexts[thread_id]
 
-                except Exception, e:
+                except Exception as e:
                     import traceback
                     info = sys.exc_info()
 
@@ -961,13 +965,14 @@ class VDOM_uwsgi_request_handler(object):
             file=open(filename, "rb")
             content=file.read()
             file.close()
-
-            self.send_response(code, message)
-            self.send_header("Content-Type", "text/html")
-            self.send_header('Connection', 'close')
-            self.end_headers()
+            
+            response = {'code': '', 'response_body': []}
+            response['code'] = '200'
+            response['response_body'].append(('Content-type', 'text/xml'))
+            response['response_body'].append(('Connection', 'close'))
+     
             if self.command!='HEAD' and code>=200 and code not in (204, 304):
-                self.wfile.write(content)
+                self.wfile["response"].append(str(content))
             else:
                 pass
         else:
@@ -977,8 +982,8 @@ class VDOM_uwsgi_request_handler(object):
                 page_debug = VDOM_CONFIG_1["ENABLE-PAGE-DEBUG"]
                 if "1" == page_debug:
                     e = "<br>".join(excinfo.splitlines(True))
-                    self.wfile.write(e)
-                    self.wfile.flush()
+                    self.wfile["response"].append(str(content))
+
                     self.finish()
 
     def log_error(self, *args):

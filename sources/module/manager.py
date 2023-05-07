@@ -1,10 +1,16 @@
 """Module Manager module"""
 
 import sys, traceback, shutil, os, types, re
-
+import SOAPpy
 import managers
 from utils.exception import VDOM_exception
 from utils.tracing import show_exception_trace
+from utils.singleton import Singleton
+from web.vhosting import VDOM_vhosting
+
+from soap.functions import *
+from soap.wsdl import gen_wsdl
+from soap.wsdl import methods as wsdl_methods
 
 from resource import VDOM_module_resource
 from .python import VDOM_module_python
@@ -32,8 +38,135 @@ class PathNotFound(Exception):
     pass
 
 
+
+class wsgiVhosting(Singleton):
+    def virtual_hosting(self):
+        if not hasattr(self, "_vhosting"):
+            self._vhosting = VDOM_vhosting()
+        return self._vhosting
+
+class SOAP_module():
+
+    def __init__(self):
+        """constructor"""
+
+        # init SOAP
+        encoding = 'UTF-8'
+        # Test the encoding, raising an exception if it's not known
+        if encoding != None:
+            ''.encode(encoding)
+        config = SOAPpy.Config
+        self.config = config
+
+        # soap debug options
+        self.config.debug = 0
+        self.config.VDOM_debug = 0
+        self.config.dumpSOAPIn = 0
+        self.config.dumpSOAPOut = 0
+        self.config.dumpHeadersIn = 0
+        self.config.dumpHeadersOut = 0
+
+        self.config.buildWithNamespacePrefix = False
+
+        ssl_context = None
+        if ssl_context != None and not config.SSLserver:
+            raise AttributeError, "SSL server not supported by this Python installation"
+        namespace = "http://services.vdom.net/VDOMServices"
+        log = 0
+        self.namespace = namespace
+        self.objmap = {}
+        self.funcmap = {}
+        self.ssl_context = ssl_context
+        self.encoding = encoding
+        self.log = log
+        self.allow_reuse_address = 1
+
+        # register soap methods
+        for method in wsdl_methods.keys():
+            exec("""self.registerFunction(SOAPpy.MethodSig(%s, keywords = 0, context = 1), namespace = "http://services.vdom.net/VDOMServices")""" % method)
+
+#		self.registerFunction(SOAPpy.MethodSig(login, keywords = 0, context = 1), namespace = "http://services.vdom.net/VDOMServices")
+#		self.registerFunction(SOAPpy.MethodSig(create_application, keywords = 0, context = 1), namespace = "http://services.vdom.net/VDOMServices")
+#		self.registerFunction(SOAPpy.MethodSig(set_application_info, keywords = 0, context = 1), namespace = "http://services.vdom.net/VDOMServices")
+
+        # generate wsdl file
+        gen_wsdl()
+
+    def get_wsdl(self):
+        """get wsdl data"""
+        # !!! TODO: cache wsdl
+        ff = open(VDOM_CONFIG["WSDL-FILE-LOCATION"], "rb")
+        data = ff.read()
+        ff.close()
+        return data
+
+    # soap handler registration methods
+    def registerObject(self, object, namespace='', path=''):
+        if namespace == '' and path == '':
+            namespace = self.namespace
+        if namespace == '' and path != '':
+            namespace = path.replace("/", ":")
+            if namespace[0] == ":":
+                namespace = namespace[1:]
+        self.objmap[namespace] = object
+
+    def registerFunction(self, function, namespace='', funcName=None, path=''):
+        if not funcName:
+            funcName = function.__name__
+        if namespace == '' and path == '':
+            namespace = self.namespace
+        if namespace == '' and path != '':
+            namespace = path.replace("/", ":")
+            if namespace[0] == ":":
+                namespace = namespace[1:]
+        if namespace in self.funcmap:
+            self.funcmap[namespace][funcName] = function
+        else:
+            self.funcmap[namespace] = {funcName: function}
+
+    def registerKWObject(self, object, namespace='', path=''):
+        if namespace == '' and path == '':
+            namespace = self.namespace
+        if namespace == '' and path != '':
+            namespace = path.replace("/", ":")
+            if namespace[0] == ":":
+                namespace = namespace[1:]
+        for i in dir(object.__class__):
+            if i[0] != "_" and callable(getattr(object, i)):
+                self.registerKWFunction(getattr(object, i), namespace)
+
+    # convenience  - wraps your func for you.
+    def registerKWFunction(self, function, namespace='', funcName=None, path=''):
+        if namespace == '' and path == '':
+            namespace = self.namespace
+        if namespace == '' and path != '':
+            namespace = path.replace("/", ":")
+            if namespace[0] == ":":
+                namespace = namespace[1:]
+        self.registerFunction(MethodSig(function, keywords=1), namespace, funcName)
+
+    def unregisterObject(self, object, namespace='', path=''):
+        if namespace == '' and path == '':
+            namespace = self.namespace
+        if namespace == '' and path != '':
+            namespace = path.replace("/", ":")
+            if namespace[0] == ":":
+                namespace = namespace[1:]
+
+        del self.objmap[namespace]
+
 class VDOM_module_manager(object):
     """Module Manager class"""
+
+    def __init__(self):
+        self._vhsoting = wsgiVhosting()
+        self._soapModule = SOAP_module()
+
+    def getVHosting(self):
+        return self._vhsoting
+    
+    def getSOAPModule(self):
+        return self._soapModule
 
     def process_request(self, request_object):
         """process request"""

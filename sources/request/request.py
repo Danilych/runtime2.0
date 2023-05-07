@@ -142,7 +142,6 @@ class VDOM_request(object):
         # special flags
         self.redirect_to = None
         self.wfile = handler.wfile
-        self.wfile["response"].append("Test")
         self.__nocache = False
         self.nokeepalive = False
         self.__binary = False
