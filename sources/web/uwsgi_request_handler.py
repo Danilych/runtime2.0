@@ -14,12 +14,15 @@ import xml.sax.saxutils
 from wsgiref.util import guess_scheme
 
 import managers
+import settings
+
 from request.request import VDOM_request
 from storage.storage import VDOM_config
 from version import *
 #import soap.SOAPBuilder
 from soap.wsdl import methods as soap_methods
 from utils.exception import VDOM_exception
+from utils.pages import compose_page, compose_trace
 #from server import VDOM_WSGI_Vhosting
 #from server.uwsgi_vhosting import VDOM_WSGI_Vhosting
 
@@ -150,6 +153,7 @@ class VDOM_uwsgi_request_handler(object):
         #start_response('200 OK', [('Content-Type', 'text/html')])
         #return [b"Hello World"]
 #        try:
+    
             self.command = environ['REQUEST_METHOD']
             mname = 'do_' + self.command
             self.headers = environ

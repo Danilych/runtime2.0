@@ -348,7 +348,7 @@ class VDOM_web_services_server(object):
         app.save()
 
         if settings.AUTOSELECT_NEW_APPLICATION:
-            managers.server.web_server.http_server.virtual_hosting().set_def_site(str(app.id))
+            managers.module_manager.getVHosting().virtual_hosting().set_def_site(str(app.id))
 
         # return "<Application ID=\"%s\">\n%s</Application>" % (appid, self.__app_info(app))
         return "<Application ID=\"%s\">\n%s</Application>" % (app.id, self.__app_info(app))
@@ -2790,10 +2790,10 @@ class VDOM_web_services_server(object):
 
         if not hostname or hostname.lower() == "default" or hostname == 0:
             # managers.virtual_hosts.set_def_site(appid)
-            managers.server.web_server.http_server.virtual_hosting().set_def_site(str(app.id))
+            managers.module_manager.getVHosting().virtual_hosting().set_def_site(str(app.id))
         else:
             # managers.virtual_hosts.set_site(hostname, appid)
-            managers.server.web_server.http_server.virtual_hosting().set_site(hostname, str(appid))
+            managers.module_manager.getVHosting().virtual_hosting().set_site(hostname, str(appid))
 
         return "<Result>OK</Result>"
 
@@ -2806,10 +2806,10 @@ class VDOM_web_services_server(object):
 
         if not hostname or hostname.lower() == "default" or hostname == 0:
             # managers.virtual_hosts.set_def_site(None)
-            managers.server.web_server.http_server.virtual_hosting().set_def_site(None)
+            managers.module_manager.getVHosting().virtual_hosting().set_def_site(None)
         else:
             # managers.virtual_hosts.set_site(hostname, None)
-            managers.server.web_server.http_server.virtual_hosting().set_site(hostname, None)
+            managers.module_manager.getVHosting().virtual_hosting().set_site(hostname, None)
 
         return "<Result>OK</Result>"
 
