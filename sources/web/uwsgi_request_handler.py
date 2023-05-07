@@ -641,7 +641,7 @@ class VDOM_uwsgi_request_handler(object):
                 s = 'Incoming HTTP headers'
                 SOAPpy.debugHeader(s)
                 debug(self.raw_requestline.strip())
-                debug("\n".join(map (lambda x: x.strip(), self.headers.headers)))
+                debug("\n".join(map (lambda x: x.strip(), self.headers)))
                 SOAPpy.debugFooter(s)
             data = self.__request.postdata
             if dumpSOAPIn:
@@ -949,6 +949,7 @@ class VDOM_uwsgi_request_handler(object):
 
                 SOAPpy.debugFooter(s)
 
+
             self.send_response(self.__request.fault_type_http_code)
             self.end_headers()
 
@@ -966,13 +967,16 @@ class VDOM_uwsgi_request_handler(object):
                 SOAPpy.debugFooter(s)
         else:
             # got a valid SOAP response
-            self.send_response(status)
+            response['code'] = str(status)
+#            self.send_response(status)
             t = 'text/xml';
             if managers.module_manager.getSOAPModule().encoding != None:
                 t += '; charset="%s"' % managers.module_manager.getSOAPModule().encoding
-            self.send_header("Content-type", t)
-            self.send_header("Content-length", str(len(resp)))
-            self.end_headers()
+ #           self.send_header("Content-type", t)
+ #           self.send_header("Content-length", str(len(resp)))
+            response['response_body'].append(('Content-type', str(t)))
+            response['response_body'].append(('Content-length', str(len(resp))))
+ #           self.end_headers()
 
             if dumpHeadersOut and \
                self.request_version != 'HTTP/0.9':
@@ -982,7 +986,7 @@ class VDOM_uwsgi_request_handler(object):
                     s = ' ' + self.responses[status][0]
                 else:
                     s = ''
-                debug("%s %d%s" % (self.protocol_version, status, s))
+ #               debug("%s %d%s" % (self.protocol_version, status, s))
                 debug("Server: %s" % self.version_string())
                 debug("Date: %s" % self.__last_date_time_string)
                 debug("Content-type: %s" % t)
@@ -999,8 +1003,9 @@ class VDOM_uwsgi_request_handler(object):
                 except: pass
 
             #resp = xml.sax.saxutils.unescape(resp)
-            self.wfile.write(resp)
-            self.wfile.flush()
+            self.wfile["response"].append(str(resp))
+ #           self.wfile.write(resp)
+ #           self.wfile.flush()
 
             # We should be able to shut down both a regular and an SSL
             # connection, but under Python 2.1, calling shutdown on an
@@ -1019,51 +1024,33 @@ class VDOM_uwsgi_request_handler(object):
     def date_time_string(self):
         self.__last_date_time_string = BaseHTTPServer.BaseHTTPRequestHandler.date_time_string(self)
         return self.__last_date_time_string
-
+    
     def send_error(self, code, message=None, excinfo=None):
         """ send error """
         try:
-            short, long=self.responses[code]
+            short, explanation=self.responses[code]
         except KeyError:
-            short, long='???', '???'
+            short, explanation='???', '???'
         if message is None:
             message=short
 
-        try:
-            accept_language=self.headers.get("Accept-Language", "")
-            separator=accept_language.find("-")
-            if separator<0:
-                language=VDOM_CONFIG["DEFAULT-LANGUAGE"]
-            language=accept_language[0:]
-        except:
-            language=VDOM_CONFIG["DEFAULT-LANGUAGE"]
+        self.log_error("code %d, message %s", code, message)
 
-        filename=VDOM_CONFIG["HTTP-ERROR-PAGES-DIRECTORY"]+"/"+str(code)+".htm"
+        response = {'code': '', 'response_body': []}
+        response['code'] = str(code)
+        response['response_body'].append(("Conenction", "close"))
+        self.wfile["response"].append("Error " + str(code) + " " + message)
 
-        if os.path.exists(filename):
-            file=open(filename, "rb")
-            content=file.read()
-            file.close()
-            
-            response = {'code': '', 'response_body': []}
-            response['code'] = '200'
-            response['response_body'].append(('Content-type', 'text/xml'))
-            response['response_body'].append(('Connection', 'close'))
-     
-            if self.command!='HEAD' and code>=200 and code not in (204, 304):
-                self.wfile["response"].append(str(content))
-            else:
-                pass
+        if code < 200 or code in (204, 205, 304):
+            content = None
         else:
-            self.requestline = ""
-            SimpleHTTPServer.SimpleHTTPRequestHandler.send_error(self, code, message)
-            if excinfo:
-                page_debug = VDOM_CONFIG_1["ENABLE-PAGE-DEBUG"]
-                if "1" == page_debug:
-                    e = "<br>".join(excinfo.splitlines(True))
-                    self.wfile["response"].append(str(content))
+            content = compose_page(
+                explanation, title="Error", heading="Error %d: %s" % (code, message),
+                extra=compose_trace if settings.SHOW_PAGE_DEBUG else None)
+            response['response_body'].append(('Content-Type', "text/html"))
 
-                    self.finish()
+        if self.command != "HEAD" and content:
+            self.wfile["response"].append(str(content))
 
     def log_error(self, *args):
         pass
