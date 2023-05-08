@@ -174,7 +174,12 @@ class VDOM_module_manager(object):
         if "127.0.0.1" != request_object.handler().client_address[0]:
             debug("Requested URL: '" + script_name + "'")
         # dirty HACK!!!
+ #       print("===========================")
+ #       print(str(request_object))
+  #      print("===========================")
         if script_name.lower().startswith("/images/"):
+  #          print("Dirty hack 1 = " + str("../images/" + script_name.split("/")[-1]))
+  #         print("Dirty hack 2 = " + str(script_name.split(".")[-1].lower()))
             e = {"jpg": "image/jpeg", "jpeg": "image/jpeg", "gif": "image/gif", "png": "image/png", "js": "text/javascript"}
             file = open("../images/" + script_name.split("/")[-1], "rb")
             ext = script_name.split(".")[-1].lower()
@@ -195,7 +200,7 @@ class VDOM_module_manager(object):
                 request_object.environment().environment()["REQUEST_URI"] = "/%s.res" % app.icon
                 module = VDOM_module_resource()
                 return (None, module.run(request_object, "res"))
-            except Exception, e:
+            except Exception as e:
                 debug(_("Module manager: resource module error: %s") % str(e))
                 return (404, None)
 
@@ -246,7 +251,7 @@ class VDOM_module_manager(object):
 
         request_type = url_parts[0].rpartition(".")[2] if '.' in url_parts[0] else 'vdom'
         request_object.request_type = request_type
-
+ #       print("request type = " + str(request_object.request_type))
         # this acts as Communication Dispatcher
         if "vdom" == request_type:  # VDOM container request
             # first chek if application is OK
@@ -297,7 +302,7 @@ class VDOM_module_manager(object):
 
             if "1" == system_options["server_license_type"] and request_object.number_of_connections >2: # = len(obj.get_all_children()):
                 return (503, None)
-
+#            print("content type is = " + str(obj.type.http_content_type))
             # set content type of container
             if obj.type.http_content_type is "":
                 return (None, _("Unknown content type"))
@@ -344,6 +349,7 @@ class VDOM_module_manager(object):
                 #             os.remove(request_object.files[key][0].name)
 
                 if request_object.fh:
+#                    print("request object!")
                     from logs import log
                     # log.debug("REQUEST FILE HANDLER: %r" % request_object.fh)
                     shutil.copyfileobj(request_object.fh, request_object.wfile)
@@ -387,6 +393,9 @@ class VDOM_module_manager(object):
         elif request_type:# pass to resource module
             module = VDOM_module_resource()
             ret = module.run(request_object, request_type)
+ #           print("===========================")
+ #           print(str(request_object))
+ #           print("===========================")
             return (None, ret) if ret else (404, None)
 
         return (404, None)

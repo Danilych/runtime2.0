@@ -146,22 +146,24 @@ class VDOM_uwsgi_request_handler(object):
                 exc_info = None    # Avoid circular ref.
         status_code = int(status.split(' ')[0])
         status_message = status[status.find(' ')+1:]
-        self.send_response(status_code, status_message)
+        
+        self.response['code'] = '200'
+        self.wfile["response"].append(status_message)
+ 
         for header in response_headers:
             if header[0] != 'Date':
-                self.send_header(header[0], header[1])
+                self.response[header[0]] =  header[1]
 
         cookies = self.__request.cookies()
         if "sid" in cookies:
             cookies["sid"]["path"] = "/"
-            self.wfile.write("%s\r\n" % cookies.output())
+            self.wfile["response"].append(status_message)
 
-        self.end_headers()
         #print response_headers
         #_str = '\n'.join( traceback.format_stack() )
         #print _str
         #cgi.escape( str )		
-        return self.wfile.write
+        return self.wfile.append
 
     def get_environ(self):
         env = self.__request.environment().environment().copy()
@@ -216,7 +218,9 @@ class VDOM_uwsgi_request_handler(object):
         #start_response('200 OK', [('Content-Type', 'text/html')])
         #return [b"Hello World"]
 #        try:
-    
+ #           print("===========================")
+ #           print(str(environ['wsgi.input'].readline()))
+ #           print("===========================")
             self.command = environ['REQUEST_METHOD']
             mname = 'do_' + self.command
             self.headers = environ
@@ -278,7 +282,6 @@ class VDOM_uwsgi_request_handler(object):
             return self.wfile["response"] #actually send the response if not already done.
 #        except socket.timeout, e:
             #a read or a write timed out.  Discard this connection
-#            self.log_error("Request timed out: %r", e)
 #            self.close_connection = 1
 #            start_response('200 OK', [('Content-Type', 'text/html')])
  #           return	[b"Hello World"]
@@ -293,18 +296,28 @@ class VDOM_uwsgi_request_handler(object):
         application = self.wsgidav_app
         if not application:
             self.send_error(404, self.responses[404][0])
+            return
         elif environ["REQUEST_METHOD"] == "OPTIONS" and environ["PATH_INFO"] in ("/", "*"):
             import wsgidav.util as util
-            self.start_response("200 OK", [("Content-Type", "text/html"),
-                                           ("Content-Length", "0"),
-                                           ("DAV", "1,2"),
-                                           ("Server", "DAV/2"),
-                                           ("Date", util.getRfc1123Time()),
-                                           ])		
+            self.response['code'] = '200'
+            self.response['response_body'].append(('Content-type', 'text/xml'))
+            self.response['response_body'].append(('Content-Length', '0'))
+            self.response['response_body'].append(('DAV', '1,2'))
+            self.response['response_body'].append(('Server', 'DAV/2'))
+            self.response['response_body'].append(('Date', util.getRfc1123Time()))	
+            return
 
-        else:
-            for v in application(environ, self.start_response):
-                self.wfile.write(v)
+        if environ["REQUEST_METHOD"] == "PROPFIND" and environ["PATH_INFO"] in ("/", "*"):
+            providers = self.wsgidav_app.providerMap.keys()
+            if providers:
+                environ["PATH_INFO"] = providers[0]  # Need some testing if this approach will work
+            else:
+                self.send_error(404, self.responses[404][0])
+                return
+        #print "<<<%s %s"%(environ["REQUEST_METHOD"], environ["PATH_INFO"])
+        application(environ, self.start_response)
+ #       for v in application(environ, self.start_response):
+ #           self.wfile["response"].append(v)
 
 
     def do_GET(self):
@@ -388,17 +401,15 @@ class VDOM_uwsgi_request_handler(object):
             return None
         if not self.__card:
             data = _("Please insert your card")
-            self.send_response(200)
-            self.send_header("Content-type", "text/html")
-            self.send_header("Content-Length", str(len(data)))
-            self.end_headers()
+            self.response['code'] = '200'
+            self.response['response_body'].append(('Content-type', 'text/xml'))
+            self.response['response_body'].append(('Content-Length', str(len(data))))
             return StringIO(data)
         if not self.__limit:
             data = _("License exceeded")
-            self.send_response(200)
-            self.send_header("Content-type", "text/html")
-            self.send_header("Content-Length", str(len(data)))
-            self.end_headers()
+            self.response['code'] = '200'
+            self.response['response_body'].append(('Content-type', 'text/xml'))
+            self.response['response_body'].append(('Content-Length', str(len(data))))
             return StringIO(data)
         # check if requested for wsdl file - then return it
         if self.__request.environment().environment()["REQUEST_URI"] == VDOM_CONFIG["WSDL-FILE-URL"]:
@@ -420,10 +431,9 @@ class VDOM_uwsgi_request_handler(object):
  <allow-access-from domain="*" secure="false"/>
  <allow-http-request-headers-from domain="*" headers="*" secure="false"/>
 </cross-domain-policy>"""
-            self.send_response(200)
-            self.send_header("Content-type", "text/xml")
-            self.send_header("Content-Length", str(len(data)))
-            self.end_headers()
+            self.response['code'] = '200'
+            self.response['response_body'].append(('Content-type', 'text/xml'))
+            self.response['response_body'].append(('Content-Length', str(len(data))))
             return StringIO(data)
         # management
 
@@ -432,6 +442,9 @@ class VDOM_uwsgi_request_handler(object):
         # process requested URI, call module manager
         try:
             (code, ret) = managers.module_manager.process_request(self.__request)
+  #          print("===========================")
+  #          print(str(ret))
+  #          print("===========================")
             self.__request.collect_files()
         except Exception as e:
             requestline = "<br>"
@@ -1034,8 +1047,6 @@ class VDOM_uwsgi_request_handler(object):
         if message is None:
             message=short
 
-        self.log_error("code %d, message %s", code, message)
-
         self.response['code'] = str(code)
         self.response['response_body'].append(("Conenction", "close"))
         self.wfile["response"].append("Error " + str(code) + " " + message)
@@ -1051,8 +1062,6 @@ class VDOM_uwsgi_request_handler(object):
         if self.command != "HEAD" and content:
             self.wfile["response"].append(str(content))
 
-    def log_error(self, *args):
-        pass
 
     def version_string(self):
         """Return the server software version string."""
