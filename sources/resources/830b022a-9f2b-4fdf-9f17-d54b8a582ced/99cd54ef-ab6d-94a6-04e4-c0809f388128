@@ -1,0 +1,21 @@
+<svg width="17" height="17" viewBox="0 0 17 17" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<title>alignmentrightw</title>
+<desc>Created using Figma</desc>
+<g id="Canvas" transform="translate(1465 -12634)">
+<g id="alignmentrightw">
+<g id="Line 17">
+<use xlink:href="#path0_stroke" transform="matrix(1 -2.44929e-16 2.44929e-16 1 -1464.53 12636.1)" fill="#FFFFFF"/>
+</g>
+<g id="Line 17">
+<use xlink:href="#path1_stroke" transform="matrix(1 -2.44929e-16 2.44929e-16 1 -1460.53 12643.1)" fill="#FFFFFF"/>
+</g>
+<g id="Line 17">
+<use xlink:href="#path0_stroke" transform="matrix(1 -2.44929e-16 2.44929e-16 1 -1464.53 12650.1)" fill="#FFFFFF"/>
+</g>
+</g>
+</g>
+<defs>
+<path id="path0_stroke" d="M 0 0L 16 0L 16 -2L 0 -2L 0 0Z"/>
+<path id="path1_stroke" d="M 0 0L 12 0L 12 -2L 0 -2L 0 0Z"/>
+</defs>
+</svg>

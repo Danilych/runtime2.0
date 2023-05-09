@@ -172,6 +172,8 @@ def gen_wsdl():
 	# done
 	result += """</definitions>\n"""
 
+	print("trying to open file = " + str(VDOM_CONFIG["WSDL-FILE-LOCATION"]))
 	ff = open(VDOM_CONFIG["WSDL-FILE-LOCATION"], "wb")
+	print("trying to open file (success) = " + str(VDOM_CONFIG["WSDL-FILE-LOCATION"]))
 	ff.write(result)
 	ff.close()

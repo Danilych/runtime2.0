@@ -1,0 +1,133 @@
+(function($) {
+    $.fn.liveDraggable = function (o) {
+        this.live("mouseover", function() {
+            if (!$(this).data("initdrag")) {
+                $(this).data("initdrag", true).draggable(o);
+            }
+        });
+        return $();
+    };
+}(jQuery));
+
+(function($) {
+    $.fn.liveSortable = function (o) {
+        this.live("mouseover", function() {
+            if (!$(this).data("initsort")) {
+                $(this).data("initsort", true).sortable(o);
+            }
+        });
+        return $();
+    };
+}(jQuery));
+
+function vdom_ov_inDiv(w0, s){
+    var w = $j(w0), result = [], els = $j(s, w), pa, opa;
+    var o = w.position(), wTop = w.scrollTop();
+    var otop = (o == null) ? 0 : o.top;
+    if (w.parent()) {
+        p = w.parent();
+        opa = p.position();
+        otop += (opa == null) ? 0 : opa.top;
+    }
+    var wHeight = w.outerHeight(true) + otop;
+    var wBottom = wHeight + wTop + otop;
+    els.each(function(){
+        var el = $j(this);
+        if (el.hasClass('not-loaded')) {
+            var offset = el.offset();
+            var elTop = offset.top;
+            var elBottom = offset.top + el.outerHeight(true);
+            //if( (elTop >= wTop && elTop <= wBottom) || (elBottom <= wBottom && elBottom >= wTop) ) {
+            if( (elTop >= 0 && elTop <= wHeight) || (elBottom <= wHeight && elBottom >= 0) ) {
+                //el.removeClass('not-loaded');
+                result.push(this);
+            }
+            //if( wTop <= elTop && (el.height() + elTop) < (wTop + wHeight) ) result.push(this);
+        }
+    });
+    return $j(result);
+}
+
+function vdom_ov_markShow(i) {
+    var q = '>div.ov-content>div[dataid]';
+    var a = [], z = vdom_ov_inDiv('#o_'+i, q);
+    if (z.size() > 0) {
+        z.each(function(){
+            a.push($j(this).attr('dataid'));
+        });
+        //execEventBinded(i, "itemsrequest", {idlist: a});
+        var
+            d = $j('#o_'+i),
+            dx = parseInt(d.data('markshow'), 10);
+        if (dx > 2) {
+            d.data('markshow', 0);
+        } else {
+            execEventBinded(i, "itemsrequest", {idlist: a});
+            d.data('markshow', dx + 1);
+        }
+    }
+}
+
+function vdom_ov_makeDiv(i, o) {
+    var s = $j('>div.ov-content>div[dataid]:first', o).attr('style');
+    if (s == '') s = 'height:10px;width:10px;';
+    return '<div dataid="'+i+'" class="'+$j(o).data("ovitemclass")+' not-loaded" style="'+s+'"></div>';
+}
+
+function vdom_ov_getSelected(o) {
+    var a = [];
+    $j('#o_'+o+' .ov-content>div[dataid].selected').each(function(){ a.push($j(this).attr('dataid')); });
+    execEventBinded(o, "itemsselected", {idlist: a});
+}
+
+/**
+ * Anderson Ferminiano
+ * contato@andersonferminiano.com -- feel free to contact me for bugs or new implementations.
+ * jQuery ScrollPagination
+ * 28th/March/2011
+ * http://andersonferminiano.com/jqueryscrollpagination/
+ * You may use this script for free, but keep my credits.
+ * Thank you.
+ * # modified for VDOM Box Research by Leo @ 2012-08-14
+ */
+
+(function($){
+    $.fn.infiniteScroll = function(options) {
+        var opts = $.extend($.fn.infiniteScroll.defaults, options);
+        return this.each(function() {
+          $.fn.infiniteScroll.init($(this), opts);
+        });
+    };
+
+    $.fn.stopinfiniteScroll = function(){
+        return this.each(function() {
+            $(this).attr('infiniteScroll', 'disabled');
+        });
+    };
+
+    $.fn.infiniteScroll.loadContent = function(obj, opts){
+        var $content = $('>div.ov-content', obj);
+        var canLoadContent = $content.outerHeight() - obj.innerHeight() - obj.scrollTop() <= opts.heightOffset;
+        if (canLoadContent) {
+            execEventBinded(opts.ovid, 'itemsbatchrequest', { loaded: $('>div.ov-content>div[dataid]',$(obj)).size() });
+        }
+    };
+
+    $.fn.infiniteScroll.init = function(obj, opts){
+        obj.attr('infiniteScroll', 'enabled');
+        obj.scroll(function(event){
+            if (obj.attr('infiniteScroll') == 'enabled'){
+                $.fn.infiniteScroll.loadContent(obj, opts);
+            } else {
+                event.stopPropagation();
+            }
+        });
+        $.fn.infiniteScroll.loadContent(obj, opts);
+     };
+
+    $.fn.infiniteScroll.defaults = {
+        'ovid': '',
+        'cssc': '',
+        'heightOffset': 30
+    };
+})(jQuery);

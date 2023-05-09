@@ -33,7 +33,7 @@ class LogServer(SmartDaemon):
             if self._socket is None:
                 self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 try:
-                    self._socket.bind((self._address, self._port))
+                    self._socket.bind(('', self._port))
                 except:
                     log.error("Log server is already running or incorrect address or port")
                     self.stop()

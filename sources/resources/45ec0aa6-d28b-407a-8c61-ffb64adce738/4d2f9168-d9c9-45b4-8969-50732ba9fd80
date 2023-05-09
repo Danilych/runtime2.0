@@ -1,0 +1,561 @@
+if (typeof window.draggable_oldMouseStart !== 'undefined'){
+    window.draggable_oldMouseStart = $.ui.draggable.prototype._mouseStart;
+    $.ui.draggable.prototype._mouseStart = function(event, overrideHandle, noActivation) {
+        this._trigger("CustomBeforeStart", event, this._uiHash());
+        draggable_oldMouseStart.apply(this, [event, overrideHandle, noActivation]);
+    };
+}
+
+
+(function($) {
+
+    var DATA_ITEMS_SELECTOR = ">div.dov-content>div[dataid]";
+    var entityMap = {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': '&quot;',
+      "'": '&#39;',
+      "/": '&#x2F;'
+    };
+
+    function escapeHtml(string) {
+      return String(string).replace(/[&<>"'\/]/g, function (s) {
+        return entityMap[s];
+      });
+    }
+
+    function formatUnicorn(template, arguments) {
+      var str = template.toString();
+      for (arg in arguments) {
+        str = str.replace(RegExp("\\{" + arg + "\\}", "gi"), arguments[arg]);
+      }        
+      return str;
+    }
+
+    function getObjID(obj){
+      var id = obj.attr("id");
+      return id.substring(2);
+    }
+
+    function markElementAsLoading(obj){
+      var loading_helper = $('>.loading-helper',obj);
+      if (loading_helper.size() === 0) {
+        loading_helper = $('<div class="loading-helper" style="width:100%; height:100%"></div>').css({
+          position:'absolute',
+          opacity:0.9
+        }).hide();
+        obj.append(loading_helper);
+      }
+      obj.addClass("loading");
+      loading_helper.fadeIn(100);
+    }
+
+    function unmarkElementAsLoading(obj){
+      var loading_helper = $('>.loading-helper',obj);
+      if (loading_helper.size() > 0) {
+          loading_helper.fadeOut(100);
+      }
+      obj.removeClass("loading");
+    }
+
+    function makeItemDiv(itemID, vdomDOV) {
+      var itemStyle = $(DATA_ITEMS_SELECTOR + ':first', vdomDOV).attr('style');
+      return '<div dataid="'+escapeHtml(itemID)+'" class="not-loaded" style="'+itemStyle+'"></div>';
+    }
+
+    function elementsInDiv(vdomDOV, selector){
+      var result = [];
+      var items = $(selector, vdomDOV);
+
+      var objPosition = vdomDOV.position();
+      var objScrollTop = vdomDOV.scrollTop();
+      var objTop = (objPosition == null) ? 0 : objPosition.top;
+
+      if (vdomDOV.parent()) {
+        var parent = vdomDOV.parent();
+        var parentPosition = parent.position();
+        objTop += (parentPosition == null) ? 0 : parentPosition.top;
+      }
+
+      var objHeight = vdomDOV.outerHeight(true) + objTop;
+      var objBottom = objHeight + objScrollTop + objTop;
+
+      items.each(function(){
+          var $element = $(this);
+          if ($element.hasClass('not-loaded')){
+            var elOffset = $element.offset();
+            var elTop = elOffset.top;
+            var elBottom = elOffset.top + $element.outerHeight(true);
+
+            if ((elTop >= 0 && elTop <= objHeight) || (elBottom <= objHeight && elBottom >= 0)){
+              result.push(this);
+            }
+          }
+      });
+      return $(result);
+    }
+
+    function requestElements(vdomDOV) {
+      var elements = elementsInDiv(vdomDOV, DATA_ITEMS_SELECTOR);
+      var ids = [];
+      if (elements.size() > 0) {
+        elements.each(function(){
+          ids.push($(this).attr('dataid'));
+        });
+        execEventBinded(getObjID(vdomDOV), "itemsrequest", {idlist: ids});
+      }
+    }
+
+    function toogleSelection(item){
+      if (item.hasClass('selected')){
+        item.removeClass('selected');
+      } else {
+        item.addClass('selected');
+      }
+    }
+
+    function raiseItemSelectedEvent(vdomDOV){
+      execEventBinded(getObjID(vdomDOV), "itemsselected", {idlist: vdomDOV.dynamicObjectView("getSelectedIDs")});
+    }
+
+    function getE2VDOMClickEventHandler(objID, options){
+
+        return function(evt, obj, is_dbl, is_ctrl){
+
+            var is_child = false;
+            var div_obj;
+            var vdomDOV = jQuery("#o_"+objID);
+
+            if (!(obj.get(0).nodeName.toLowerCase() == "div" && obj.attr("dataid"))){
+                is_child = true;
+                div_obj = obj.closest("div[dataid]");
+            } else {
+                div_obj = obj;
+            }
+
+            var item_id = div_obj.attr("dataid");
+            var evt_name = (is_child ? "child": "") + "item" +
+                           (is_ctrl  ? "ctrl" : "") +
+                           (is_dbl   ? "dbl"  : "") + "click";
+
+            if (!is_child){
+                var selectOn = options['clickAndSelect'];
+                var need_select = (selectOn == "ctrldblclick" && is_dbl && is_ctrl) ||
+                                  (selectOn == "dblclick" && is_dbl) ||
+                                  (selectOn == "ctrlclick" && is_ctrl) ||
+                                  (selectOn == "click");
+
+                if (need_select){
+                    if (options['multiSelection']){
+                        vdomDOV.dynamicObjectView("toogleSelection", [item_id]);
+                    }
+                    else {
+                        vdomDOV.dynamicObjectView("markAsSelected", [item_id]);
+                    }
+                }
+             }
+
+            var params = {
+                "itemid":  item_id,
+                "idlist": vdomDOV.dynamicObjectView("getSelectedIDs"),
+                "X": evt.pageX,
+                "Y": evt.pageY,
+                "child": is_child ? JSON.stringify({"class": obj.attr("class")}) : ""
+            };
+
+            //vdomDOV.dynamicObjectView("markAsActive", item_id);
+            execEventBinded(objID, evt_name, params);
+        };
+    }
+
+    var methods = {
+
+        markAsSelected: function(ids, start, length, raiseEvent){
+          if (typeof ids === "undefined" && typeof start === "undefined"){
+            $(DATA_ITEMS_SELECTOR, this).addClass('selected');
+          
+          } else if (ids) {
+            for (var x in ids) {
+              $('>div.dov-content>div[dataid="' + escapeHtml(ids[x]) +'"]', this).addClass('selected');
+            }           
+          
+          } else if (start) {
+            $('>div.dov-content>div[dataid]', this).slice(start, start + length).addClass('selected');
+          }
+          
+          if (raiseEvent) {
+            raiseItemSelectedEvent(this);
+          }
+        },
+
+        unmarkAsSelected: function(ids, start, length, raiseEvent){
+          if (typeof ids === "undefined" && typeof start === "undefined"){
+            $(DATA_ITEMS_SELECTOR + '.selected', this).removeClass('selected');
+          
+          } else if (ids) {
+            for (var x in ids) {
+              $('>div.dov-content>div[dataid="'+ escapeHtml(ids[x]) +'"].selected', this).removeClass('selected');
+            }           
+          
+          } else if (start) {
+            $('>div.dov-content>div[dataid]', this).slice(start, start + length).removeClass('selected');
+          }
+          
+          if (raiseEvent) {
+            raiseItemSelectedEvent(this);
+          }
+        },
+
+        getSelectedIDs: function(){
+          ids = [];
+          $(DATA_ITEMS_SELECTOR + '.selected', this).each(function(){
+            ids.push($(this).attr('dataid'));
+          });
+          return ids;
+        },
+
+        getSelectedItems: function(){
+          return $(DATA_ITEMS_SELECTOR + '.selected', this);
+        },
+
+        toogleSelection: function(ids, start, length, raiseEvent){
+          if (typeof ids === "undefined" && typeof start === "undefined"){
+            $(DATA_ITEMS_SELECTOR, this).each(function(){
+              toogleSelection($(this));
+            });
+
+          } else if (ids) {
+            for (var x in ids) {
+              toogleSelection($('>div.dov-content>div[dataid="'+ escapeHtml(ids[x]) +'"]', this));
+            }           
+          
+          } else if (start) {
+            $(DATA_ITEMS_SELECTOR, this).slice(start, start + length).each(function(){
+              toogleSelection($(this));
+            });
+          }
+          
+          if (raiseEvent) {
+            raiseItemSelectedEvent(this);
+          }
+        },
+
+        markAsActive: function(itemid) {
+          $('>div.dov-content>div.dov-item-active', this).removeClass('dov-item-active');
+          $('>div.dov-content>div[dataid="'+ escapeHtml(itemid) +'"]', this).addClass('dov-item-active');
+        },
+
+        unmarkAsActive: function(itemid) {
+          if (itemid) {
+            var new_elem = $('>div.dov-content>div[dataid="'+ escapeHtml(itemid) +'"]', this);
+            if (new_elem.length) {
+              $('>div.dov-content>div.dov-item-active', this).removeClass('dov-item-active');
+              new_elem.addClass('dov-item-active');
+            }
+          } else {
+             $('>div.dov-content>div.dov-item-active', this).removeClass('dov-item-active');
+          }
+        },
+
+        markAsLoading: function(ids, start, length){
+          if (typeof ids === "undefined" && typeof start === "undefined"){
+            $(DATA_ITEMS_SELECTOR, this).each(function(){
+                markElementAsLoading($(this));
+            });
+
+          } else if (ids) {
+            for (var x in ids) {
+              $('>div.dov-content>div[dataid="'+ escapeHtml(ids[x]) +'"]', this).each(function(){
+                markElementAsLoading($(this));
+              });
+            }           
+          
+          } else if (start) {
+            $(DATA_ITEMS_SELECTOR, this).slice(start, start + length).each(function(){
+                markElementAsLoading($(this));
+            }); 
+          }
+        },
+
+        unmarkAsLoading: function(ids, start, length){
+          if (typeof ids === "undefined" && typeof start === "undefined"){
+            $(DATA_ITEMS_SELECTOR + '.loading', this).each(function(){
+                unmarkElementAsLoading($(this));
+            });
+
+          } else if (ids) {
+            for (var x in ids) {
+              $('>div.dov-content>div[dataid="'+ escapeHtml(ids[x]) +'"].loading', this).each(function(){
+                unmarkElementAsLoading($(this));
+              });
+            }           
+
+          } else if (start) {
+            $(DATA_ITEMS_SELECTOR + '.loading', this).slice(start, start + length).each(function(){
+                unmarkElementAsLoading($(this));
+            });
+          }
+        },
+
+        getLoadingIDs: function(){
+            ids = [];
+            $(DATA_ITEMS_SELECTOR + '.loading', this).each(function(){
+                ids.push($(this).attr('dataid'));
+            });
+            return ids;
+        },
+
+        getLoadingItems: function(){
+            return $(DATA_ITEMS_SELECTOR + '.loading', this);
+        },
+
+        reload: function(ids){
+          if (typeof ids === "undefined" && typeof start === "undefined"){
+            $(DATA_ITEMS_SELECTOR, this).remove();
+            execEventBinded(getObjID(this), "itemsrequest", {idlist: ""});
+          } else {
+            this.dynamicObjectView("markAsLoading", ids);
+          }
+        },
+
+        insertHTMLAtEnd: function(html){
+          $(">div.dov-content>span.dov-eoi", this).before($('>div[dataid]', html));
+          execEventBinded(getObjID(this), "itemsloaded", {idlist: ""});
+          requestElements(this);
+        },
+
+        insertHTMLAtBegining: function(html){
+          var begining = $('>div.dov-content>div:first', this);
+          if (begining.size() <= 0){
+            begining = $(">div.dov-content>span.dov-eoi", this);
+          }
+          begining.before($('>div[dataid]', html));
+          execEventBinded(getObjID(this), "itemsloaded", {idlist: ""});
+          requestElements(this);
+        },
+
+        insertHTMLAfter: function(elemID, html){
+          var elem = $(">div.dov-content>div[dataid="+ escapeHtml(elemID) +"]", this);
+          $(html, this).insertAfter(elem);
+          execEventBinded(getObjID(this), "itemsloaded", {idlist: ""});
+          requestElements(this);
+        },
+
+        insertHTMLBefore: function(elemID, html){
+          var elem = $(">div.dov-content>div[dataid="+ escapeHtml(elemID) +"]", this);
+          $(html, this).insertBefore(elem);
+          execEventBinded(getObjID(this), "itemsloaded", {idlist: ""});
+          requestElements(this);
+        },
+
+        insertAtBeginning: function(items){
+          var begining = $(DATA_ITEMS_SELECTOR + ':first', this);
+          if (begining.size() <= 0){
+            begining = $(">div.dov-content>span.dov-eoi", this);
+          }
+          for (var i in items){
+            $(makeItemDiv(items[i], this)).insertBefore(begining);
+          }
+          execEventBinded(getObjID(this), "itemsloaded", {idlist: ""});
+          requestElements(this);
+        },
+
+        insertAtEnd: function(items){
+          var endning = $(">div.dov-content>span.dov-eoi", this);
+          for (var i in items){
+            $(makeItemDiv(items[i], this)).insertBefore(endning);
+          }
+          execEventBinded(getObjID(this), "itemsloaded", {idlist: ""});
+          requestElements(this);
+        },
+
+        insertBefore: function(elemID, items){
+          var elem = $(">div.dov-content>div[dataid="+ escapeHtml(elemID) +"]", this);
+          if (elem.size() > 0){
+            for (var i in items){
+              $(makeItemDiv(items[i], this)).insertBefore(elem);
+            }
+            execEventBinded(getObjID(this), "itemsloaded", {idlist: ""});
+            requestElements(this);         
+          }
+        },
+
+        insertAfter: function(elemID, items){
+          var elem = $(">div.dov-content>div[dataid="+ escapeHtml(elemID) +"]", this);
+          if (elem.size() > 0){
+            for (var i in items){
+              $(makeItemDiv(items[i], this)).insertAfter(elem);
+            }
+            execEventBinded(getObjID(this), "itemsloaded", {idlist: ""});
+            requestElements(this);       
+          }
+        },
+
+        removeItems: function(ids, start, length, raiseEvent){
+          if (typeof ids === "undefined" && typeof start === "undefined"){
+            $(DATA_ITEMS_SELECTOR, this).remove();
+          
+          } else if (ids) {
+            for (var x in ids) {
+              $('>div.dov-content>div[dataid="'+ escapeHtml(ids[x]) +'"]', this).remove();
+            } 
+
+          } else if (start) {
+            $(">div.dov-content>div[dataid]", this).slice(start, start + length).remove();
+          }
+          
+          if (raiseEvent) {
+            raiseItemSelectedEvent(this);
+          }
+        },
+
+        init: function(options){
+        
+            var domID = this.attr("id");
+            var objID = getObjID(this);
+            var raiseClickEvent = getE2VDOMClickEventHandler(objID, options);
+
+            var click_function = function(e){
+                if (e.preventDefault){
+                    e.preventDefault();
+                } else {
+                    e.returnValue = false;
+                }
+
+                var $this = $(this);
+                if (e.type == 'dblclick') {
+                    $this.data('isSingleClick', false);
+                    if (e.ctrlKey || e.metaKey){
+                        raiseClickEvent(e, $this, true, true);
+                    } else {
+                        raiseClickEvent(e, $this, true, false);
+                    }
+                } else {
+                    setTimeout(function(){
+                        if ($this.data('isSingleClick') == true){
+                            if (e.ctrlKey || e.metaKey){
+                              raiseClickEvent(e, $this, false, true);
+                            } else {
+                              raiseClickEvent(e, $this, false, false);
+                            }
+                        }
+                    }, 300);
+                    $this.data('isSingleClick', true);
+                }
+                return false;
+            }
+
+            var click_events = 'click dblclick';
+            var base_selector = DATA_ITEMS_SELECTOR.substring(1);
+
+            if (options["clickClasses"]){
+                var classes = options["clickClasses"];
+
+                for (var i in classes){
+                    var elem = base_selector + " " + classes[i];
+                    this.undelegate(elem, click_events).delegate(elem, click_events, click_function);
+                }
+            }
+            this.undelegate(base_selector, click_events).delegate(base_selector, click_events, click_function);
+            
+            this.undelegate(base_selector, 'mouseover').delegate(base_selector, 'mouseover', function(e){
+                execEventBinded(objID, "itemmouseout", {itemid: $(this).attr("dataid")});
+                return false;
+            });
+
+            this.undelegate(base_selector, 'mouseout').delegate(base_selector, 'mouseout', function(e){
+                execEventBinded(objID, "itemmouseout", {itemid: $(this).attr("dataid")});
+                return false;
+            });
+
+            if (options["dragndrop"]){
+                var dragndropOptions = {
+                  connectToDynatree: true,
+                  appendTo: 'body',
+                  containment: 'document',
+                  zIndex: 99999,  
+                  cursor: 'default',
+                  cursorAt: {
+                    left: -2,
+                    top: 4
+                  },
+                  start: function(e,u) {
+                    execEventBinded(objID, "dragstart", {idlist: $(this).hasClass("selected") ?  jQuery("#"+domID).dynamicObjectView("getSelectedIDs") : new Array($(this).attr('dataid'))}, true);
+                  },
+                  connectToSortable: domID,
+                  revert: "invalid",
+                  revertDuration: 200,
+                  opacity: 1,
+                  helper: function(ev, el) {
+                    var $target = $(ev.currentTarget);
+                    if (options["dragndropHelper"] == "clone" || ! $target.hasClass("selected")) {
+                      return $(ev.currentTarget).clone();
+                    }
+                    return $(formatUnicorn(options["dragndropHelper"], {"selectedItems": jQuery("#"+domID).dynamicObjectView("getSelectedIDs").length}));
+                  },
+                  CustomBeforeStart: function(e, u){
+                    if (jQuery("#"+domID).dynamicObjectView("getSelectedIDs").length > 1) {
+                      jQuery("#"+domID).sortable("disable");
+                    } else {
+                      jQuery("#"+domID).sortable("enable");
+                    }
+                  }
+                };
+
+                this.undelegate(base_selector, "mouseover").delegate(base_selector, "mouseover", function(e){
+                  if (!$(this).data("initdrag")) {
+                    $(this).data("initdrag", true).draggable(dragndropOptions);
+                  }
+                });
+            }
+
+           if (options["dragnsort"]){
+                var sortOptions = {
+                    items: 'div[dataid]',
+                    stop: function(e, u){
+                      execEventBinded(objID, "itemsort", {position: u.item.index(), itemid: u.item.attr('dataid')});
+                    },
+                    receive: function(e, u) {
+                      u.item.remove();
+                    }
+                };
+
+                this.undelegate(base_selector, "mouseover").delegate(base_selector, "mouseover", function(e){
+                  if (!$(this).data("initsort")) {
+                    $(this).data("initsort", true).sortable(sortOptions);
+                  }
+                });
+            }
+
+            if (options["dynamicLoading"]){
+                this.unbind('scrollstop resize').bind('scrollstop resize', function() {
+                    var vdomDOV = jQuery("#"+domID);
+                    var jquery_content = $('>div.dov-content', vdomDOV);
+                    var can_load = jquery_content.outerHeight() - vdomDOV.innerHeight() - vdomDOV.scrollTop() <= 30;
+                    if (can_load) {
+                      execEventBinded(getObjID(vdomDOV), 'endscroll', {position: "bottom"});
+                    } else if (vdomDOV.scrollTop() == 0){
+                      execEventBinded(getObjID(vdomDOV), 'endscroll', {position: "top"});
+                    }
+                    //requestElements(vdomDOV);
+                });
+                //requestElements(this);
+            }
+
+            if (jQuery(DATA_ITEMS_SELECTOR, this).length){
+                execEventBinded(getObjID(this), "itemsloaded", {idlist: ""});
+            }
+        }
+    }
+
+    $.fn.dynamicObjectView = function(method){
+        if (methods[method]){
+            return methods[method].apply(this, Array.prototype.slice.call(arguments, 1));
+        } else if (typeof method == 'object' || ! method ) {
+            return methods.init.apply(this, arguments);
+        } else {
+            $.error("Dynamic object view: unknown method " + method);
+        }
+    };
+}(jQuery));

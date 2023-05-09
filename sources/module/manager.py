@@ -171,8 +171,8 @@ class VDOM_module_manager(object):
     def process_request(self, request_object):
         """process request"""
         script_name = request_object.environment().environment()["SCRIPT_NAME"]
-        if "127.0.0.1" != request_object.handler().client_address[0]:
-            debug("Requested URL: '" + script_name + "'")
+ #       if "127.0.0.1" != request_object.handler().client_address[0]:
+ #           debug("Requested URL: '" + script_name + "'")
         # dirty HACK!!!
  #       print("===========================")
  #       print(str(request_object))
@@ -193,13 +193,26 @@ class VDOM_module_manager(object):
             request_object.add_header("Content-Length", str(len(data)))
             return (None, data)
         if "/favicon.ico" == script_name:
+    #        print("======================")
             app = request_object.application()
             if not app or not app.icon:
                 return (404, None)
             try:
                 request_object.environment().environment()["REQUEST_URI"] = "/%s.res" % app.icon
-                module = VDOM_module_resource()
-                return (None, module.run(request_object, "res"))
+              #  pathIcon = str(os.path.join(os.getcwd()[0:-7], managers.file_manager.locate(category = file_access.RESOURCE, owner = resource.application_id, name = resource.id)[3:])))
+    #  print("getting /" + app.id + "/%s.res" % app.icon)
+              #  try:
+              #      print("++++++++")
+                    #print("Dirs = " + str(os.listdir("../resources")))
+              #      stats = os.stat("../resources/" + app.id + "/" + app.icon)
+                    
+              #      print("file size is " + str(stats.st_size))
+              #  except Exception as e:
+              #      print("read file error = " + str(e))
+     #           module = VDOM_module_resource()
+     #           return (None, module.run(request_object, "res"))
+                return (25, str(os.getcwd()[0:-7] + "resources/") + str(request_object.app_id()) + str(request_object.environment().environment()["REQUEST_URI"].split(".")[0]))
+     #           return (25, "/resources/" + app.id + "/" + app.icon + ".res")
             except Exception as e:
                 debug(_("Module manager: resource module error: %s") % str(e))
                 return (404, None)
@@ -392,10 +405,21 @@ class VDOM_module_manager(object):
 
         elif request_type:# pass to resource module
             module = VDOM_module_resource()
-            ret = module.run(request_object, request_type)
+            (ret, path) = module.run(request_object, request_type)
+
+        #    print("request object = " + str(request_object.environment().environment()["REQUEST_URI"].split(".")[0]))
+        #    print("request app id = " + str(request_object.app_id()))
+      #      try:
+     #           uwsgi.sendfile("test.txt")
+      #      except Exception as e:
+      #          print("Error = " + str(e))
+            
  #           print("===========================")
  #           print(str(request_object))
  #           print("===========================")
-            return (None, ret) if ret else (404, None)
+  #          print("path want = " + str(request_object.app_id()) + str(request_object.environment().environment()["REQUEST_URI"].split(".")[0]))
+            
+            return (25, path)
+ #           return (None, ret) if ret else (404, None)
 
         return (404, None)

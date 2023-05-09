@@ -1,0 +1,18 @@
+<svg width="13" height="16" viewBox="0 0 13 16" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<title>lock</title>
+<desc>Created using Figma</desc>
+<g id="Canvas" transform="translate(1776 -12355)">
+<g id="lock">
+<g id="Vector">
+<use xlink:href="#path0_stroke" transform="translate(-1774.46 12362.3)" fill="#6496CB"/>
+</g>
+<g id="Vector">
+<use xlink:href="#path1_stroke" transform="translate(-1773.14 12356.5)" fill="#6496CB"/>
+</g>
+</g>
+</g>
+<defs>
+<path id="path0_stroke" d="M 0 -1.04183e-07L 0 -1L -1 -1L -1 -1.04183e-07L 0 -1.04183e-07ZM 10 -1.04183e-07L 11 -1.04183e-07L 11 -1L 10 -1L 10 -1.04183e-07ZM 10 7.15546L 10 8.15546L 11 8.15546L 11 7.15546L 10 7.15546ZM 0 7.15546L -1 7.15546L -1 8.15546L 0 8.15546L 0 7.15546ZM 0 1L 10 1L 10 -1L 0 -1L 0 1ZM 9 -1.04183e-07L 9 7.15546L 11 7.15546L 11 -1.04183e-07L 9 -1.04183e-07ZM 10 6.15546L 0 6.15546L 0 8.15546L 10 8.15546L 10 6.15546ZM 1 7.15546L 1 -1.04183e-07L -1 -1.04183e-07L -1 7.15546L 1 7.15546Z"/>
+<path id="path1_stroke" d="M 1 5.84454L 1 3.65966L -1 3.65966L -1 5.84454L 1 5.84454ZM 1 3.65966C 1 2.19649 2.19507 1 3.68132 1L 3.68132 -1C 1.10164 -1 -1 1.08082 -1 3.65966L 1 3.65966ZM 3.68132 1C 5.16757 1 6.36264 2.19649 6.36264 3.65966L 8.36264 3.65966C 8.36264 1.08082 6.261 -1 3.68132 -1L 3.68132 1ZM 6.36264 3.65966L 6.36264 5.84454L 8.36264 5.84454L 8.36264 3.65966L 6.36264 3.65966Z"/>
+</defs>
+</svg>

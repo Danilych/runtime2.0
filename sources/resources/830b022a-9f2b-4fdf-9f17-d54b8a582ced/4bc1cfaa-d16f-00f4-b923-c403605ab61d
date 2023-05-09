@@ -1,0 +1,12 @@
+<svg width="6" height="8" viewBox="0 0 6 8" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<title>arrleft</title>
+<desc>Created using Figma</desc>
+<g id="Canvas" transform="translate(1846 -12844)">
+<g id="arrleft">
+<use xlink:href="#path0_fill" transform="matrix(6.12323e-17 1 -1 6.12323e-17 -1840.77 12844.9)" fill="#FFFFFF"/>
+</g>
+</g>
+<defs>
+<path id="path0_fill" d="M 7 0L 0 0L 3.47552 5L 7 0Z"/>
+</defs>
+</svg>

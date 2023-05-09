@@ -1,0 +1,18 @@
+<svg width="20" height="20" viewBox="0 0 20 20" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<title>clear</title>
+<desc>Created using Figma</desc>
+<g id="Canvas" transform="translate(1401 -12364)">
+<g id="clear">
+<g id="Subtract">
+<use xlink:href="#path0_fill" transform="matrix(0.707107 0.707107 -0.707107 0.707107 -1387.26 12364.2)" fill="#6496CB"/>
+</g>
+<g id="Line 8">
+<use xlink:href="#path1_stroke" transform="translate(-1390.75 12382.9)" fill="#6496CB"/>
+</g>
+</g>
+</g>
+<defs>
+<path id="path0_fill" fill-rule="evenodd" d="M 3.00002 0C 1.34361 0.0005179 0.0005179 1.34361 0 3.00002L 0.000604217 11.9708L 8.68519 11.9704L 8.6851 3.00046C 8.68493 1.34335 7.34184 0.00025895 5.68473 8.63167e-05L 3.00002 0ZM 8.6851 13.7645L 0.000604217 13.7648L 0.000431584 15.8919C -2.2049e-13 17.5482 1.34309 18.8913 3.00011 18.8915L 5.68491 18.8915C 7.34193 18.8918 8.6851 17.5486 8.68493 15.8915L 8.6851 13.7645Z"/>
+<path id="path1_stroke" d="M 0 0L 8.34294 0L 8.34294 -1L 0 -1L 0 0Z"/>
+</defs>
+</svg>

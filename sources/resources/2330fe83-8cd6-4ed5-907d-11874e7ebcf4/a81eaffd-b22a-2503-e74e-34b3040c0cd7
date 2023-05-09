@@ -1,0 +1,551 @@
+/**
+ * helpers for HTMLContainer
+ * lmd: 2012-07-17
+ * 3ef16f3c-9863-9597-f341-8f9913c99c11.res
+ */
+
+if(!window.console){var names=["log","debug","info","warn","error","assert","dir","dirxml","group","groupEnd","time","timeEnd","count","trace","profile","profileEnd"];window.console={};for(var i=0;i<names.length;++i)window.console[names[i]]=function(){}}
+
+var $q = jQuery;
+
+function function_exists(function_name) {
+	if (typeof function_name == 'string'){
+		return (typeof window[function_name] == 'function');
+	} else{
+		return (function_name instanceof Function);
+	}
+}
+
+function type(o){
+	return !!o && Object.prototype.toString.call(o).match(/(\w+)\]/)[1];
+}
+
+(function(){
+	var types = ['Array','Function','Object','String','Number'],
+		typesLength = types.length;
+	while (typesLength--) {
+		window['is' + types[typesLength]] = (function(type){
+			return function(o) {
+				return !!o && ( Object.prototype.toString.call(o) === '[object ' + type + ']' );
+			}
+		})(types[typesLength]);
+	}
+})();
+
+function windowHeight()
+{
+	var de = document.documentElement;
+	return self.innerHeight || (de && de.clientHeight) || document.body.clientHeight;
+}
+
+function windowWidth()
+{
+	var de = document.documentElement;
+	return self.innerWidth || (de && de.clientWidth) || document.body.clientWidth;
+}
+
+var hchw = hchml = hchcentered = 0;
+
+function hchShowPage(pc)
+{
+	hchcentered = parseInt(pc,10) > 0 ? 1 : 0;
+	var h = w = divw = divh = 1;
+	var ii, aa = new Array();
+	$q("#container>div").each(function(i){
+		var t = $q(this);
+		divh = t.height()  + (parseInt(t.offset().top,10) || 0);
+		h = divh > h ? divh : h;
+		divw = t.width() + (parseInt(t.css('left'),10) || 0);
+		w = divw > w ? divw : w;
+		aa[i] = w;/*fantastic trick*/
+		ii = i;
+	});
+	$q("#container").height(h).width(w).css({ width: w });
+	w = aa[ii];
+	hchw = w;
+	hchml = (w / 2) * (-1);
+	hchFixCentered();
+//	$q(window).resize(function(){
+//		hchFixCentered();
+//	});
+	$q("div[rel$=footer]").css("top", h);
+}
+
+function hchFixCentered()
+{
+	if (hchcentered > 0) {
+		$q("#container").css({ position: 'relative', margin: '0 auto' });
+	} else {
+		$q("#container").css({ position: 'absolute', left: 0, marginLeft: 0 });
+	}
+}
+
+function hchInit(cen,col,wid)
+{
+	hchcentered = parseInt(cen,10) > 0 ? true : false;
+	if (hchcentered) {
+		document.body.style.overflow='hidden';
+		document.write('<div id="hch_loa" style="z-index:99999;position:absolute;width:'+windowWidth()+'px;height:'+windowHeight()+'px;top:0;left:0;background-color:'+col+'"></div>');
+	}
+	$q(function(){
+		hchShowPage(cen);
+		if (hchcentered) {
+			$q('#hch_loa').hide('fast');
+			document.body.style.overflow='auto';
+			$q(window).resize(function(){
+				hchFixCentered();
+			});
+		}
+		if (typeof vdom_ui_afterInit === 'function') vdom_ui_afterInit();
+	});
+}
+
+function hchSetEvents(id)
+{
+	$q(function(){
+		window.e2vdompageurl = window.location.href.split('#')[0];
+		$q(window).bind("popstate", function(e){
+			var returnLocation = window.location || history.location || document.location;
+			execEventBinded(id, "labelchanged", {label: returnLocation.hash.substring(1,returnLocation.hash.length)});
+		});
+		if (window.location.hash.length > 0) execEventBinded(id, "labelchanged", {label: window.location.hash.substring(1,window.location.hash.length)});
+		execEventBinded(id, "load", {
+			width: $q(window).width(),
+			height: $q(window).height(),
+			userAgent: navigator.userAgent,
+			language: navigator.language,
+			os: navigator.oscpu,
+			platform: navigator.platform,
+			cookie: (navigator.cookieEnabled) ? 1 : 0,
+			maxWidth: screen.width,
+			maxHeight: screen.height,
+			colors: screen.colorDepth
+		});
+		$q(window).resize(function(){
+			execEventBinded(id, "resize", {width: $q(window).width(), height: $q(window).height()});
+		});
+	});
+}
+
+function onloadInit()
+{
+/*
+	$q(function(){
+//		execEventBinded(APPLICATION_ID.replace(/\-/g, "_"), 'onload');
+
+		for (var i=0; i<o.eventEngine.eventDispatcher.eventArray.length; i++) {
+			if (o.eventEngine.eventDispatcher.eventArray[i].eventSrc == "o_"+srcID+":"+evtName) {
+				var nev = new VDOM_Event();
+				nev.srcObj = document.getElementById("o_"+srcID);
+				nev.name = evtName;
+				if (params != undefined) {
+					for (key in params) {
+						nev.addParameter(key, params[key]);
+					}
+//				for (var i=0;i<params.length;i++) {
+//					nev.addParameter(params[i].Name, params[i].Value);
+//				};
+				}
+				o.eventEngine.processEvent(nev);
+			}
+		}
+
+	});
+*/
+}
+
+
+/**
+ * E2VDOM: UI helpers for client actions
+ * lmd: 2009-02-10
+ */
+
+function vdom_evt_setvalue(o, value)
+{
+	$q(o.domCont).val(value).trigger("change");
+	var ve = new VDOM_Event();
+	ve.srcObj = o.domCont;
+	ve.name = 'valuechange';
+	ve.addParameter('itemValue', value);
+	o.execEvent(ve);
+}
+
+function vdom_ui_hide(obj, fade, zi, toparent)
+{
+	if ($q(obj).css('display')!='none') {
+		if (parseInt(fade,10) > 0) {
+			var n = $q(obj).queue('fx');
+			if (n.length <= 0) {
+				var nn = parseInt(fade,10);
+				$q(obj).fadeOut(nn);
+			}
+		} else {
+			obj.style.setProperty("display", "none", "important");
+		}
+		if (zi != undefined && parseInt(zi,10) > 0) {
+			if (toparent != undefined && parseInt(toparent,10) > 0) {
+				var o = obj.parentNode.style.zIndex;
+			} else {
+				var o = obj.style.zIndex;
+			}
+			o = zi;
+		}
+	}
+}
+
+function vdom_ui_show(obj, fade, zi, toparent, display='block')
+{
+	if ($q(obj).css('display')=='none') {
+		if (parseInt(fade,10) > 0) {
+			var n = $q(obj).queue('fx');
+			if (n.length <= 0) {
+				var nn = parseInt(fade,10);
+				$q(obj).stop().fadeIn(nn);
+			}
+		} else {
+			obj.style.display = display;
+		}
+		if (zi != undefined && parseInt(zi,10) > 0) {
+			if (toparent != undefined && parseInt(toparent,10) > 0) {
+				var o = $q(obj).parent();
+			} else {
+				var o = $q(obj);
+			}
+			o.css('z-index', zi);
+		}
+	}
+}
+
+function vdom_ui_moveZindexTo(obj, newz)
+{
+	obj.style.zindex = parseInt(newz,10);
+}
+
+function vdom_ui_moveTo(obj, newX, newY, Effect)
+{
+	var xx = parseInt(newX,10) + "px";
+	var yy = parseInt(newY,10) + "px";
+	if (parseInt(Effect,10) > 0) {
+		var n = $q(obj).queue('fx');
+		if (n.length <= 0) {
+			var num = parseInt(Effect,10);
+			$q(obj).animate( { left:xx, top:yy }, num )
+		}
+	} else {
+		obj.style.left = xx;
+		obj.style.top = yy;
+	}
+}
+
+function vdom_ui_addItem(obj, item, itemValue, selected)
+{
+	var x = obj.appendChild(document.createElement("option"));
+	x.value = $q.trim(itemValue);
+	x.innerHTML = item;
+	if (parseInt(selected,10) > 0) {
+		x.selected = true;
+	}
+}
+
+function vdom_ui_removeItem(obj, item, itemValue)
+{
+	if (obj.length > 0 && (item !== '' || itemValue !== '')) {
+		for (i = 0; i < obj.length; i++) {
+			var node = obj[i];
+			if (node) {
+				if (/option/i.test(node.nodeName)) {
+					var x1 = item !== '' ? (item == node.innerHTML ? true : false) : true;
+					var x2 = itemValue !== '' ? (itemValue == node.value ? true : false) : true;
+					if (x1 && x2) {
+						obj.removeChild(node);
+						break;
+					}
+				}
+			}
+		}
+	}
+}
+
+function vdom_ui_sortItem(obj, sort)
+{
+	var lb = obj;
+	var oldValue = lb[obj.selectedIndex].value;
+	arrTexts = new Array();
+	for(i=0; i < lb.length; i++) {
+		arrTexts[i] = lb.options[i].text+':'+lb.options[i].value;
+	}
+	arrTexts.sort();
+	var xx = sort > 0 ? lb.length - 1 : 0;
+	for (i=0; i < lb.length; i++) {
+		op = lb.options[xx - (xx-i < 0 ? 0 : xx-i)];
+		el = arrTexts[i].split(':');
+		op.text = el[0];
+		op.value = el[1];
+		if (oldValue == op.value) {
+			op.selected = true;
+		} else {
+			op.selected = false;
+		}
+	}
+}
+
+function vdom_ui_setButtonImage(obj, resourceUrl)
+{
+	var ob = $q(obj).find('img:first');
+	var iw = $q(ob).attr('width');
+	var ih = $q(ob).attr('height');
+	var isrc = resourceUrl;
+	var srcover = $q(ob).attr("srcover");
+	var iover = "this.src='" + srcover + "'";
+	var iout = "this.src='" + resourceUrl + "'";
+	$q(ob).replaceWith('<img width="'+iw+'" height="'+ih+'" border="0" alt="" src="'+isrc+'" srcover="'+srcover+'" onmouseover="'+iover+'" onmouseout="'+iout+'" />');
+}
+
+function vdom_ui_setButtonRollover(obj, resourceUrl)
+{
+	var ob = $q(obj).find('img:first');
+	var iw = $q(ob).attr('width');
+	var ih = $q(ob).attr('height');
+	var isrc = $q(ob).attr("src");
+	var srcover = resourceUrl;
+	var iover = "this.src='" + resourceUrl + "'";
+	var iout = "this.src='" + isrc + "'";
+	$q(ob).replaceWith('<img width="'+iw+'" height="'+ih+'" border="0" alt="" src="'+isrc+'" srcover="'+srcover+'" onmouseover="'+iover+'" onmouseout="'+iout+'" />');
+}
+
+function vdom_ui_setLink(obj, containerUrl)
+{
+	var ob = $q(obj).find('a:first');
+	$q(ob).attr('href', containerUrl);
+}
+
+function vdom_ui_unselect(obj)
+{
+	var a = obj.childNodes;
+	if (a.length) {
+		for (i = 0; i < a.length; i++) {
+			if (a[i].type == 'checkbox') {
+				a[i].checked = false;
+			}
+		}
+	}
+}
+
+function vdom_ui_select(obj)
+{
+	var a = obj.childNodes;
+	if (a.length) {
+		for (i = 0; i < a.length; i++) {
+			if (a[i].type == 'checkbox') {
+				a[i].checked = true;
+			}
+		}
+	}
+}
+
+function vdom_ui_addHTML(obj, value)
+{
+	tt = $q(obj).html(value) + value;
+	$q(obj).html(tt);
+}
+
+function vdom_ui_resizeTo(obj, width, height)
+{
+	obj.style.width = parseInt(newZindex,10);
+	obj.style.height = parseInt(newZindex,10);
+}
+
+/* drag */
+
+function vdom_ui_dragStart(obj)
+{
+	if (drag_current_obj !== null) {
+		dragStop_();
+	}
+	drag_current_obj = obj;
+	dragInit_(obj);
+}
+
+function vdom_ui_dragStop()
+{
+	dragStop_();
+}
+
+/**/
+
+function vdom_ui_setMenuHide(obj, msec, zi, toparent)
+{
+	$q('#'+obj.id).stopTime(obj.id);
+	$q('#'+obj.id).mouseover(function(e){
+		$q('#'+obj.id).stopTime(obj.id);
+	}).mouseout(function(){
+		$q('#'+obj.id).oneTime(msec, obj.id, function() {
+			$q('#'+obj.id).hide()
+			if (zi != undefined && parseInt(zi,10) > 0) {
+				if (toparent != undefined && parseInt(toparent,10) > 0) {
+					var o = $q(obj).parent();
+				} else {
+					var o = $q(obj);
+				}
+				o.css('z-index', zi);
+			}
+		});
+	});
+	$q('#'+obj.id).oneTime(msec, obj.id, function() {
+		$q('#'+obj.id).hide();
+		if (zi != undefined && parseInt(zi,10) > 0) {
+			if (toparent != undefined && parseInt(toparent,10) > 0) {
+				var o = $q(obj).parent();
+			} else {
+				var o = $q(obj);
+			}
+			o.css('z-index', zi);
+		}
+	});
+}
+
+/* resize */
+
+function vdom_ui_startResizeXY(obj)
+{
+//TODO: reset resizable if already binded
+	$q(obj).resizable({
+		transparent: true
+	});
+}
+
+function vdom_ui_startResizeX(obj)
+{
+	var th = $q(obj).height();
+	$q(obj).resizable({
+		transparent: true,
+		minHeight: th,
+		maxHeight: th
+	});
+}
+
+function vdom_ui_startResizeY(obj)
+{
+	var tw = $q(obj).width();
+	$q(obj).resizable({
+		transparent: true,
+		minWidth: tw,
+		maxWidth: tw
+	});
+}
+
+/* timer */
+
+function vdom_ui_timerStart(obj, interval)
+{
+	if (interval == undefined) interval = 500;
+	$q(obj).stopTime();
+	obj.timerfreeze = 0;
+	$q(obj).everyTime(interval, function(i){
+		if (parseInt(obj.timerfreeze,10) == 0) {
+			var vdomEvent = new VDOM_Event();
+			vdomEvent.srcObj = obj.domCont;
+			vdomEvent.name = 'timechange';
+			vdomEvent.addParameter('count', i);
+			vdomEvent.addParameter('time', new Date);
+			obj.execEvent(vdomEvent);
+		}
+	});
+}
+
+function vdom_ui_timerStop(obj)
+{
+	$q(obj).stopTime();
+}
+
+function vdom_ui_timerFreeze(obj, freeze)
+{
+	obj.timerfreeze = parseInt(freeze,10);
+}
+
+function vdom_ui_timerSetInterval(obj, interval)
+{
+	vdom_ui_timerStart(obj, interval);
+}
+
+/* calendar */
+
+function vdom_ui_calendarDateChange(o,d,m,y)
+{
+	execEventBinded(o, 'datechange', { day: d, month: m, year: y });
+}
+
+/*
+* @author iNils
+* @version 1.2 (20.07.07)
+* @adds Leo: coords in styles added
+*/
+function showFlash(o){
+	var bg,q,s,v;
+	if(o.bgcolor){bg=o.bgcolor;}else{bg="#FFFFFF";}
+	if(o.quality){q=o.quality;}else{q="high";}
+	if(o.scale){s=o.scale;}else{s="noscale";}
+	x=(o.x)?o.x:0;
+	y=(o.y)?o.y:0;
+	sty=(o.x||o.y)?'style="position:absolute;left:'+x+'px;top:'+y+'px;width:'+o.width+'px;height:'+o.height+'px"':'';
+	if(o.nocache=="true"){o.name+="?"+new Date().getTime();}
+	if(o.ver){v=o.ver;}else{v='9,0,0,0';}
+	var str='<object '+sty+' classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version='+v+'" ';
+	str+='id="'+o.id+'" ';
+	if(o.align){str+='align="'+o.align+'" ';}
+	str+='width="'+o.width+'" height="'+o.height+'"><param name="movie" value="'+o.name+'"/><param name="bgcolor" value="'+bg+'"/><param name="quality" value="'+q+'"/>';
+	if(o.base){str+='<param name="base" value="'+o.base+'"/>';}
+	if(o.flashvars){str+='<param name="flashvars" value="'+o.flashvars+'"/>';}
+	if(o.allowScriptAccess){str+='<param name="allowScriptAccess" value="'+o.allowScriptAccess+'"/>';}
+	if(o.salign){str+='<param name="salign" value="'+o.salign+'"/>';}
+	if(o.wmode){str+='<param name="wmode" value="'+o.wmode+'"/>';}
+	str+='<param name="scale" value="'+s+'"/><embed '+sty+' type="application/x-shockwave-flash" pluginspage="http://www.macromedia.com/go/getflashplayer" name="'+o.id+'" src="'+o.name+'" bgcolor="'+bg+'" ';
+	if(o.flashvars){str+='flashvars="'+o.flashvars+'" ';}
+	if(o.swLiveConnect){str+='swLiveConnect="'+o.swLiveConnect+'" ';}
+	if(o.allowScriptAccess){str+='allowScriptAccess="'+o.allowScriptAccess+'" ';}
+	str+='quality="'+q+'" ';
+	if(o.base){str+='base="'+o.base+'" ';}
+	if(o.wmode){str+='wmode="'+o.wmode+'" ';}
+	if(o.salign){str+='salign="'+o.salign+'" ';}
+	str+='scale="'+s+'" width="'+o.width+'" height="'+o.height+'"></embed></object>';
+//	document.writeln(str);
+	$q('body').append(str);
+}
+
+document.attachCP = [];
+document.attachCP.length = 0;
+
+function attachPickColor(id)
+{
+	$q(function(){
+		attachPickColorDo(id);
+	});
+}
+
+function attachPickColorDo(id)
+{
+	if($q.inArray(id,document.attachCP)<0){
+		document.attachCP.length++;document.attachCP[document.attachCP.length-1]=id;
+		var cp=$q('#'+id);
+		cp.colorpickered = true;
+		cp.ColorPicker({
+			onShow:function(cp){$q(cp).css('z-index',9999).fadeIn(100);return false;},
+			onSubmit:function(hsb,hex,rgb){
+				$q('#'+id).css('backgroundColor','#'+hex);
+				execEventBinded(id.substring(2, id.length),'changecolor',{color:'#'+hex});
+				$q('#'+id+'>span').text('#'+hex);
+				$q('#'+id).ColorPickerHidePicker();
+			}
+		});
+		cp.ColorPickerSetColor('#'+cp.find('span').text());
+	}
+}
+
+function vdom_ui_formSubmit(o)
+{
+	if (o.alreadySubmitted == undefined) {
+		o.alreadySubmitted = true;
+		return true;
+	}
+	return false;
+}

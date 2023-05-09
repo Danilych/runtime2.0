@@ -1,0 +1,1374 @@
+/* vdom_classes @ 2013-04-17 // changes for x-state @ 2011-11-09 v2 */
+
+/* xmlDOM v1.0 * http://outwestmedia.com/jquery-plugins/xmldom/ * 2009-04-06 * 1.0 */
+(function(a){if(window.DOMParser==undefined&&window.ActiveXObject){DOMParser=function(){};DOMParser.prototype.parseFromString=function(c){var b=new ActiveXObject("Microsoft.XMLDOM");b.async="false";b.loadXML(c);return b}}a.xmlDOM=function(b,h){try{var d=(new DOMParser()).parseFromString(b,"text/xml");if(a.isXMLDoc(d)){var c=a("parsererror",d);if(c.length==1){throw ("Error: "+a(d).text())}}else{throw ("Unable to parse XML")}}catch(f){var g=(f.name==undefined?f:f.name+": "+f.message);if(a.isFunction(h)){h(g)}else{a(document).trigger("xmlParseError",[g])}return a([])}return a(d)}})(jQuery);
+
+var
+    $j = jQuery,
+    /* ajax loader style */
+    css1 = {
+        'position': 'fixed',
+        'left': 0,
+        'bottom': 0,
+        'padding': '5px 10px',
+        'background': 'navy',
+        'border': '1px solid #fff',
+        'color': '#fff'
+    },
+    /* ajax error style */
+    css2 = {
+        'position': 'fixed',
+        'left': 0,
+        'bottom': 0,
+        'padding': '5px 10px',
+        'background': '#f00',
+        'border': '1px solid #fff',
+        'color': '#fff'
+    },
+    //e2vdomSV = (typeof E2VSV !== 'undefined') ? JSON.parse(E2VSV) : {};
+    e2vdomSV = (typeof E2VSV !== 'undefined') ? E2VSV : {},
+    e2vdomerrwin_html = '<div style="word-wrap:break-word;word-break:break-all;white-space:pre-wrap;z-index:99999;position:absolute;left:5px;bottom:20px;border:1px solid red;padding:10px 10px 20px 10px;max-width:70%;white-space:pre;font-family:courier new,monospace,courier;background:#ffe;opacity:0.95;-moz-box-shadow:0 0 10px rgba(0,0,0,0.5);-moz-webkit-shadow:0 0 10px rgba(0,0,0,0.5);box-shadow:0 0 10px rgba(0,0,0,0.5);display:none" id="e2vdomerrwin"></div>',
+    e2vdomerrwin_html_close = '<a style="position:absolute;bottom:2px;left:2px;font-weight:bold;outline:none;color:red" href="#" onclick="$j(this).parent().fadeOut(100);return false">close</a>',
+    e2vdomtext1 = 'Loading...',
+    e2vdomtext2 = 'Error!',
+    e2vdomloading = "<div id='e2vdomloading' style='z-index:99999'></div>",
+    e2vdomfade = true,
+    e2vdomloading_clearfade = function(){
+        vdomajaxloader.stop(true,true);
+        e2vdomfade = true;
+        if (typeof e2vlt !== 'undefined') { clearTimeout(e2vlt); }
+    },
+    e2vdom_event_counter = 0,
+    e2vdomindicator_counter = 0,
+    e2vdomindicator_showed = 0,
+    e2vdomindicator_hided = 0,
+    e2vdomindicator_show = function(){
+//console.info('called e2vdomindicator_show');
+        e2vdomindicator_counter++;
+        e2vdomindicator_showed++;
+        if (e2vdomindicator_counter > 0) {
+//console.info('shedule e2vdomindicator_show');
+            setTimeout(function(){
+//console.info('e2vdomindicator_show');
+                $j('#e2vdomindicator').show(0);
+            }, 10);
+        }
+    },
+    e2vdomindicator_hide = function(){
+//console.info('called e2vdomindicator_hide');
+        e2vdomindicator_counter--;
+        e2vdomindicator_hided++;
+        if (e2vdomindicator_counter < 0) e2vdomindicator_counter = 0;
+        if (e2vdomindicator_counter <= 0) {
+            if ($j('#e2vdomloading').is(':visible')) {
+//console.info('wait for loading hide');
+                setTimeout(e2vdomindicator_hide, 100);
+            } else {
+                //$j('#e2vdomindicator').hide(0);
+//console.info('shedule e2vdomindicator_hide');
+                setTimeout(function(){
+//console.info('e2vdomindicator_hide');
+                    $j('#e2vdomindicator').hide(0);
+                }, 10);
+            }
+        }
+    },
+    e2vdomloading_err = function(e){
+        e2vdomloading_clearfade();
+        e2vdomfade = false;
+        vdomajaxloader.css(css2).text(e2vdomtext2).attr('title','An error occured while communicating with the server');
+        var x = e || '', e2vd = (typeof E2VDEBUG !== 'undefined') ? (E2VDEBUG ? true : false) : false;
+        if (x != '' && e2vd) {
+            e2vdomerrwin.html(e2vdomerrwin_html_close).append(e);
+            $j(" <a href='#' onclick='var o=$j(\"#e2vdomerrwin\");if(o.is(\":visible\")){o.fadeOut(100);}else{$j(\"#e2vdomerrwin\").show();};return false' style='color:#ff0;padding-left:10px;outline:none'>show</a> &nbsp; <span>... " + $j.trim(e).split("\n").pop() + '</span>').appendTo(vdomajaxloader);
+        } else {
+            e2vlt = setTimeout( function(){ vdomajaxloader.fadeOut(); } , 5000);
+        }
+        vdomajaxloader.show(0);
+    },
+    e2vdomerrwin,
+    vdomajaxloader,
+    e2vdomAR = [],
+    e2vdomAfterResponse = function(s){ e2vdomAR.push(s); }
+    ;
+
+/* ajax loader indicator */
+$j(function(){
+    e2vdomerrwin = $j(e2vdomerrwin_html).hide().appendTo('body');
+    vdomajaxloader = $j(e2vdomloading).css('opacity',0.5).hide().appendTo('body').css(css1);
+    vdomajaxloader
+        .hover(function(){
+            $j(this).css('opacity',1);
+        },function(){
+            $j(this).css('opacity',0.5);
+        })
+        .ajaxStart(function(){
+            e2vdomloading_clearfade();
+            $j(this).text(e2vdomtext1).css(css1).show(0).attr('title','');
+            $j('body').addClass('loading');
+            //e2vdomindicator_show();
+        })
+        .ajaxStop(function(){
+            if (e2vdomfade) { $j(this).fadeOut(); }
+            var mz = get_max_zindex();
+            vdomajaxloader.css('z-index', ++mz);
+            e2vdomerrwin.css('z-index', ++mz);
+            $j('body').removeClass('loading');
+            //e2vdomindicator_hide();
+        })
+        .ajaxError(function(){
+            e2vdomloading_err('Server is not responding.');
+            $j(this).text('Server is not responding.');
+            $j('body').removeClass('loading');
+            //e2vdomindicator_hide();
+        })
+        ;
+});
+
+var
+    drag_current_obj = null,
+    drag_current_event = null,
+    drag_mouse_down = false,
+    drag_lastMouseX = 0,
+    drag_lastMouseY = 0,
+    drag_maxMouseX = 0,
+    drag_maxMouseY = 0,
+    drag_minMouseX = 0,
+    drag_minMouseY = 0,
+    border_last = '',
+    corner_last = '',
+    highestZindex = 0;
+
+
+/**
+ * HELPERS
+ */
+
+Array.prototype.toString = function () {
+    var i, result = "";
+    for (i = 0; i < this.length; i++) {
+        result += this[i] +", ";
+    }
+    if (result !== "") {
+        result = result.slice(0, -2);
+    }
+    return result;
+};
+
+function substr( f_string, f_start, f_length ) {
+    if(f_start < 0) { f_start += f_string.length; }
+    if(f_length === 'undefined') { f_length = f_string.length;
+    } else if(f_length < 0){  f_length += f_string.length;
+    } else { f_length += f_start; }
+    if(f_length < f_start) { f_length = f_start; }
+    return f_string.substring(f_start, f_length);
+}
+
+function bind(obj, func)
+{
+    return function(){ return func.apply(obj, arguments); };
+}
+
+/**
+ * Implements JSON stringify and parse functions
+ * v1.0
+ *
+ * By Craig Buckler, Optimalworks.net
+ *
+ * As featured on SitePoint.com
+ * Please use as you wish at your own risk.
+ *
+ * Usage:
+ *
+ * // serialize a JavaScript object to a JSON string
+ * var str = JSON.stringify(object);
+ *
+ * // de-serialize a JSON string to a JavaScript object
+ * var obj = JSON.parse(str);
+ */
+var JSON = JSON || {};
+JSON.stringify = JSON.stringify || function (obj) {
+    var t = typeof (obj);
+    if (t != "object" || obj === null) {
+        if (t == "string") { obj = '"'+obj+'"'; }
+        return String(obj);
+    } else {
+        var n, v, json = [], arr = (obj && obj.constructor == Array);
+        for (n in obj) {
+            v = obj[n]; t = typeof(v);
+            if (t == "string") { v = '"'+v+'"'; }
+            else if (t == "object" && v !== null) { v = JSON.stringify(v); }
+            json.push((arr ? "" : '"' + n + '":') + String(v));
+        }
+        return (arr ? "[" : "{") + String(json) + (arr ? "]" : "}");
+    }
+};
+JSON.parse = JSON.parse || function (str) {
+    if (str === "") str = '""';
+    eval("var p=" + str + ";");
+    return p;
+};
+
+/**
+ * vdomRegisterEventListener
+ * attaches an event listener function to DOM object
+ * @vdom            reference to a VDOM object
+ * @eType           string, representing an event(onload, onmousedown, etc)
+ * @eListener       function to be attached
+ * @useCapture      events must be captured at descending phase
+ */
+function vdomRegisterEventListener(vdom, eType, eListener, useCapture)
+{
+    var obj = vdom.domCont;
+    eType = eType.toLowerCase();
+    if (/opera/.test(navigator.userAgent.toLowerCase())) {
+        obj.addEventListener(eType, bind(vdom, eListener), false);
+    } else if (obj.attachEvent) { /*ie*/
+        obj.attachEvent('on'+eType, bind(vdom, eListener));
+    } else if (obj.addEventListener) { /*true browsers*/
+        obj.addEventListener(eType, bind(vdom, eListener), useCapture);
+    }
+/*  $j(obj).bind( eType, bind(vdom, eListener) ); */
+}
+
+function defPosition(event)
+{
+    var x = 0, y = 0;
+    if (document.attachEvent !== null) { /*ie & Opera*/
+        x = window.event.clientX + (document.documentElement.scrollLeft ? document.documentElement.scrollLeft : document.body.scrollLeft);
+        y = window.event.clientY + (document.documentElement.scrollTop ? document.documentElement.scrollTop : document.body.scrollTop);
+    } else if (!document.attachEvent && document.addEventListener) { /*Gecko*/
+        x = event.clientX + window.scrollX;
+        y = event.clientY + window.scrollY;
+    } else {
+    }
+    return {x:x, y:y};
+}
+
+function attachScript(inner)
+{
+    var s = document.createElement('script');
+    s.type = "text/javascript";
+    s.innerHTML = inner;
+    document.getElementsByTagName("body")[0].appendChild(s);
+}
+
+function str_explode(delimiter, string)
+{
+    var emptyArray = { 0: '' };
+    if (arguments.length != 2 || typeof arguments[0] === 'undefined' || typeof arguments[1] === 'undefined') { return null; }
+    if (delimiter === '' || delimiter === false || delimiter === null) { return false; }
+    if (typeof delimiter == 'function' || typeof delimiter == 'object' || typeof string == 'function' || typeof string == 'object') { return emptyArray; }
+    if (delimiter === true) { delimiter = '1'; }
+    return string.toString().split(delimiter.toString());
+}
+
+
+/**
+ * CLASSES
+ */
+
+/**
+ * VDOM_EventLink declaration
+ */
+function VDOM_EventLink(evtSrc, actTgt, actParams)
+{
+    this.eventSrc = evtSrc;
+    this.actionTgt = actTgt;
+    this.actionParams = actParams;
+}
+
+/**
+ * VDOM_EventDispatcher
+ */
+
+function VDOM_EventDispatcher()
+{
+    this.eventArray = [];
+}
+
+/**
+ * eventSrc      objectname:eventname (i.e. vdomobj1:mouseup)
+ * actionTgt     notation:
+ * actionParams  parameters for actions, in array []
+ */
+VDOM_EventDispatcher.prototype.addDispatchEvent = function(eventSrc, actionTgt, actionParams)
+{
+    for (var i = 0; i < this.eventArray.length; i++) {
+        if (this.eventArray[i].eventSrc == eventSrc && this.eventArray[i].actionTgt == actionTgt) {
+            return;
+        }
+    }
+    this.eventArray.push( new VDOM_EventLink(eventSrc, actionTgt, actionParams) );
+};
+
+/**
+ * Puts all the actions, associated with the given eventSrc into actList array
+ */
+VDOM_EventDispatcher.prototype.getActionList = function(eSrc)
+{
+    var actList = [];
+    for (var i = 0; i < this.eventArray.length; i++) {
+        if (this.eventArray[i].eventSrc == eSrc) {
+            actList.push(this.eventArray[i].actionTgt);
+        }
+    }
+    return actList;
+};
+
+
+/**
+ * VDOM_EventEngine
+ */
+
+function VDOM_EventEngine(ADispatcher, AQueue)
+{
+    this.eventDispatcher = ADispatcher;
+    this.Active = false;
+    this.EvtQueue = AQueue;
+}
+
+VDOM_EventEngine.prototype.start = function()
+{
+    this.Active = true;
+};
+
+VDOM_EventEngine.prototype.stop = function()
+{
+    this.Active = false;
+};
+
+
+/**
+ * evnt - VDOM_event object
+ */
+VDOM_EventEngine.prototype.sendToServer = function(evnt, que)
+{
+    if (!this.Active) { return false; }
+    if (!this.EvtQueue) { return false; }
+    this.EvtQueue.addEvent(evnt, que || false);
+};
+
+VDOM_EventEngine.prototype.parseParams = function(vdomEvent, paramStr, paramArray)
+{
+//console.info('parseParams: ', paramStr);
+    if (paramStr == "") { return; }
+    if (paramStr == "()") { return; }
+    if (paramStr[0] == '(') {
+        paramStr = paramStr.replace(/^\(/, "");
+        paramStr = paramStr.replace(/\)$/, "");
+    }
+    paramStr = paramStr.replace(/\\\"/g, "");
+    //var tempArray = paramStr.split(',');
+//console.info("var tempArray = ["+paramStr+"];");
+    //var ff_for_temp_replace = function(){};
+    //paramStr = paramStr.replace(/evt_param/g, "ff_for_temp_replace");
+    var evt_param = function (param_name) {
+        if (param_name == "evt_name") {
+            return vdomEvent.name;
+        } else if (param_name == "evt_src") {
+            return vdomEvent.srcObj;
+        } else if (param_name == "evt_ref") {
+            return vdomEvent;
+        } else {
+            return vdomEvent.paramByName(param_name);
+        }
+    };
+    try {
+        eval("var tempArray = ["+paramStr+"];");
+    } catch(ex) {
+        generateErrorEvent('ERROR parseParams on eval: '+paramStr+" // "+ex);
+        var tempArray = [];
+    }
+//console.info(tempArray);
+
+    if (tempArray.length > 0) {
+        var i, cur_param, evt_param;
+        for (i = 0; i < tempArray.length; i++) {
+            cur_param = tempArray[i];
+            //cur_param = cur_param.replace(/^\s+|\s+$/g, "");/*trim spaces*/
+            /*
+            evt_param = function (param_name) {
+                if (param_name == "evt_name") {
+                    return vdomEvent.name;
+                } else if (param_name == "evt_src") {
+                    return vdomEvent.srcObj;
+                } else if (param_name == "evt_ref") {
+                    return vdomEvent;
+                } else {
+                    return vdomEvent.paramByName(param_name);
+                }
+            };
+            */
+            if (cur_param != '()') {
+                //paramArray.push(eval(cur_param)); // error with ordinary parameters
+                eval('paramArray.push(cur_param);'); // error while JS is in clients actions, when use evt_param & etc. For fix this just use "" only when it needed.
+            }
+        }
+    }
+};
+
+VDOM_EventEngine.prototype.executeAction = function(act_str, evnt)
+{
+    /*act_str = action string in ":" notation from dispatcher, like object:action(params)
+    evnt - VDOM_event object*/
+    if (!this.Active) { return false; }
+    var re = /^(\w+)\:(\w+)\((.*)\)$/g;
+    re.lastIndex = 0;
+    var m = re.exec(act_str);
+    if (m !== null) {
+        var vdomObj = (typeof m[1] === 'undefined') ? null : eval(m[1]);
+        if (vdomObj === null || typeof vdomObj === 'undefined') {
+            generateErrorEvent("ERROR executeAction: Object '"+m[1]+"' does not exist !");
+            return false;
+        }
+        var actName = m[2];
+        var params = [];
+        this.parseParams(evnt, m[3], params);
+
+        /*executing action with parsed params*/
+        vdomObj[actName].apply(vdomObj, params);
+        /*try {
+            //vdomObj[actName].apply(vdomObj, params);
+        } catch(ex) {
+            generateErrorEvent('ERROR [executeAction] unrecognized vdomobj');
+        }*/
+
+    } else {
+        generateErrorEvent("Invalid action name: "+act_str);
+    }
+};
+
+VDOM_EventEngine.prototype.processEvent = function(evnt, que)
+{
+    /* evnt has type of VDOM_Event */
+    if (!this.Active) { return false; }
+
+    var act_str, actList = this.eventDispatcher.getActionList(evnt.getEventStr());
+    for (var i = 0; i < actList.length; i++) {
+        act_str = actList[i];
+        drag_current_event = evnt;
+        switch (act_str) {
+            case "server":
+//console.info('processEvent [server]: sendToServer: ', evnt );
+//window.e2vdom_event_counter++;
+//console.info('e2vdom_event_counter=',window.e2vdom_event_counter, ' event=', evnt.name);
+                this.sendToServer(evnt, que || false);
+                break;
+            default:
+//console.info('processEvent [client]: executeAction: ', act_str, evnt );
+//window.e2vdom_event_counter++;
+//console.info('e2vdom_event_counter=',window.e2vdom_event_counter, ' event=', evnt.name);
+                this.executeAction(act_str, evnt);
+                break;
+        }
+    }
+    this.EvtQueue.checkForSending();
+
+    //e2vdomindicator_hide();
+};
+
+
+/**
+ * VDOM_Param
+ */
+
+function VDOM_Param(name, value)
+{
+  this.Name = name;
+  this.Value = value;
+}
+
+
+/**
+ * VDOM_Event
+ * srcObj     // Field contains a reference to DOM object (not id)
+ * name       // Field contains a string - name of event
+ * parameters // Obviously this is array of parameters
+ */
+
+function VDOM_Event()
+{
+    this.srcObj = "";
+    this.name = "";
+    this.parameters = new Array();
+}
+
+VDOM_Event.prototype.addParameter = function(name, value)
+{
+    this.parameters.push( new VDOM_Param(name, value) );
+};
+
+/**
+ * return a name of event in ":" notation
+ * event dispatcher should store events in this notation
+ */
+VDOM_Event.prototype.getEventStr = function()
+{
+    return this.srcObj.id + ':'+this.name;
+};
+
+VDOM_Event.prototype.paramByName = function (AName)
+{
+    for (var i = 0; i < this.parameters.length; i++){
+        if (this.parameters[i].Name == AName) {
+            return this.parameters[i].Value;
+        }
+    }
+    return null;
+};
+
+
+/**
+ * VDOM_Object
+ */
+
+function VDOM_Object(contId, eEngine)
+{
+    var domElement = document.getElementById(contId) || null;
+    if (domElement !== null) {
+        this.domCont = domElement;
+        this.eventEngine = eEngine;
+        this['name'] = contId;
+        /*this.evtAssociation = new Array();*/
+        this.evtAssociation = [];
+        this.evtAssociation.mousemove   = {evtname:'mousemove', evtfunc:this.mousemove, evttyp:'mousemove'};
+        this.evtAssociation.mousedown   = {evtname:'mousedown', evtfunc:this.mousedown, evttyp:'mousedown'};
+        this.evtAssociation.mouseup     = {evtname:'mouseup', evtfunc:this.mouseup, evttyp:'mouseup'};
+        this.evtAssociation.mouseover   = {evtname:'mouseover', evtfunc:this.mouseover, evttyp:'mouseover'};
+        this.evtAssociation.mouseout    = {evtname:'mouseout', evtfunc:this.mouseout, evttyp:'mouseout'};
+        this.evtAssociation.click       = {evtname:'click', evtfunc:this.click, evttyp:'click'};
+        this.evtAssociation.dblclick    = {evtname:'dblclick', evtfunc:this.dblclick, evttyp:'dblclick'};
+        this.evtAssociation.keydown     = {evtname:'keydown', evtfunc:this.keydown, evttyp:'keydown'};
+        this.evtAssociation.keyup       = {evtname:'keyup', evtfunc:this.keyup, evttyp:'keyup'};
+        this.evtAssociation.keypress    = {evtname:'keypress', evtfunc:this.keypress, evttyp:'keypress'};
+        this.evtAssociation.ctrlclick   = {evtname:'ctrlclick', evtfunc:this.ctrlclick, evttyp:'click'};
+        this.evtAssociation.border      = {evtname:'border', evtfunc:this.border, evttyp:'mousemove'};
+        this.evtAssociation.corner      = {evtname:'corner', evtfunc:this.border, evttyp:'mousemove'};
+        this.evtAssociation.dragstart   = {evtname:'dragstart', evtfunc:this.mousemove, evttyp:'mousemove'};
+        this.evtAssociation.dragstop    = {evtname:'dragstop', evtfunc:this.mouseup, evttyp:'mouseup'};
+        this.evtAssociation.change      = {evtname:'change', evtfunc:this.change, evttyp:'change'};
+        this.evtAssociation.changecolor = {evtname:'change', evtfunc:this.change, evttyp:'change'};
+        this.evtAssociation.select      = {evtname:'select', evtfunc:this.change, evttyp:'change'};
+        this.evtAssociation.unselect    = {evtname:'unselect', evtfunc:this.change, evttyp:'change'};
+        this.evtAssociation.valuechange = {evtname:'valuechange', evtfunc:this.change, evttyp:'change'};
+        this.evtAssociation.timechange  = {evtname:'timechange', evtfunc:this.timechange, evttyp:'change'};
+        this.evtAssociation.load        = {evtname:'load', evtfunc:this.timechange, evttyp:'change'};
+    }
+}
+
+VDOM_Object.prototype.execEvent = function(e, que)
+{
+    if (this.eventEngine !== null) {
+        //this.eventEngine.processEvent(e, this, que);
+        this.eventEngine.processEvent(e, que || false);
+    } else {
+        window.status = 'ERROR['+this.name+'.'+e.name+']: eventEngine - bad object reference';
+    }
+};
+
+VDOM_Object.prototype.timechange = function(evnt)
+{
+    var vdomEvent = new VDOM_Event();
+    vdomEvent.srcObj = this.domCont;
+    vdomEvent.name = 'timechange';
+    var t = new Date();
+    vdomEvent.addParameter('time', t);
+    this.execEvent(vdomEvent);
+};
+
+VDOM_Object.prototype.mousemove = function(evnt)
+{
+    var evt = evnt || window.event;
+    var vdomEvent = new VDOM_Event();
+    vdomEvent.srcObj = this.domCont;
+    vdomEvent.name = 'mousemove';
+    var x = evt.layerX ? evt.layerX : evt.offsetX;
+    var y = evt.layerY ? evt.layerY : evt.offsetY;
+    vdomEvent.addParameter('x', x);
+    vdomEvent.addParameter('y', y);
+    vdomEvent.addParameter('X', x);
+    vdomEvent.addParameter('Y', y);
+    this.execEvent(vdomEvent);
+    /* drag */
+    if (drag_current_obj !== null && drag_mouse_down === true) {
+        drag_current_event = evt;
+    }
+};
+
+VDOM_Object.prototype.mousedown = function(evnt)
+{
+    var evt = evnt || window.event;
+        var vdomEvent = new VDOM_Event();
+    vdomEvent.srcObj = this.domCont;
+    vdomEvent.name = 'mousedown';
+        var x = evt.layerX ? evt.layerX : evt.offsetX;
+        var y = evt.layerY ? evt.layerY : evt.offsetY;
+    vdomEvent.addParameter('x', x);
+    vdomEvent.addParameter('y', y);
+    vdomEvent.addParameter('X', x);
+    vdomEvent.addParameter('Y', y);
+    vdomEvent.addParameter('button', evt.button);
+    vdomEvent.addParameter('altKey', evt.altKey);
+    vdomEvent.addParameter('ctrlKey', evt.ctrlKey);
+    vdomEvent.addParameter('shiftKey', evt.shiftKey);
+    this.execEvent(vdomEvent);
+
+    drag_current_event = evt;
+};
+
+VDOM_Object.prototype.mouseup = function(evnt)
+{
+    var evt = evnt || window.event;
+    var vdomEvent = new VDOM_Event();
+    vdomEvent.srcObj = this.domCont;
+    vdomEvent.name = 'mouseup';
+        var x = evt.layerX ? evt.layerX : evt.offsetX;
+        var y = evt.layerY ? evt.layerY : evt.offsetY;
+    vdomEvent.addParameter('x', x);
+    vdomEvent.addParameter('y', y);
+    vdomEvent.addParameter('X', x);
+    vdomEvent.addParameter('Y', y);
+    vdomEvent.addParameter('button', evt.button);
+    vdomEvent.addParameter('altKey', evt.altKey);
+    vdomEvent.addParameter('ctrlKey', evt.ctrlKey);
+    vdomEvent.addParameter('shiftKey', evt.shiftKey);
+    this.execEvent(vdomEvent);
+
+    drag_mouse_down = false;
+};
+
+VDOM_Object.prototype.mouseover = function(evnt)
+{
+    var evt = evnt || window.event;
+    var vdomEvent = new VDOM_Event();
+    vdomEvent.srcObj = this.domCont;
+    vdomEvent.name = 'mouseover';
+    var x = evt.layerX ? evt.layerX : evt.offsetX;
+    var y = evt.layerY ? evt.layerY : evt.offsetY;
+    vdomEvent.addParameter('x', x);
+    vdomEvent.addParameter('y', y);
+    vdomEvent.addParameter('X', x);
+    vdomEvent.addParameter('Y', y);
+    this.execEvent(vdomEvent);
+};
+
+VDOM_Object.prototype.mouseout = function(evnt)
+{
+    var evt = evnt || window.event;
+    var vdomEvent = new VDOM_Event();
+    vdomEvent.srcObj = this.domCont;
+    vdomEvent.name = 'mouseout';
+    var x = evt.layerX ? evt.layerX : evt.offsetX;
+    var y = evt.layerY ? evt.layerY : evt.offsetY;
+    vdomEvent.addParameter('x', x);
+    vdomEvent.addParameter('y', y);
+    vdomEvent.addParameter('X', x);
+    vdomEvent.addParameter('Y', y);
+    this.execEvent(vdomEvent);
+};
+
+VDOM_Object.prototype.click = function(evnt)
+{
+    var evt = evnt || window.event;
+    var vdomEvent = new VDOM_Event();
+    vdomEvent.srcObj = this.domCont;
+    vdomEvent.name = 'click';
+    var x = evt.layerX ? evt.layerX : evt.offsetX;
+    var y = evt.layerY ? evt.layerY : evt.offsetY;
+    vdomEvent.addParameter('x', x);
+    vdomEvent.addParameter('y', y);
+    vdomEvent.addParameter('X', x);
+    vdomEvent.addParameter('Y', y);
+    vdomEvent.addParameter('button', evt.button);
+    vdomEvent.addParameter('altKey', evt.altKey);
+    vdomEvent.addParameter('ctrlKey', evt.ctrlKey);
+    vdomEvent.addParameter('shiftKey', evt.shiftKey);
+    this.execEvent(vdomEvent);
+};
+
+VDOM_Object.prototype.dblclick = function(evnt)
+{
+    var evt = evnt || window.event;
+    var vdomEvent = new VDOM_Event();
+    vdomEvent.srcObj = this.domCont;
+    vdomEvent.name = 'dblclick';
+    var x = evt.layerX ? evt.layerX : evt.offsetX;
+    var y = evt.layerY ? evt.layerY : evt.offsetY;
+    vdomEvent.addParameter('x', x);
+    vdomEvent.addParameter('y', y);
+    vdomEvent.addParameter('X', x);
+    vdomEvent.addParameter('Y', y);
+    vdomEvent.addParameter('button', evt.button);
+    vdomEvent.addParameter('altKey', evt.altKey);
+    vdomEvent.addParameter('ctrlKey', evt.ctrlKey);
+    vdomEvent.addParameter('shiftKey', evt.shiftKey);
+    this.execEvent(vdomEvent);
+};
+
+VDOM_Object.prototype.keydown = function(evnt)
+{
+    var evt = evnt || window.event;
+    var vdomEvent = new VDOM_Event();
+    vdomEvent.srcObj = this.domCont;
+    vdomEvent.name = 'keydown';
+    vdomEvent.addParameter('keyCode', evt.keyCode);
+    vdomEvent.addParameter('altKey', evt.altKey);
+    vdomEvent.addParameter('ctrlKey', evt.ctrlKey);
+    vdomEvent.addParameter('shiftKey', evt.shiftKey);
+    this.execEvent(vdomEvent);
+};
+
+VDOM_Object.prototype.keyup = function(evnt)
+{
+    var evt = evnt || window.event;
+    var vdomEvent = new VDOM_Event();
+    vdomEvent.srcObj = this.domCont;
+    vdomEvent.name = 'keyup';
+    vdomEvent.addParameter('keyCode', evt.keyCode);
+    vdomEvent.addParameter('altKey', evt.altKey);
+    vdomEvent.addParameter('ctrlKey', evt.ctrlKey);
+    vdomEvent.addParameter('shiftKey', evt.shiftKey);
+    this.execEvent(vdomEvent);
+};
+
+VDOM_Object.prototype.keypress = function(evnt)
+{
+    var evt = evnt || window.event;
+    var vdomEvent = new VDOM_Event();
+    vdomEvent.srcObj = this.domCont;
+    vdomEvent.name = 'keypress';
+    vdomEvent.addParameter('keyCode', evt.keyCode);
+    vdomEvent.addParameter('altKey', evt.altKey);
+    vdomEvent.addParameter('ctrlKey', evt.ctrlKey);
+    vdomEvent.addParameter('shiftKey', evt.shiftKey);
+    this.execEvent(vdomEvent);
+};
+
+VDOM_Object.prototype.change = function(evnt)
+{
+    var vdomEvent = new VDOM_Event();
+    vdomEvent.srcObj = this.domCont;
+    if (this.domCont.firstChild && this.domCont.firstChild.type == 'checkbox') {
+        vdomEvent.name = this.domCont.firstChild.checked ? 'select' : 'unselect';
+        this.execEvent(vdomEvent);
+    } else
+    if (this.domCont.tagName == 'SELECT') {
+        vdomEvent.name = 'valuechange';
+        vdomEvent.addParameter('item', ''); /* !!! */
+        vdomEvent.addParameter('itemValue', this.domCont.value);
+        this.execEvent(vdomEvent);
+    } else {
+        vdomEvent.name = 'valuechange';
+        vdomEvent.addParameter('itemValue', evnt.target.value);
+        this.execEvent(vdomEvent);
+    }
+};
+
+/* CUSTOM EVENTS */
+
+VDOM_Object.prototype.ctrlclick = function(evnt)
+{
+    var evt = evnt || window.event;
+    if (evt.ctrlKey == 1) {
+        var vdomEvent = new VDOM_Event();
+        vdomEvent.srcObj = this.domCont;
+        vdomEvent.name = 'ctrlclick';
+        var x = evt.layerX ? evt.layerX : evt.offsetX;
+        var y = evt.layerY ? evt.layerY : evt.offsetY;
+        vdomEvent.addParameter('x', x);
+        vdomEvent.addParameter('y', y);
+        vdomEvent.addParameter('X', x);
+        vdomEvent.addParameter('Y', y);
+        vdomEvent.addParameter('keyCode', evt.keyCode);
+        vdomEvent.addParameter('altKey', evt.altKey);
+        vdomEvent.addParameter('ctrlKey', evt.ctrlKey);
+        vdomEvent.addParameter('shiftKey', evt.shiftKey);
+        this.execEvent(vdomEvent);
+    }
+};
+
+VDOM_Object.prototype.border = function(evnt)
+{
+    var evt = evnt || window.event;
+    var vdomEvent = new VDOM_Event();
+    vdomEvent.srcObj = this.domCont;
+    var x = evt.layerX ? evt.layerX : evt.offsetX;
+    var y = evt.layerY ? evt.layerY : evt.offsetY;
+    var right  = (x <= this.domCont.clientWidth) && (x > this.domCont.clientWidth - 4);
+    var left   = (x >= 0) && (x < 4);
+    var top    = (y >= 0) && (y < 4);
+    var bottom = (y <= this.domCont.clientHeight) && (y > this.domCont.clientHeight - 4);
+    if (top || bottom || left || right) {
+        var corner1 = left && top;
+        var corner2 = right && top;
+        var corner3 = right && bottom;
+        var corner4 = left && bottom;
+        if (corner1 || corner2 || corner3 || corner4) {
+            var pos = corner1 ? 1 : (corner2 ? 2 : (corner3 ? 3 : (corner4 ? 4 : 0)));
+            if (pos > 0) {
+                if (corner_last != pos) {
+                    corner_last = pos;
+                    vdomEvent.name = 'corner';
+                    vdomEvent.addParameter('pos', pos);
+                    vdomEvent.addParameter('x', x);
+                    vdomEvent.addParameter('y', y);
+                    vdomEvent.addParameter('X', x);
+                    vdomEvent.addParameter('Y', y);
+                    this.execEvent(vdomEvent);
+                }
+            }
+        } else {
+            var pos = right ? 'right' : (left ? 'left' : (top ? 'top' : (bottom ? 'bottom' : '')));
+            if (pos != '' && border_last != pos) {
+                border_last = pos;
+                vdomEvent.name = 'border';
+                vdomEvent.addParameter('pos', pos);
+                vdomEvent.addParameter('x', x);
+                vdomEvent.addParameter('y', y);
+                vdomEvent.addParameter('X', x);
+                vdomEvent.addParameter('Y', y);
+                this.execEvent(vdomEvent);
+            }
+        }
+    }
+};
+
+/**
+ * rase event to level up
+ */
+VDOM_Object.prototype.riseEvent = function(eName, eParams, eEngine)
+{
+    var newEvent = new VDOM_Event();
+    newEvent.srcObj = this.domCont;
+    newEvent.name = eName;
+    for (var i = 0; i < eParams.length; i++) {
+        newEvent.addParameter(eParams[i].Name, eParams[i].Value);
+    }
+    eEngine.processEvent(newEvent);
+};
+
+/**
+ * registerEvents procedure prototype
+ */
+VDOM_Object.prototype.registerEvents = function(events)
+{
+    for (var i = 0; i < events.length; i++) {
+        var evtname = events[i];
+        if (typeof this.evtAssociation !== 'undefined') {
+            if (typeof this.evtAssociation[evtname] !== 'undefined') {
+                var evtObj = this.evtAssociation[evtname];
+                if (typeof(evtObj) == "object") {
+                    vdomRegisterEventListener(this, evtObj.evttyp, evtObj.evtfunc, true);
+                }
+            }
+        }
+    }
+};
+
+/* function vdomRegisterEventListener(vdomObject, eventType, eventListener, useCapture) */
+customRegisterEvents = function(pa,ob,ev,ac)
+{
+    var o=false,os='Obj_'+pa+'_Dispatcher';
+    eval("if (typeof "+os+" !== 'undefined') o=true;");
+    if (o) {
+        eval('os.addDispatchEvent("o_'+ob+':'+ev+'","server");');
+    }
+/*
+Container_aa1bc2f5_adf3_4b5d_8678_feb130980f43_Dispatcher=new VDOM_EventDispatcher();
+Container_aa1bc2f5_adf3_4b5d_8678_feb130980f43_Dispatcher.addDispatchEvent("o_e62ff902_5b1b_4ee2_9286_3a8397ec666b:click", "server")
+*/
+};
+
+
+/**
+ * VDOM_EventQueue
+ */
+
+function VDOM_EventQueue()
+{
+    this.eventQueue = [];
+    this.sendAvailable = true; /* Shows if the queue is ready to send events */
+}
+
+VDOM_EventQueue.prototype.serialize = function()
+{
+    if (this.eventQueue.length === 0) { return ""; }
+    var SV = "<SV><!"+"[CDATA["+JSON.stringify(e2vdomSV)+"]"+"]></SV>";
+    var evnt, str, i, j, param, param_val;
+    var resultStr = "<EVENTS><APPLICATION ID='"+APPLICATION_ID+"'/><SESSION ID='"+SESSION_ID+"'/>";
+    for (i = 0; i < this.eventQueue.length; i++) {
+        evnt = this.eventQueue[i];
+        str = "<EVENT objSrcID='"+evnt.srcObj.id+"' name='"+evnt.name+"'>";
+        for (j = 0; j < evnt.parameters.length; j++) {
+            param = evnt.parameters[j];
+            /*param_val = $.isArray(pv) ? JSON.stringify(pv) : pvs.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');*/
+            if ($.isArray(param.Value)) {
+                param_val = JSON.stringify(param.Value);
+            } else {
+                var pvs = '' + param.Value;
+                param_val = pvs.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            }
+            str += "<PARAMETER name='"+param.Name+"'><!"+"[CDATA["+param_val+"]"+"]></PARAMETER>";
+        }
+        str+="</EVENT>";
+        resultStr += str;
+    }
+    resultStr += "<STATE value='" + parseInt(E2VSTATE, 10) + "' />"+SV+"</EVENTS>";
+
+    delete(this.eventQueue);
+    this.eventQueue = [];
+    return resultStr;
+};
+
+VDOM_EventQueue.prototype.sendRequest = function(str)
+{
+    /* sending of the serialized queue to the server */
+    if (str != "") {
+        this.sendAvailable = false;
+
+        /* sendForm(str, bind(this, this.receiveAnswer)); */
+        var func = bind(this, this.receiveAnswer);
+        $j.ajax({
+              type: "POST",
+              url: SERVER_URL,
+              data: { 'datafield': str },
+              success: function(d, status) {
+                var x = '<res>' + d + '</res>';
+                func(
+                    $.xmlDOM( x, function(error){
+                            console.error('xmlDOM parse error: ' + error);
+                    })
+                );
+            },
+             dataType:  'text',
+			 async:true
+        });
+    }
+};
+
+
+VDOM_EventQueue.prototype.receiveAnswer = function(doc)
+{
+    if (!doc) {
+        return;
+    }
+
+    if ($j('SESSIONISOVER',doc).size() > 0) {
+        window.location.reload();
+        return;
+    }
+
+    var ee = $j('ERROR',doc);
+    if (ee.size() > 0) {
+        e2vdomloading_err(ee.text());
+
+    } else {
+
+        //e2vdomindicator_show();
+
+        var objList = $j('OBJECT',doc);
+        var i, s, papa, objItem, objValue, oa, objID, objType, objParent, objContainer, elem;
+
+        for (i = 0; i < objList.length; i++) {
+            objItem = objList[i];
+            objValue = $j(objItem).text();
+
+            oa = $j(objList[i]);
+            objID = oa.attr('ID');
+            objType = oa.attr('TYPE');
+            objParent = oa.attr('PARENT');
+            objContainer = oa.attr('CONTAINER');
+
+            elem = document.getElementById('o_'+objID);
+            if (elem) {
+
+                /*elem.innerHTML = objValue; // wrong */
+
+                /* this kills e2vdom events linked for object, but they will be restored by initE2VDOM() */
+                papa = elem.parentNode;
+                if (papa) {
+                    if ($j(oa.text()).is('noreplace')) {
+                        // no replace inner html, received code will be placed after object
+                        $j(papa).after(objValue);
+
+                    } else {
+                        /*papa.removeChild(elem);*/
+                        $j('#o_'+objID+'_e2vdomhelper').remove();
+                        s = [];
+                        $j('script',objValue).each(function(){
+                            s.push( $j(this).html() );
+                        });
+                        /* recreate vdom obj */
+                        $j('script',objValue).remove();
+                        $j(elem).replaceWith(objValue);
+
+                        /*if (s.length>0) {
+                            $j.each(s,function(){
+                                attachScript(this);
+                            });
+                        }*/
+                    }
+                }
+
+            }
+            initE2VDOM();
+        }
+
+        /*
+        processing EXECUTE from server answer
+
+        <EXECUTE SRC_ID="" DST_ID="" ACT_NAME=""><PARAM>< ! [ CDATA[ ... ] ] ></PARAM><PARAM>< ! [ CDATA[ ... ] ] ></PARAM>...</EXECUTE>
+        */
+        var a, aname, apars, adest, jsn;
+        doc.find('EXECUTE').each(function() {
+            a = $j(this);
+            aname = a.attr('ACT_NAME');
+            adest = a.attr('DST_ID');
+            /*apars = [ a.text() ];*/
+            apars = [];
+            $j('PARAM',a).each(function(x,v){
+                var de = $j(v).text();
+                de = de.replace(/&quot;/g, '"').replace(/&gt;/g, ">").replace(/&lt;/g, "<").replace(/&amp;/g, "&");
+                //de = de.replace('&quot;', '"').replace('&gt;', '>').replace('&lt;', '<').replace('&amp;', '&');
+                if ($j(v).attr('type') != 'obj') {
+                    //apars.push('"'+$j(v).text().replace(/\"/g, '\"')+'"');
+                    //apars.push('"'+$j(v).text().replace(/"/g, '\\"')+'"');
+                    apars.push(de);
+                } else {
+                    //apars.push($j(v).text());
+                    eval('var z = '+de+';');
+                    apars.push(z);
+                }
+            });
+            execActionDirect(aname, apars, adest);
+        });
+
+        /*
+        processing LISTENER from server answer
+
+        <LISTENER
+            CONTAINER   = "aa1bc2f5_adf3_4b5d_8678_feb130980f43"
+            SRC_ID      = "4a4450c9_12eb_48b2_8ea2_f408525de209"
+            EVENT_NAME  = "click"
+            DST_ID      = "7085bd26_e653_490b_908f_61208c260a86"
+            ACT_NAME    = "client_action_function_name"
+            PARAMS      = "1,true,'stringstring'"
+        />
+        */
+        var objList3 = $j('LISTENER', doc);
+        var o, os, act, aact;
+        for (i = 0; i < objList3.length; i++) {
+            a = $j(objList3[i]);
+            aact = a.attr('ACT_NAME')||'';
+            o = false;
+            os = 'Container_' + a.attr('CONTAINER') + '_Dispatcher';
+            eval("if (typeof " + os + " !== 'undefined') o=true;");
+            if (o) {
+                act = (aact == 'server') ? 'server' : 'Obj_' + a.attr('DST_ID') + ':' + aact + '(' + a.attr('PARAMS') + ')';
+                eval(os + '.addDispatchEvent("o_' + a.attr('SRC_ID') + ':' + a.attr('EVENT_NAME') + '","' + act + '");');
+            }
+    /*
+    Container_f2fa4240_e7dd_4bfb_a183_197953af6cdb_Dispatcher.addDispatchEvent("o_95182681_c165_43f6_a36c_6892f1c80cd2:click", "Object_b008a8e6_64a1_40d2_9a8e_9741f65cc798:setHTML('coucou')");
+
+    //VDOM_EventDispatcher.prototype.addDispatchEvent = function(eventSrc, actionTgt) {
+    //eventSrc must be in ":" notation like objectname:eventname - (i.e vdomobj1:mouseup)
+    //actionTgt must be in ":" notation also
+    */
+        }
+
+        var objsv = $j('SV', doc);
+        if (objsv.size() > 0) {
+            var v = objsv.text();
+            if (typeof v !== 'undefined') {
+                //e2vdomSV = JSON.parse(v);
+                //var vadd = JSON.parse(v.replace('&quot;', '"').replace('&gt;', '>').replace('&lt;', '<').replace('&amp;', '&'));
+                var vadd = JSON.parse(v.replace(/&quot;/g, '"').replace(/&gt;/g, ">").replace(/&lt;/g, "<").replace(/&amp;/g, "&"));
+                
+                for (vadd_key in vadd) {
+                    e2vdomSV[vadd_key] = vadd[vadd_key];
+
+                    /* TODO:
+                    scan registered events for listened keys,
+                    raise sharedvariablechanged 
+                    */
+                    
+                }
+            }
+        }
+
+        var objx = $j('STATE', doc);
+        if (objx.size() > 0) {
+            var v = objx.attr('value');
+            if (typeof v !== 'undefined') E2VSTATE = parseInt(v, 10);
+        }
+
+        //e2vdomindicator_hide();
+
+    }
+
+    /*end of processing the server answer, trying to send a queue*/
+    //delete(this.eventQueue);
+    //this.eventQueue = [];
+    this.sendAvailable = true;
+    this.checkForSending();
+
+    // exec user defined commands
+    if (typeof e2vdomAR !== 'undefined' && this.sendAvailable) {
+        var z, len = e2vdomAR.length;
+        for (z = 0; z < len; z++) {
+            if (typeof e2vdomAR[z] !== 'undefined') {
+                try {
+                    eval(e2vdomAR[z]);
+                    delete(e2vdomAR[z]);
+                } catch(ex) {
+                    generateErrorEvent('ERROR e2vdomAfterResponse on eval: '+e2vdomAR[z]);
+                }
+            }
+        }
+    }
+
+};
+
+VDOM_EventQueue.prototype.addEvent = function(ve, eque)
+{
+    var que = false;//no queue
+    //var que = eque || false;
+    if (que == false) {
+        this.eventQueue.push(ve);
+        //this.checkForSending();
+    } else {
+        var myq = [], i, len = this.eventQueue.length;
+        for (i = 0; i < len; i++) {
+            myq.push( this.eventQueue[i].name + this.eventQueue[i].srcObj );
+        }
+//      if (!$j.inArray(ve.name + ve.srcObj, myq)) {
+            this.eventQueue.push(ve);
+//      } else {
+////            this.eventQueue[i].parameters + ve.parameters;
+//      }
+    }
+};
+
+
+VDOM_EventQueue.prototype.checkForSending = function()
+{
+    if (this.sendAvailable && this.eventQueue.length > 0) {
+        var s = this.serialize();
+        this.sendRequest(s);
+    }
+};
+
+
+/**
+ * DRAG/DROP
+ */
+
+/**
+ * we respect every individual, we understand their traits..
+ */
+function dragFixE_(e)
+{
+    if (typeof e === 'undefined') { e = window.event; }
+    if (typeof e.layerX === 'undefined') { e.layerX = e.offsetX; }
+    if (typeof e.layerY === 'undefined') { e.layerY = e.offsetY; }
+    return e;
+}
+
+function dragInit_(o, evt)
+{
+    drag_current_obj = o;
+    var oRoot = document;
+    o.root = oRoot !== null ? oRoot : o;
+
+    dragStart_();
+
+    document.onmousemove = dragDrag_;
+    document.onmouseup = dragStop_;
+}
+
+function dragStart_()
+{
+    var e = drag_current_event;
+    e = dragFixE_(e);
+
+    var y = parseInt(drag_current_obj.style.top, 10);
+    var x = parseInt(drag_current_obj.style.left, 10);
+    drag_current_obj.style.zIndex = ++highestZindex;
+
+    drag_lastMouseX = defPosition(e).x;
+    drag_lastMouseY = defPosition(e).y;
+
+    drag_maxMouseX = e.clientX + x;
+    drag_maxMouseY = e.clientX + x;
+    drag_minMouseX = e.clientY + y;
+    drag_minMouseY = e.clientY + y;
+
+    return false;
+}
+
+function dragDrag_(e)
+{
+    e = dragFixE_(e);
+
+    var ey = defPosition(e).y;
+    var ex = defPosition(e).x;
+
+    var y = parseInt(drag_current_obj.style.top, 10);
+    var x = parseInt(drag_current_obj.style.left, 10);
+
+    var nx = x - (ex - drag_lastMouseX) * (-1);
+    var ny = y - (ey - drag_lastMouseY) * (-1);
+
+    drag_current_obj.style.top = ny + "px";
+    drag_current_obj.style.left = nx + "px";
+    drag_lastMouseX = ex;
+    drag_lastMouseY = ey;
+
+    return false;
+}
+
+function dragStop_()
+{
+    document.onmousemove = null;
+    document.onmouseup   = null;
+    drag_current_obj = null;
+    drag_mouse_down = false;
+    drag_lastMouseX = drag_lastMouseY = 0;
+}
+
+/**
+ * find div with max zIndex.
+ * this info needed in drag'n'drop
+ */
+function get_max_zindex()
+{
+/*
+    var mz = 0, iz, a = document.getElementsByTagName('div');
+    for (iz = 0; iz < a.length; iz++) {
+        if (a[iz].style.zIndex) {
+            if (a[iz].style.zIndex > mz) {
+                mz = a[iz].style.zIndex;
+            }
+        }
+    }
+*/
+    var mz = 0, tz;
+    $q("body>*").each(function(){
+        tz = parseInt($q(this).css('z-index'),10);
+        if (tz > mz) mz = tz;
+    });
+    return mz;
+}
+
+highestZindex = get_max_zindex();
+
+
+function generateErrorEvent(msg)
+{
+    console.error(msg);
+/*
+    var prm = { msg: msg };
+    execEventCustom('erroreventengine', this, prm, this);
+*/
+}
+
+/**
+ * generate single event
+ */
+function execEventCustom(evtName, srcp, params, target)
+{
+    var nev = new VDOM_Event();
+    nev.srcObj = (srcp.domCont) ? srcp.domCont : srcp;
+    nev.name = evtName;
+    for (var i = 0; i < params.length; i++) {
+        nev.addParameter(params[i].Name, params[i].Value);
+    }
+    if (target.eventEngine) {
+        target.eventEngine.processEvent(nev);
+    }
+}
+
+/**
+ * call binded event
+ */
+function execEventBinded(srcID, evtName, params, que) {
+    
+    function wait(func, timeout) {
+        timeout = timeout || 5000; // 5 sec
+
+        var x = func();
+        if (Boolean(x)) return Promise.resolve(x);
+       
+        return new Promise(function(resolve, reject) {
+            var t1 = Date.now();
+
+            var intervalId = setInterval(function() {
+                var x = func();
+                
+                if (Boolean(x)) {
+                    resolve(x);
+                    return clearInterval(intervalId);
+                }
+
+                if (Date.now() - t1 > timeout) {
+                    reject();
+                    return clearInterval(intervalId);
+                }
+            }, 200);
+        });
+    }
+
+
+    wait(function() {
+        return window['Obj_' + srcID];
+    })
+
+    .then(function(obj) {
+        var event = new VDOM_Event();
+        event.name = evtName;
+        event.srcObj = document.getElementById('o_' + srcID);
+        
+        if (params !== 'undefined') {
+            for (var k in params) {
+                if (params.hasOwnProperty(k)) {
+                    event.addParameter(k, params[k]);
+                }
+            }
+        }
+
+        obj.execEvent(event, que || false);
+    })
+
+    .catch(function(ex) {
+        generateErrorEvent("ERROR execEventBinded: Obj_"+srcID+" is undefined// "+ex);
+    })
+}
+
+
+/**
+ * execute single action directly
+ */
+function execActionDirect(actName, params, target)
+{
+/*
+    var s = '', f = "Obj_"+target+"."+actName;
+    for (x in params) {
+        s += (s === '' ? '' : ',') + JSON.stringify(params[x]);
+    }
+    s = s.replace(/\n/g, '\\n');
+    try {
+        eval(f+"("+s+");");
+*/
+    try {
+        eval("var t = Obj_"+target);
+        eval("var f = Obj_"+target+"."+actName);
+        f.apply(t, params);
+
+    } catch(ex) {
+        //generateErrorEvent('ERROR execActionDirect on eval [Error code: '+ex+']: '+f+'("'+s+'");');
+        generateErrorEvent('ERROR execActionDirect on eval: '+ex);
+        //generateErrorEvent('ERROR execActionDirect on eval: '+f);
+        //console.info(s);
+    }
+}

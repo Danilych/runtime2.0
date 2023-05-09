@@ -1,0 +1,2931 @@
+(function(Se) {
+    function a(t) {
+        Se.extend(!0, se, t)
+    }
+    function Me(a, i, e) {
+        function r(t) {
+            G ? g() && (w(),
+            b(t)) : l()
+        }
+        function l() {
+            Z = i.theme ? "ui" : "fc",
+            a.addClass("fc"),
+            i.isRTL ? a.addClass("fc-rtl") : a.addClass("fc-ltr"),
+            i.theme && a.addClass("ui-widget"),
+            G = Se("<div class='fc-content' style='position:relative'/>").prependTo(a),
+            V = new Te(J,i),
+            U = V.render(),
+            U && a.prepend(U),
+            f(i.defaultView),
+            i.handleWindowResize && Se(window).resize(E),
+            h() || d()
+        }
+        function d() {
+            setTimeout(function() {
+                !K.start && h() && y()
+            }, 0)
+        }
+        function c() {
+            K && (X("viewDestroy", K, K, K.element),
+            K.triggerEventDestroy()),
+            Se(window).unbind("resize", E),
+            V.destroy(),
+            G.remove(),
+            a.removeClass("fc fc-rtl ui-widget")
+        }
+        function g() {
+            return true // a.is(":visible")
+        }
+        function h() {
+            return Se("body").is(":visible")
+        }
+        function f(t) {
+            K && t == K.name || v(t)
+        }
+        function v(t) {
+            ye++,
+            K && (X("viewDestroy", K, K, K.element),
+            W(),
+            K.triggerEventDestroy(),
+            B(),
+            K.element.remove(),
+            V.deactivateButton(K.name)),
+            V.activateButton(t),
+            K = new oe[t](Se("<div class='fc-view fc-view-" + t + "' style='position:relative'/>").appendTo(G),J),
+            y(),
+            j(),
+            ye--,
+            X("viewChanged", this, K.name, K.title);
+        }
+        function m() {
+            var t = we.month;
+            return t ? t.calculateStartEnd(be) : [NaN, NaN]
+        }
+        function y(t) {
+            (!K.start || t || be < K.start || be >= K.end) && g() && b(t)
+        }
+        function b(t) {
+            ye++,
+            K.start && (X("viewDestroy", K, K, K.element),
+            W(),
+            x()),
+            B(),
+            K.render(be, t || 0),
+            C(),
+            j(),
+            (K.afterRender || H)(),
+            z(),
+            F(),
+            X("viewRender", K, K, K.element),
+            K.trigger("viewDisplay", me),
+            ye--,
+            k()
+        }
+        function D() {
+            g() && (W(),
+            x(),
+            w(),
+            C(),
+            T())
+        }
+        function w() {
+            ue = i.contentHeight ? i.contentHeight : i.height ? i.height - (U ? U.height() : 0) - S(G) : Math.round(G.width() / Math.max(i.aspectRatio, .5))
+        }
+        function C() {
+            void 0 === ue && w(),
+            ye++,
+            K.setHeight(ue),
+            K.setWidth(G.width()),
+            ye--,
+            Q = a.outerWidth()
+        }
+        function E() {
+            if (!ye)
+                if (K.start) {
+                    var e = ++le;
+                    setTimeout(function() {
+                        e == le && !ye && g() && Q != (Q = a.outerWidth()) && (ye++,
+                        D(),
+                        K.trigger("windowResize", me),
+                        ye--)
+                    }, 200)
+                } else
+                    d()
+        }
+        function M(t) {
+            x(),
+            T(t)
+        }
+        function T(t) {
+            g() && (K.setEventData(De),
+            K.renderEvents(De, t),
+            K.trigger("eventAfterAllRender"))
+        }
+        function x() {
+            K.triggerEventDestroy(),
+            K.clearEvents(),
+            K.clearEventData()
+        }
+        function k() {
+            !i.lazyFetching || ve(K.visStart, K.visEnd) ? R() : T()
+        }
+        function R() {
+            ie(K.visStart, K.visEnd)
+        }
+        function z() {
+            V.updateTitle(K.title)
+        }
+        function F() {
+            var t = new Date;
+            t >= K.start && t < K.end ? V.disableButton("today") : V.enableButton("today")
+        }
+        function N(s, e, t) {
+            K.select(s, e, void 0 === t || t)
+        }
+        function W() {
+            K && K.unselect()
+        }
+        function O() {
+            y(-1);
+            var t = m();
+            X("dateChanged", this, K.name, K.title, t[0], t[1], K.visStart, K.visEnd)
+        }
+        function A() {
+            y(1);
+            var t = m();
+            X("dateChanged", this, K.name, K.title, t[0], t[1], K.visStart, K.visEnd)
+        }
+        function L() {
+            s(be, -1),
+            y()
+        }
+        function _() {
+            s(be, 1),
+            y()
+        }
+        function P(s, e, t) {
+            s instanceof Date ? be = ze(s) : o(be, s, e, t),
+            y()
+        }
+        function q(n, e, t) {
+            void 0 !== n && s(be, n),
+            void 0 !== e && xe(be, e),
+            void 0 !== t && ke(be, t),
+            y()
+        }
+        function Y() {
+            return ze(be)
+        }
+        function B() {
+            G.css({
+                width: "100%",
+                height: G.height(),
+                overflow: "hidden"
+            })
+        }
+        function j() {
+            G.css({
+                width: "",
+                height: "",
+                overflow: ""
+            })
+        }
+        function I() {
+            return K
+        }
+        function X(a, e) {
+            if (i[a])
+                return i[a].apply(e || me, Array.prototype.slice.call(arguments, 2))
+        }
+        var J = this;
+        J.options = i,
+        J.render = r,
+        J.destroy = c,
+        J.refetchEvents = function() {
+            x(),
+            R()
+        }
+        ,
+        J.reportEvents = function(t) {
+            De = t,
+            T()
+        }
+        ,
+        J.reportEventChange = function(t) {
+            M(t)
+        }
+        ,
+        J.rerenderEvents = M,
+        J.changeView = f,
+        J.select = N,
+        J.unselect = W,
+        J.prev = O,
+        J.next = A,
+        J.prevYear = L,
+        J.nextYear = _,
+        J.today = function() {
+            be = new Date,
+            y()
+        }
+        ,
+        J.gotoDate = P,
+        J.incrementDate = q,
+        J.formatDate = function(a, e) {
+            return p(a, e, i)
+        }
+        ,
+        J.formatDates = function(s, e, t) {
+            return u(s, e, t, i)
+        }
+        ,
+        J.getDate = Y,
+        J.getView = I,
+        J.option = function(a, e) {
+            return void 0 === e ? i[a] : void (("height" == a || "contentHeight" == a || "aspectRatio" == a) && (i[a] = e,
+            D()))
+        }
+        ,
+        J.trigger = X,
+        J.calculateMonthStartEnd = m,
+        n.call(J, i, e);
+        var V, U, G, Z, K, Q, ue, fe, ve = J.isFetchNeeded, ie = J.fetchEvents, me = a[0], le = 0, ye = 0, be = new Date, De = [], we = {};
+        o(be, i.year, i.month, i.date),
+        i.droppable && Se(document).bind("dragstart", function(a, t) {
+            var n = a.target
+              , s = Se(n);
+            if (!s.parents(".fc").length) {
+                var r = i.dropAccept;
+                (Se.isFunction(r) ? r.call(n, s) : s.is(r)) && (fe = n,
+                K.dragStart(fe, a, t))
+            }
+        }).bind("dragstop", function(a, e) {
+            fe && (K.dragStop(fe, a, e),
+            fe = null)
+        })
+    }
+    function Te(a, d) {
+        function s() {
+            p = d.theme ? "ui" : "fc";
+            var e = d.header;
+            if (e)
+                return u = Se("<table class='fc-header' style='width:100%'/>").append(Se("<tr/>").append(r("left")).append(r("center")).append(r("right"))),
+                u
+        }
+        function n() {
+            u.remove()
+        }
+        function r(t) {
+            var s = Se("<td class='fc-header-" + t + "'/>")
+              , n = d.header[t];
+            return n && Se.each(n.split(" "), function(t) {
+                0 < t && s.append("<span class='fc-header-space'/>");
+                var n;
+                Se.each(this.split(","), function(t, e) {
+                    if ("title" == e)
+                        s.append("<span class='fc-header-title'><h2>&nbsp;</h2></span>"),
+                        n && n.addClass(p + "-corner-right"),
+                        n = null;
+                    else {
+                        var r;
+                        if (a[e] ? r = a[e] : oe[e] && (r = function() {
+                            c.removeClass(p + "-state-hover"),
+                            a.changeView(e)
+                        }
+                        ),
+                        r) {
+                            var o = d.theme ? N(d.buttonIcons, e) : null
+                              , i = N(d.buttonText, e)
+                              , c = Se("<span class='fc-button fc-button-" + e + " " + p + "-state-default'>" + (o ? "<span class='fc-icon-wrap'><span class='ui-icon ui-icon-" + o + "'/></span>" : i) + "</span>").click(function() {
+                                c.hasClass(p + "-state-disabled") || r()
+                            }).mousedown(function() {
+                                c.not("." + p + "-state-active").not("." + p + "-state-disabled").addClass(p + "-state-down")
+                            }).mouseup(function() {
+                                c.removeClass(p + "-state-down")
+                            }).hover(function() {
+                                c.not("." + p + "-state-active").not("." + p + "-state-disabled").addClass(p + "-state-hover")
+                            }, function() {
+                                c.removeClass(p + "-state-hover").removeClass(p + "-state-down")
+                            }).appendTo(s);
+                            j(c),
+                            n || c.addClass(p + "-corner-left"),
+                            n = c
+                        }
+                    }
+                }),
+                n && n.addClass(p + "-corner-right")
+            }),
+            s
+        }
+        function o(e) {
+            u.find("h2").html(e)
+        }
+        function l(e) {
+            u.find("span.fc-button-" + e).addClass(p + "-state-active")
+        }
+        function i(e) {
+            u.find("span.fc-button-" + e).removeClass(p + "-state-active")
+        }
+        function c(e) {
+            u.find("span.fc-button-" + e).addClass(p + "-state-disabled")
+        }
+        function g(e) {
+            u.find("span.fc-button-" + e).removeClass(p + "-state-disabled")
+        }
+        var h = this;
+        h.render = s,
+        h.destroy = n,
+        h.updateTitle = o,
+        h.activateButton = l,
+        h.deactivateButton = i,
+        h.disableButton = c,
+        h.enableButton = g;
+        var p, u = Se([])
+    }
+    function n(i, e) {
+        function a(t, e) {
+            return !C || t < C || e > E
+        }
+        function s(t, e) {
+            C = t,
+            E = e,
+            B = [];
+            var a = ++P
+              , n = H.length;
+            q = n;
+            for (var s = 0; s < n; s++)
+                h(H[s], a)
+        }
+        function h(e, t) {
+            v(e, function(a) {
+                if (t == P) {
+                    if (a) {
+                        i.eventDataTransform && (a = Se.map(a, i.eventDataTransform)),
+                        e.eventDataTransform && (a = Se.map(a, e.eventDataTransform));
+                        for (var n = 0; n < a.length; n++)
+                            a[n].source = e,
+                            m(a[n]);
+                        B = B.concat(a)
+                    }
+                    q--,
+                    q || x(B)
+                }
+            })
+        }
+        function v(e, a) {
+            var t, s, n = re.sourceFetchers;
+            for (t = 0; t < n.length; t++) {
+                if (s = n[t](e, C, E, a),
+                !0 === s)
+                    return;
+                if ("object" == typeof s)
+                    return void v(s, a)
+            }
+            var l = e.events;
+            if (l)
+                Se.isFunction(l) ? (_(),
+                l(ze(C), ze(E), function(t) {
+                    a(t),
+                    f()
+                })) : Se.isArray(l) ? a(l) : a();
+            else {
+                var c = e.url;
+                if (c) {
+                    var g, h = e.success, u = e.error, y = e.complete;
+                    g = Se.isFunction(e.data) ? e.data() : e.data;
+                    var b = Se.extend({}, g || {})
+                      , m = L(e.startParam, i.startParam)
+                      , w = L(e.endParam, i.endParam);
+                    m && (b[m] = Math.round(+C / 1e3)),
+                    w && (b[w] = Math.round(+E / 1e3)),
+                    _(),
+                    Se.ajax(Se.extend({}, d, e, {
+                        data: b,
+                        success: function(s) {
+                            s = s || [];
+                            var n = A(h, this, arguments);
+                            Se.isArray(n) && (s = n),
+                            a(s)
+                        },
+                        error: function() {
+                            A(u, this, arguments),
+                            a()
+                        },
+                        complete: function() {
+                            A(y, this, arguments),
+                            f()
+                        }
+                    }))
+                } else
+                    a()
+            }
+        }
+        function n(t) {
+            t = r(t),
+            t && (q++,
+            h(t, P))
+        }
+        function r(t) {
+            if (Se.isFunction(t) || Se.isArray(t) ? t = {
+                events: t
+            } : "string" == typeof t && (t = {
+                url: t
+            }),
+            "object" == typeof t)
+                return y(t),
+                H.push(t),
+                t
+        }
+        function o(s) {
+            H = Se.grep(H, function(t) {
+                return !b(t, s)
+            }),
+            B = Se.grep(B, function(e) {
+                return !b(e.source, s)
+            }),
+            x(B)
+        }
+        function c(e) {
+            var t, i, d = B.length, s = T().defaultEventEnd, r = e.start - e._start, o = e.end ? e.end - (e._end || s(e)) : 0;
+            for (t = 0; t < d; t++)
+                i = B[t],
+                i._id == e._id && i != e && (i.start = new Date(+i.start + r),
+                i.end = e.end ? i.end ? new Date(+i.end + o) : new Date(+s(i) + o) : null,
+                i.title = e.title,
+                i.url = e.url,
+                i.allDay = e.allDay,
+                i.className = e.className,
+                i.editable = e.editable,
+                i.color = e.color,
+                i.backgroundColor = e.backgroundColor,
+                i.borderColor = e.borderColor,
+                i.textColor = e.textColor,
+                m(i));
+            m(e),
+            x(B)
+        }
+        function g(a, e) {
+            m(a),
+            a.source || (e && (k.events.push(a),
+            a.source = k),
+            B.push(a)),
+            x(B)
+        }
+        function p(a) {
+            if (!a) {
+                B = [];
+                for (var s = 0; s < H.length; s++)
+                    Se.isArray(H[s].events) && (H[s].events = [])
+            } else {
+                if (!Se.isFunction(a)) {
+                    var r = a + "";
+                    a = function(e) {
+                        return e._id == r
+                    }
+                }
+                B = Se.grep(B, a, !0);
+                for (var s = 0; s < H.length; s++)
+                    Se.isArray(H[s].events) && (H[s].events = Se.grep(H[s].events, a, !0))
+            }
+            x(B)
+        }
+        function u(e) {
+            return Se.isFunction(e) ? Se.grep(B, e) : e ? (e += "",
+            Se.grep(B, function(t) {
+                return t._id == e
+            })) : B
+        }
+        function _() {
+            Y++ || S("loading", null, !0, T())
+        }
+        function f() {
+            --Y || S("loading", null, !1, T())
+        }
+        function m(e) {
+            var t = e.source || {}
+              , a = L(t.ignoreTimezone, i.ignoreTimezone);
+            e._id = e._id || (void 0 === e.id ? "_fc" + le++ : e.id + ""),
+            e.date && (!e.start && (e.start = e.date),
+            delete e.date),
+            e._start = ze(e.start = l(e.start, a)),
+            e.end = l(e.end, a),
+            e.end && e.end <= e.start && (e.end = null),
+            e._end = e.end ? ze(e.end) : null,
+            void 0 === e.allDay && (e.allDay = L(t.allDayDefault, i.allDayDefault)),
+            e.className ? "string" == typeof e.className && (e.className = e.className.split(/\s+/)) : e.className = []
+        }
+        function y(s) {
+            s.className ? "string" == typeof s.className && (s.className = s.className.split(/\s+/)) : s.className = [];
+            for (var e = re.sourceNormalizers, t = 0; t < e.length; t++)
+                e[t](s)
+        }
+        function b(a, e) {
+            return a && e && D(a) == D(e)
+        }
+        function D(t) {
+            return ("object" == typeof t ? t.events || t.url : "") || t
+        }
+        var w = this;
+        w.isFetchNeeded = a,
+        w.fetchEvents = s,
+        w.addEventSource = n,
+        w.removeEventSource = o,
+        w.updateEvent = c,
+        w.renderEvent = g,
+        w.removeEvents = p,
+        w.clientEvents = u,
+        w.normalizeEvent = m;
+        for (var C, E, S = w.trigger, T = w.getView, x = w.reportEvents, k = {
+            events: []
+        }, H = [k], P = 0, q = 0, Y = 0, B = [], j = 0; j < e.length; j++)
+            r(e[j])
+    }
+    function s(s, e, t) {
+        return s.setFullYear(s.getFullYear() + e),
+        t || c(s),
+        s
+    }
+    function xe(r, e, t) {
+        if (+r) {
+            var a = r.getMonth() + e
+              , n = ze(r);
+            for (n.setDate(1),
+            n.setMonth(a),
+            r.setMonth(a),
+            t || c(r); r.getMonth() != n.getMonth(); )
+                r.setDate(r.getDate() + (r < n ? 1 : -1))
+        }
+        return r
+    }
+    function ke(o, e, t) {
+        if (+o) {
+            var a = o.getDate() + e
+              , n = ze(o);
+            n.setHours(9),
+            n.setDate(a),
+            o.setDate(a),
+            t || c(o),
+            r(o, n)
+        }
+        return o
+    }
+    function r(a, e) {
+        if (+a)
+            for (; a.getDate() != e.getDate(); )
+                a.setTime(+a + 36e5 * (a < e ? 1 : -1))
+    }
+    function He(a, e) {
+        return a.setMinutes(a.getMinutes() + e),
+        a
+    }
+    function c(t) {
+        return t.setHours(0),
+        t.setMinutes(0),
+        t.setSeconds(0),
+        t.setMilliseconds(0),
+        t
+    }
+    function ze(a, e) {
+        return e ? c(new Date(+a)) : new Date(+a)
+    }
+    function i() {
+        var a, s = 0;
+        do
+            a = new Date(1970,s++,1);
+        while (a.getHours());return a
+    }
+    function h(a, e) {
+        return Math.round((ze(a, !0) - ze(e, !0)) / 864e5)
+    }
+    function o(s, e, t, a) {
+        void 0 !== e && e != s.getFullYear() && (s.setDate(1),
+        s.setMonth(0),
+        s.setFullYear(e)),
+        void 0 !== t && t != s.getMonth() && (s.setDate(1),
+        s.setMonth(t)),
+        void 0 !== a && s.setDate(a)
+    }
+    function l(a, e) {
+        return "object" == typeof a ? a : "number" == typeof a ? new Date(1e3 * a) : "string" == typeof a ? a.match(/^\d+(\.\d+)?$/) ? new Date(1e3 * parseFloat(a)) : (void 0 === e && (e = !0),
+        g(a, e) || (a ? new Date(a) : null)) : null
+    }
+    function g(o, e) {
+        var t = o.match(/^([0-9]{4})(-([0-9]{2})(-([0-9]{2})([T ]([0-9]{2}):([0-9]{2})(:([0-9]{2})(\.([0-9]+))?)?(Z|(([-+])([0-9]{2})(:?([0-9]{2}))?))?)?)?)?$/);
+        if (!t)
+            return null;
+        var a = new Date(t[1],0,1);
+        if (e || !t[13]) {
+            var l = new Date(t[1],0,1,9,0);
+            t[3] && (a.setMonth(t[3] - 1),
+            l.setMonth(t[3] - 1)),
+            t[5] && (a.setDate(t[5]),
+            l.setDate(t[5])),
+            r(a, l),
+            t[7] && a.setHours(t[7]),
+            t[8] && a.setMinutes(t[8]),
+            t[10] && a.setSeconds(t[10]),
+            t[12] && a.setMilliseconds(1e3 * +("0." + t[12])),
+            r(a, l)
+        } else if (a.setUTCFullYear(t[1], t[3] ? t[3] - 1 : 0, t[5] || 1),
+        a.setUTCHours(t[7] || 0, t[8] || 0, t[10] || 0, t[12] ? 1e3 * +("0." + t[12]) : 0),
+        t[14]) {
+            var s = 60 * +t[16] + (t[18] ? +t[18] : 0);
+            s *= "-" == t[15] ? 1 : -1,
+            a = new Date(+a + 1e3 * (60 * s))
+        }
+        return a
+    }
+    function e(s) {
+        if ("number" == typeof s)
+            return 60 * s;
+        if ("object" == typeof s)
+            return 60 * s.getHours() + s.getMinutes();
+        var e = s.match(/(\d+)(?::(\d+))?\s*(\w+)?/);
+        if (e) {
+            var t = parseInt(e[1], 10);
+            return e[3] && (t %= 12,
+            "p" == e[3].toLowerCase().charAt(0) && (t += 12)),
+            60 * t + (e[2] ? parseInt(e[2], 10) : 0)
+        }
+    }
+    function p(s, e, t) {
+        return u(s, null, e, t)
+    }
+    function u(i, e, t, a) {
+        a = a || se;
+        var c, v, m, y, b = i, D = e, w = t.length, h = "";
+        for (c = 0; c < w; c++)
+            if (v = t.charAt(c),
+            "'" == v) {
+                for (m = c + 1; m < w; m++)
+                    if ("'" == t.charAt(m)) {
+                        b && (h += m == c + 1 ? "'" : t.substring(c + 1, m),
+                        c = m);
+                        break
+                    }
+            } else if ("(" == v) {
+                for (m = c + 1; m < w; m++)
+                    if (")" == t.charAt(m)) {
+                        var C = p(b, t.substring(c + 1, m), a);
+                        parseInt(C.replace(/\D/, ""), 10) && (h += C),
+                        c = m;
+                        break
+                    }
+            } else if ("[" == v) {
+                for (m = c + 1; m < w; m++)
+                    if ("]" == t.charAt(m)) {
+                        var E = t.substring(c + 1, m)
+                          , C = p(b, E, a);
+                        C != p(D, E, a) && (h += C),
+                        c = m;
+                        break
+                    }
+            } else if ("{" == v)
+                b = e,
+                D = i;
+            else if ("}" == v)
+                b = i,
+                D = e;
+            else {
+                for (m = w; m > c; m--)
+                    if (y = ce[t.substring(c, m)]) {
+                        b && (h += y(b, a)),
+                        c = m - 1;
+                        break
+                    }
+                m == c && b && (h += v)
+            }
+        return h
+    }
+    function t(s) {
+        var e, n = new Date(s.getTime());
+        return n.setDate(n.getDate() + 4 - (n.getDay() || 7)),
+        e = n.getTime(),
+        n.setMonth(0),
+        n.setDate(1),
+        Math.floor(Math.round((e - n) / 864e5) / 7) + 1
+    }
+    function y(t) {
+        return t.end ? f(t.end, t.allDay) : ke(ze(t.start), 1)
+    }
+    function f(a, s) {
+        return a = ze(a),
+        s || a.getHours() || a.getMinutes() ? ke(a, 1) : c(a)
+    }
+    function v(a, e, t) {
+        a.unbind("mouseover").mouseover(function(a) {
+            for (var s, n, i, c = a.target; c != this; )
+                s = c,
+                c = c.parentNode;
+            void 0 !== (n = s._fci) && (s._fci = void 0,
+            i = e[n],
+            t(i.event, i.element, i),
+            Se(a.target).trigger(a)),
+            a.stopPropagation()
+        })
+    }
+    function m(e, t, a) {
+        for (var s, n = 0; n < e.length; n++)
+            s = Se(e[n]),
+            s.width(Math.max(0, t - D(s, a)))
+    }
+    function b(e, t, a) {
+        for (var s, n = 0; n < e.length; n++)
+            s = Se(e[n]),
+            s.height(Math.max(0, t - S(s, a)))
+    }
+    function D(a, e) {
+        return w(a) + E(a) + (e ? C(a) : 0)
+    }
+    function w(t) {
+        return (parseFloat(Se.css(t[0], "paddingLeft", !0)) || 0) + (parseFloat(Se.css(t[0], "paddingRight", !0)) || 0)
+    }
+    function C(t) {
+        return (parseFloat(Se.css(t[0], "marginLeft", !0)) || 0) + (parseFloat(Se.css(t[0], "marginRight", !0)) || 0)
+    }
+    function E(t) {
+        return (parseFloat(Se.css(t[0], "borderLeftWidth", !0)) || 0) + (parseFloat(Se.css(t[0], "borderRightWidth", !0)) || 0)
+    }
+    function S(a, e) {
+        return M(a) + x(a) + (e ? T(a) : 0)
+    }
+    function M(t) {
+        return (parseFloat(Se.css(t[0], "paddingTop", !0)) || 0) + (parseFloat(Se.css(t[0], "paddingBottom", !0)) || 0)
+    }
+    function T(t) {
+        return (parseFloat(Se.css(t[0], "marginTop", !0)) || 0) + (parseFloat(Se.css(t[0], "marginBottom", !0)) || 0)
+    }
+    function x(t) {
+        return (parseFloat(Se.css(t[0], "borderTopWidth", !0)) || 0) + (parseFloat(Se.css(t[0], "borderBottomWidth", !0)) || 0)
+    }
+    function H() {}
+    function k(a, e) {
+        return a - e
+    }
+    function R(t) {
+        return Math.max.apply(Math, t)
+    }
+    function z(t) {
+        return (10 > t ? "0" : "") + t
+    }
+    function N(r, e) {
+        if (void 0 !== r[e])
+            return r[e];
+        for (var t, o = e.split(/(?=[A-Z])/), n = o.length - 1; 0 <= n; n--)
+            if (t = r[o[n].toLowerCase()],
+            void 0 !== t)
+                return t;
+        return r[""]
+    }
+    function F(t) {
+        return t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/'/g, "&#039;").replace(/"/g, "&quot;").replace(/\n/g, "<br />")
+    }
+    function j(t) {
+        t.attr("unselectable", "on").css("MozUserSelect", "none").bind("selectstart.ui", function() {
+            return !1
+        })
+    }
+    function O(e) {
+        e.children().removeClass("fc-first fc-last").filter(":first-child").addClass("fc-first").end().filter(":last-child").addClass("fc-last")
+    }
+    function W(c, e) {
+        var t = c.source || {}
+          , a = c.color
+          , n = t.color
+          , s = e("eventColor")
+          , r = c.backgroundColor || a || t.backgroundColor || n || e("eventBackgroundColor") || s
+          , i = c.borderColor || a || t.borderColor || n || e("eventBorderColor") || s
+          , o = c.textColor || t.textColor || e("eventTextColor")
+          , l = [];
+        return r && l.push("background-color:" + r),
+        i && l.push("border-color:" + i),
+        o && l.push("color:" + o),
+        l.join(";")
+    }
+    function A(a, o, t) {
+        if (Se.isFunction(a) && (a = [a]),
+        a) {
+            var n, l;
+            for (n = 0; n < a.length; n++)
+                l = a[n].apply(o, t) || l;
+            return l
+        }
+    }
+    function L() {
+        for (var t = 0; t < arguments.length; t++)
+            if (void 0 !== arguments[t])
+                return arguments[t]
+    }
+    function _(o, e, a) {
+        function s(s, e, t) {
+            Oe = s,
+            Ae = e,
+            Le = t,
+            n(),
+            J || r(),
+            l()
+        }
+        function n() {
+            Be = Ve("theme") ? "ui" : "fc",
+            je = Ve("columnFormat"),
+            Ie = Ve("weekNumbers"),
+            Xe = Ve("weekNumberTitle"),
+            Je = "iso" == Ve("weekNumberCalculation") ? "W" : "w"
+        }
+        function r() {
+            He = Se("<div class='fc-event-container' style='position:absolute;z-index:8;top:0;left:0'/>").appendTo(o)
+        }
+        function l() {
+            var e = i();
+            z && z.remove(),
+            z = Se(e).appendTo(o),
+            N = z.find("thead"),
+            q = N.find(".fc-day-header"),
+            J = z.find("tbody"),
+            ve = J.find("tr"),
+            Ce = J.find(".fc-day"),
+            Me = ve.find("td:first-child"),
+            Te = ve.eq(0).find(".fc-day > div"),
+            xe = ve.eq(0).find(".fc-day-content > div"),
+            O(N.add(N.find("tr"))),
+            O(ve),
+            ve.eq(0).addClass("fc-first"),
+            ve.filter(":last").addClass("fc-last"),
+            Ce.each(function(a, e) {
+                var t = be(Math.floor(a / Ae), a % Ae);
+                ce("dayRender", R, t, Se(e))
+            }),
+            v(Ce)
+        }
+        function i() {
+            var t = "<table class='fc-border-separate' style='width:100%' cellspacing='0'>" + d() + h() + "</table>";
+            return t
+        }
+        function d() {
+            var s, r, o = Be + "-widget-header", a = "";
+            for (a += "<thead><tr>",
+            Ie && (a += "<th class='fc-week-number " + o + "'>" + F(Xe) + "</th>"),
+            s = 0; s < Ae; s++)
+                r = be(0, s),
+                a += "<th class='fc-day-header fc-" + de[r.getDay()] + " " + o + "'>" + F(Ee(r, je)) + "</th>";
+            return a += "</tr></thead>",
+            a
+        }
+        function h() {
+            var r, o, l, i = Be + "-widget-content", n = "";
+            for (n += "<tbody>",
+            r = 0; r < Oe; r++) {
+                for (n += "<tr class='fc-week'>",
+                Ie && (l = be(r, 0),
+                n += "<td class='fc-week-number " + i + "'><div>" + F(Ee(l, Je)) + "</div></td>"),
+                o = 0; o < Ae; o++)
+                    l = be(r, o),
+                    n += p(l);
+                n += "</tr>"
+            }
+            return n += "</tbody>",
+            n
+        }
+        function p(o) {
+            var e = Be + "-widget-content"
+              , t = R.start.getMonth()
+              , a = c(new Date)
+              , n = ""
+              , l = ["fc-day", "fc-" + de[o.getDay()], e];
+            return o.getMonth() != t && l.push("fc-other-month"),
+            +o == +a ? l.push("fc-today", Be + "-state-highlight") : o < a ? l.push("fc-past") : l.push("fc-future"),
+            n += "<td class='" + l.join(" ") + "' data-date='" + Ee(o, "yyyy-MM-dd") + "'><div>",
+            Le && (n += "<div class='fc-day-number'>" + o.getDate() + "</div>"),
+            n += "<div class='fc-day-content'><div style='position:relative'>&nbsp;</div></div></div></td>",
+            n
+        }
+        function u(a) {
+            Fe = a;
+            var o, l, i, e = Fe - N.height();
+            "variable" == Ve("weekMode") ? o = l = Math.floor(e / (1 == Oe ? 2 : 6)) : (o = Math.floor(e / Oe),
+            l = e - o * (Oe - 1)),
+            Me.each(function(t, e) {
+                t < Oe && (i = Se(e),
+                i.find("> div").css("min-height", (t == Oe - 1 ? l : o) - S(i)))
+            })
+        }
+        function f(t) {
+            Re = t,
+            qe.clear(),
+            Ye.clear(),
+            We = 0,
+            Ie && (We = N.find("th.fc-week-number").outerWidth()),
+            Ne = Math.floor((Re - We) / Ae),
+            m(q.slice(0, -1), Ne)
+        }
+        function v(t) {
+            t.click(y).mousedown(ye)
+        }
+        function y(a) {
+            if (!Ve("selectable")) {
+                var e = g(Se(this).data("date"));
+                ce("dayClick", this, e, !0, a)
+            }
+        }
+        function b(o, e, t) {
+            t && _e.build();
+            for (var a, l = De(o, e), s = 0; s < l.length; s++)
+                a = l[s],
+                v(D(a.row, a.leftCol, a.row, a.rightCol))
+        }
+        function D(e, t, a, n) {
+            var s = _e.rect(e, t, a, n, o);
+            return fe(s, o)
+        }
+        function w(r, e, t) {
+            var a = we(r)
+              , n = Ce[a.row * Ae + a.col];
+            ce("dayClick", n, r, e, t)
+        }
+        function C(a, e) {
+            Pe.start(function(t) {
+                me(),
+                t && D(t.row, t.col, t.row, t.col)
+            }, e)
+        }
+        function E(r, e, t) {
+            var a = Pe.stop();
+            if (me(),
+            a) {
+                var n = be(a);
+                ce("drop", r, n, !0, e, t)
+            }
+        }
+        function M(t) {
+            return qe.left(t)
+        }
+        function T(t) {
+            return qe.right(t)
+        }
+        function x(t) {
+            return Ye.left(t)
+        }
+        function k(t) {
+            return Ye.right(t)
+        }
+        function H(t) {
+            return ve.eq(t)
+        }
+        var R = this;
+        R.renderBasic = s,
+        R.setHeight = u,
+        R.setWidth = f,
+        R.renderDayOverlay = b,
+        R.defaultSelectionEnd = function(t) {
+            return ze(t)
+        }
+        ,
+        R.renderSelection = function(a, e) {
+            b(a, ke(ze(e), 1), !0)
+        }
+        ,
+        R.clearSelection = function() {
+            me()
+        }
+        ,
+        R.reportDayClick = w,
+        R.dragStart = C,
+        R.dragStop = E,
+        R.defaultEventEnd = function(t) {
+            return ze(t.start)
+        }
+        ,
+        R.getHoverListener = function() {
+            return Pe
+        }
+        ,
+        R.colLeft = M,
+        R.colRight = T,
+        R.colContentLeft = x,
+        R.colContentRight = k,
+        R.getIsCellAllDay = function() {
+            return !0
+        }
+        ,
+        R.allDayRow = H,
+        R.getRowCnt = function() {
+            return Oe
+        }
+        ,
+        R.getColCnt = function() {
+            return Ae
+        }
+        ,
+        R.getColWidth = function() {
+            return Ne
+        }
+        ,
+        R.getDaySegmentContainer = function() {
+            return He
+        }
+        ,
+        st.call(R, o, e, a),
+        ge.call(R),
+        ie.call(R),
+        P.call(R);
+        var z, N, q, J, ve, Ce, Me, Te, xe, He, Re, Fe, Ne, We, Oe, Ae, Le, _e, Pe, qe, Ye, Be, je, Ie, Xe, Je, Ve = R.opt, ce = R.trigger, fe = R.renderOverlay, me = R.clearOverlays, ye = R.daySelectionMousedown, be = R.cellToDate, we = R.dateToCell, De = R.rangeToSegments, Ee = e.formatDate;
+        j(o.addClass("fc-grid")),
+        _e = new he(function(a, n) {
+            var s, i, d;
+            q.each(function(a, e) {
+                s = Se(e),
+                i = s.offset().left,
+                a && (d[1] = i),
+                d = [i],
+                n[a] = d
+            }),
+            d[1] = i + s.outerWidth(),
+            ve.each(function(t, e) {
+                t < Oe && (s = Se(e),
+                i = s.offset().top,
+                t && (d[1] = i),
+                d = [i],
+                a[t] = d)
+            }),
+            d[1] = i + s.outerHeight()
+        }
+        ),
+        Pe = new pe(_e),
+        qe = new ue(function(t) {
+            return Te.eq(t)
+        }
+        ),
+        Ye = new ue(function(t) {
+            return xe.eq(t)
+        }
+        )
+    }
+    function P() {
+        var s = this;
+        s.renderEvents = function(e, t) {
+            s.renderDayEvents(e, t)
+        }
+        ,
+        s.clearEvents = function() {
+            s.getDaySegmentContainer().empty()
+        }
+        ,
+        ae.call(s)
+    }
+    function q(a, o, n) {
+        function s(t) {
+            St = t,
+            r(),
+            J ? h() : g()
+        }
+        function r() {
+            Rt = _t("theme") ? "ui" : "fc",
+            zt = _t("isRTL"),
+            Ft = e(_t("minTime")),
+            Nt = e(_t("maxTime")),
+            Wt = _t("columnFormat"),
+            Ot = _t("weekNumbers"),
+            At = _t("weekNumberTitle"),
+            Lt = "iso" == _t("weekNumberCalculation") ? "W" : "w",
+            wt = _t("snapMinutes") || _t("slotMinutes")
+        }
+        function g() {
+            var e, s, d, c, p, u = Rt + "-widget-header", g = Rt + "-widget-content", f = 0 == _t("slotMinutes") % 15;
+            for (h(),
+            ot = Se("<div style='position:absolute;z-index:2;left:0;width:100%'/>").appendTo(a),
+            _t("allDaySlot") ? (lt = Se("<div class='fc-event-container' style='position:absolute;z-index:8;top:0;left:0'/>").appendTo(ot),
+            e = "<table style='width:100%' class='fc-agenda-allday' cellspacing='0'><tr><th class='" + u + " fc-agenda-axis'>" + _t("allDayText") + "</th><td><div class='fc-day-content'><div style='position:relative'/></div></td><th class='" + u + " fc-agenda-gutter'>&nbsp;</th></tr></table>",
+            it = Se(e).appendTo(ot),
+            dt = it.find("tr"),
+            D(dt.find("td")),
+            ot.append("<div class='fc-agenda-divider " + u + "'><div class='fc-agenda-divider-inner'/></div>")) : lt = Se([]),
+            ct = Se("<div style='position:absolute;width:100%;overflow-x:hidden;overflow-y:auto'/>").appendTo(ot),
+            gt = Se("<div style='position:relative;width:100%;overflow:hidden'/>").appendTo(ct),
+            ht = Se("<div class='fc-event-container' style='position:absolute;z-index:8;top:0;left:0'/>").appendTo(gt),
+            e = "<table class='fc-agenda-slots' style='width:100%' cellspacing='0'><tbody>",
+            s = i(),
+            c = He(ze(s), Nt),
+            He(s, Ft),
+            Mt = 0,
+            d = 0; s < c; d++)
+                p = s.getMinutes(),
+                e += "<tr class='fc-slot" + d + " " + (p ? "fc-minor" : "") + "'><th class='fc-agenda-axis " + u + "'>" + (f && p ? "&nbsp;" : $e(s, _t("axisFormat"))) + "</th><td class='" + g + "'><div style='position:relative'>&nbsp;</div></td></tr>",
+                He(s, _t("slotMinutes")),
+                Mt++;
+            e += "</tbody></table>",
+            pt = Se(e).appendTo(gt),
+            w(pt.find("td"))
+        }
+        function h() {
+            var e = l();
+            J && J.remove(),
+            J = Se(e).appendTo(a),
+            V = J.find("thead"),
+            U = V.find("th").slice(1, -1),
+            G = J.find("tbody"),
+            Z = G.find("td").slice(0, -1),
+            ve = Z.find("> div"),
+            Ce = Z.find(".fc-day-content > div"),
+            nt = Z.eq(0),
+            rt = ve.eq(0),
+            O(V.add(V.find("tr"))),
+            O(G.add(G.find("tr")))
+        }
+        function l() {
+            var t = "<table style='width:100%' class='fc-agenda-days fc-border-separate' cellspacing='0'>" + p() + u() + "</table>";
+            return t
+        }
+        function p() {
+            var r, o, l, i = Rt + "-widget-header", n = "";
+            for (n += "<thead><tr>",
+            Ot ? (r = Ze(0, 0),
+            o = $e(r, Lt),
+            zt ? o += At : o = At + o,
+            n += "<th class='fc-agenda-axis fc-week-number " + i + "'>" + F(o) + "</th>") : n += "<th class='fc-agenda-axis " + i + "'>&nbsp;</th>",
+            l = 0; l < St; l++)
+                r = Ze(0, l),
+                n += "<th class='fc-" + de[r.getDay()] + " fc-col" + l + " " + i + "'>" + F($e(r, Wt)) + "</th>";
+            return n += "<th class='fc-agenda-gutter " + i + "'>&nbsp;</th></tr></thead>",
+            n
+        }
+        function u() {
+            var d, g, h, p, u, f = Rt + "-widget-header", r = Rt + "-widget-content", i = c(new Date), o = "";
+            for (o += "<tbody><tr><th class='fc-agenda-axis " + f + "'>&nbsp;</th>",
+            h = "",
+            g = 0; g < St; g++)
+                d = Ze(0, g),
+                u = ["fc-col" + g, "fc-" + de[d.getDay()], r],
+                +d == +i ? u.push(Rt + "-state-highlight", "fc-today") : d < i ? u.push("fc-past") : u.push("fc-future"),
+                p = "<td class='" + u.join(" ") + "'><div><div class='fc-day-content'><div style='position:relative'>&nbsp;</div></div></div></td>",
+                h += p;
+            return o += h,
+            o += "<td class='fc-agenda-gutter " + r + "'>&nbsp;</td></tr></tbody>",
+            o
+        }
+        function f(s) {
+            void 0 === s && (s = vt),
+            vt = s,
+            et = {};
+            var r = G.position().top
+              , t = ct.position().top
+              , a = Math.min(s - r, pt.height() + t + 1);
+            rt.height(a - S(nt)),
+            ot.css("top", r),
+            ct.height(a - t - 1),
+            Dt = pt.find("tr:first").height() + 1,
+            Ct = _t("slotMinutes") / wt,
+            Et = Dt / Ct
+        }
+        function v(t) {
+            ft = t,
+            kt.clear(),
+            Ht.clear();
+            var e = V.find("th:first");
+            it && (e = e.add(it.find("th:first"))),
+            e = e.add(pt.find("th:first")),
+            mt = 0,
+            m(e.width("").each(function(a, e) {
+                mt = Math.max(mt, Se(e).outerWidth())
+            }), mt);
+            var a = J.find(".fc-agenda-gutter");
+            it && (a = a.add(it.find("th.fc-agenda-gutter")));
+            var o = ct[0].clientWidth;
+            bt = ct.width() - o,
+            bt ? (m(a, bt),
+            a.show().prev().removeClass("fc-last")) : a.hide().prev().addClass("fc-last"),
+            yt = Math.floor((o - mt) / St),
+            m(U.slice(0, -1), yt)
+        }
+        function y() {
+            function s() {
+                ct.scrollTop(a)
+            }
+            var e = i()
+              , t = ze(e);
+            t.setHours(_t("firstHour"));
+            var a = A(e, t) + 1;
+            s(),
+            setTimeout(s, 0)
+        }
+        function D(t) {
+            t.click(C).mousedown(Ue)
+        }
+        function w(t) {
+            t.click(C).mousedown(q)
+        }
+        function C(t) {
+            if (!_t("selectable")) {
+                var e = Math.min(St - 1, Math.floor((t.pageX - J.offset().left - mt) / yt))
+                  , a = Ze(0, e)
+                  , n = this.parentNode.className.match(/fc-slot(\d+)/);
+                if (n) {
+                    var s = parseInt(n[1]) * _t("slotMinutes")
+                      , r = Math.floor(s / 60);
+                    a.setHours(r),
+                    a.setMinutes(s % 60 + Ft),
+                    Ye("dayClick", Z[e], a, !1, t)
+                } else
+                    Ye("dayClick", Z[e], a, !0, t)
+            }
+        }
+        function E(o, e, t) {
+            t && Tt.build();
+            for (var a, l = Qe(o, e), s = 0; s < l.length; s++)
+                a = l[s],
+                D(M(a.row, a.leftCol, a.row, a.rightCol))
+        }
+        function M(r, e, t, a) {
+            var n = Tt.rect(r, e, t, a, ot);
+            return Be(n, ot)
+        }
+        function T(o, e) {
+            for (var t = 0; t < St; t++) {
+                var i = Ze(0, t)
+                  , n = ke(ze(i), 1)
+                  , s = new Date(Math.max(i, o))
+                  , r = new Date(Math.min(n, e));
+                if (s < r) {
+                    var l = Tt.rect(0, t, 0, t, gt)
+                      , d = A(i, s)
+                      , c = A(i, r);
+                    l.top = d,
+                    l.height = c - d,
+                    w(Be(l, gt))
+                }
+            }
+        }
+        function x(t) {
+            return kt.left(t)
+        }
+        function H(t) {
+            return Ht.left(t)
+        }
+        function R(t) {
+            return kt.right(t)
+        }
+        function z(t) {
+            return Ht.right(t)
+        }
+        function N(t) {
+            return _t("allDaySlot") && !t.row
+        }
+        function W(s) {
+            var e = Ze(0, s.col)
+              , t = s.row;
+            return _t("allDaySlot") && t--,
+            0 <= t && He(e, Ft + t * wt),
+            e
+        }
+        function A(o, l) {
+            if (o = ze(o, !0),
+            l < He(ze(o), Ft))
+                return 0;
+            if (l >= He(ze(o), Nt))
+                return pt.height();
+            var t = _t("slotMinutes")
+              , a = 60 * l.getHours() + l.getMinutes() - Ft
+              , n = Math.floor(a / t)
+              , s = et[n];
+            return void 0 === s && (s = et[n] = pt.find("tr").eq(n).find("td div")[0].offsetTop),
+            Math.max(0, Math.round(s - 1 + Dt * (a % t / t)))
+        }
+        function L() {
+            return dt
+        }
+        function _(a, e) {
+            var t = _t("selectHelper");
+            if (Tt.build(),
+            t) {
+                var n = Ke(a).col;
+                if (0 <= n && n < St) {
+                    var s = Tt.rect(0, n, 0, n, gt)
+                      , r = A(a, a)
+                      , i = A(a, e);
+                    if (i > r) {
+                        if (s.top = r,
+                        s.height = i - r,
+                        s.left += 2,
+                        s.width -= 5,
+                        Se.isFunction(t)) {
+                            var o = t(a, e);
+                            o && (s.position = "absolute",
+                            ut = Se(o).css(s).appendTo(gt))
+                        } else
+                            s.isStart = !0,
+                            s.isEnd = !0,
+                            ut = Se(Ge({
+                                title: "",
+                                start: a,
+                                end: e,
+                                className: ["fc-select-helper"],
+                                editable: !1
+                            }, s)),
+                            ut.css("opacity", _t("dragOpacity"));
+                        ut && (w(ut),
+                        gt.append(ut),
+                        m(ut, s.width, !0),
+                        b(ut, s.height, !0))
+                    }
+                }
+            } else
+                T(a, e)
+        }
+        function P() {
+            Ve(),
+            ut && (ut.remove(),
+            ut = null)
+        }
+        function q(a) {
+            if (1 == a.which && _t("selectable")) {
+                Je(a);
+                var r;
+                xt.start(function(t, e) {
+                    if (P(),
+                    t && t.col == e.col && !N(t)) {
+                        var a = W(e)
+                          , n = W(t);
+                        r = [a, He(ze(a), wt), n, He(ze(n), wt)].sort(k),
+                        _(r[0], r[3])
+                    } else
+                        r = null
+                }, a),
+                Se(document).one("mouseup", function(t) {
+                    xt.stop(),
+                    r && (+r[0] == +r[1] && Y(r[0], !1, t),
+                    Xe(r[0], r[3], !1, t))
+                })
+            }
+        }
+        function Y(s, e, t) {
+            Ye("dayClick", Z[Ke(s).col], s, e, t)
+        }
+        function B(a, e) {
+            xt.start(function(s) {
+                if (Ve(),
+                s)
+                    if (N(s))
+                        M(s.row, s.col, s.row, s.col);
+                    else {
+                        var e = W(s)
+                          , t = He(ze(e), _t("defaultEventMinutes"));
+                        T(e, t)
+                    }
+            }, e)
+        }
+        function I(s, e, t) {
+            var a = xt.stop();
+            Ve(),
+            a && Ye("drop", s, W(a), N(a), e, t)
+        }
+        var X = this;
+        X.renderAgenda = s,
+        X.setWidth = v,
+        X.setHeight = f,
+        X.afterRender = function() {
+            y()
+        }
+        ,
+        X.defaultEventEnd = function(a) {
+            var e = ze(a.start);
+            return a.allDay ? e : He(e, _t("defaultEventMinutes"))
+        }
+        ,
+        X.timePosition = A,
+        X.getIsCellAllDay = N,
+        X.allDayRow = L,
+        X.getCoordinateGrid = function() {
+            return Tt
+        }
+        ,
+        X.getHoverListener = function() {
+            return xt
+        }
+        ,
+        X.colLeft = x,
+        X.colRight = R,
+        X.colContentLeft = H,
+        X.colContentRight = z,
+        X.getDaySegmentContainer = function() {
+            return lt
+        }
+        ,
+        X.getSlotSegmentContainer = function() {
+            return ht
+        }
+        ,
+        X.getMinMinute = function() {
+            return Ft
+        }
+        ,
+        X.getMaxMinute = function() {
+            return Nt
+        }
+        ,
+        X.getSlotContainer = function() {
+            return gt
+        }
+        ,
+        X.getRowCnt = function() {
+            return 1
+        }
+        ,
+        X.getColCnt = function() {
+            return St
+        }
+        ,
+        X.getColWidth = function() {
+            return yt
+        }
+        ,
+        X.getSnapHeight = function() {
+            return Et
+        }
+        ,
+        X.getSnapMinutes = function() {
+            return wt
+        }
+        ,
+        X.defaultSelectionEnd = function(a, e) {
+            return e ? ze(a) : He(ze(a), _t("slotMinutes"))
+        }
+        ,
+        X.renderDayOverlay = E,
+        X.renderSelection = function(s, e, t) {
+            t ? _t("allDaySlot") && E(s, ke(ze(e), 1), !0) : _(s, e)
+        }
+        ,
+        X.clearSelection = P,
+        X.reportDayClick = Y,
+        X.dragStart = B,
+        X.dragStop = I,
+        st.call(X, a, o, n),
+        ge.call(X),
+        ie.call(X),
+        at.call(X);
+        var J, V, U, G, Z, ve, Ce, nt, rt, ot, lt, it, dt, ct, gt, ht, pt, ut, ft, vt, mt, yt, bt, Dt, wt, Ct, Et, St, Mt, Tt, xt, kt, Ht, Rt, zt, Ft, Nt, Wt, Ot, At, Lt, _t = X.opt, Ye = X.trigger, Be = X.renderOverlay, Ve = X.clearOverlays, Xe = X.reportSelection, Je = X.unselect, Ue = X.daySelectionMousedown, Ge = X.slotSegHtml, Ze = X.cellToDate, Ke = X.dateToCell, Qe = X.rangeToSegments, $e = o.formatDate, et = {};
+        j(a.addClass("fc-agenda")),
+        Tt = new he(function(e, a) {
+            function t(t) {
+                return Math.max(c, Math.min(g, t))
+            }
+            var s, n, r;
+            U.each(function(o, e) {
+                s = Se(e),
+                n = s.offset().left,
+                o && (r[1] = n),
+                r = [n],
+                a[o] = r
+            }),
+            r[1] = n + s.outerWidth(),
+            _t("allDaySlot") && (s = dt,
+            n = s.offset().top,
+            e[0] = [n, n + s.outerHeight()]);
+            for (var i = gt.offset().top, c = ct.offset().top, g = c + ct.outerHeight(), h = 0; h < Mt * Ct; h++)
+                e.push([t(i + Et * h), t(i + Et * (h + 1))])
+        }
+        ),
+        xt = new pe(Tt),
+        kt = new ue(function(t) {
+            return ve.eq(t)
+        }
+        ),
+        Ht = new ue(function(t) {
+            return Ce.eq(t)
+        }
+        )
+    }
+    function at() {
+        function i(s) {
+            var e, i, d, c, h, y = R(), p = M(), u = E(), f = Se.map(s, n), v = [];
+            for (i = 0; i < y; i++)
+                for (e = T(0, i),
+                He(e, p),
+                h = a(s, f, e, He(ze(e), u - p)),
+                h = Y(h),
+                d = 0; d < h.length; d++)
+                    c = h[d],
+                    c.col = i,
+                    v.push(c);
+            return v
+        }
+        function a(i, e, t, a) {
+            var n, h, v, m, y, b, D, w, C = [], u = i.length;
+            for (n = 0; n < u; n++)
+                h = i[n],
+                v = h.start,
+                m = e[n],
+                m > t && v < a && (v < t ? (y = ze(t),
+                D = !1) : (y = v,
+                D = !0),
+                m > a ? (b = ze(a),
+                w = !1) : (b = m,
+                w = !0),
+                C.push({
+                    event: h,
+                    start: y,
+                    end: b,
+                    isStart: D,
+                    isEnd: w
+                }));
+            return C.sort(K)
+        }
+        function n(t) {
+            return t.end ? ze(t.end) : He(ze(t.start), N("defaultEventMinutes"))
+        }
+        function e(t, e) {
+            var a, n, i, d, M, F, W, O, A, L, _, q, Y, B, j, I, X = t.length, T = "", J = x(), V = N("isRTL");
+            for (a = 0; a < X; a++)
+                n = t[a],
+                i = n.event,
+                d = k(n.start, n.start),
+                M = k(n.start, n.end),
+                F = H(n.col),
+                W = z(n.col),
+                O = W - F,
+                W -= .025 * O,
+                O = W - F,
+                A = O * (n.forwardCoord - n.backwardCoord),
+                N("slotEventOverlap") && (A = Math.max(2 * (A - 10), A)),
+                V ? (_ = W - n.backwardCoord * O,
+                L = _ - A) : (L = F + n.backwardCoord * O,
+                _ = L + A),
+                L = Math.max(L, F),
+                _ = Math.min(_, W),
+                A = _ - L,
+                n.top = d,
+                n.left = L,
+                n.outerWidth = A,
+                n.outerHeight = M - d,
+                T += C(i, n);
+            for (J[0].innerHTML = T,
+            q = J.children(),
+            a = 0; a < X; a++)
+                n = t[a],
+                i = n.event,
+                Y = Se(q[a]),
+                B = u("eventRender", i, i, Y),
+                !1 === B ? Y.remove() : (B && !0 !== B && (Y.remove(),
+                Y = Se(B).css({
+                    position: "absolute",
+                    top: n.top,
+                    left: n.left
+                }).appendTo(J)),
+                n.element = Y,
+                i._id === e ? l(i, Y, n) : Y[0]._fci = a,
+                P(i, Y));
+            for (v(J, t, l),
+            a = 0; a < X; a++)
+                n = t[a],
+                (Y = n.element) && (n.vsides = S(Y, !0),
+                n.hsides = D(Y, !0),
+                j = Y.find(".fc-event-title"),
+                j.length && (n.contentTop = j[0].offsetTop));
+            for (a = 0; a < X; a++)
+                n = t[a],
+                (Y = n.element) && (Y[0].style.width = Math.max(0, n.outerWidth - n.hsides) + "px",
+                I = Math.max(0, n.outerHeight - n.vsides),
+                Y[0].style.height = I + "px",
+                i = n.event,
+                void 0 !== n.contentTop && 10 > I - n.contentTop && (Y.find("div.fc-event-time").text(G(i.start, N("timeFormat")) + " - " + i.title),
+                Y.find("div.fc-event-title").remove()),
+                u("eventAfterRender", i, i, Y))
+        }
+        function C(t, e) {
+            var a = "<"
+              , o = t.url
+              , s = W(t, N)
+              , r = ["fc-event", "fc-event-vert"];
+            return d(t) && r.push("fc-event-draggable"),
+            e.isStart && r.push("fc-event-start"),
+            e.isEnd && r.push("fc-event-end"),
+            r = r.concat(t.className),
+            t.source && (r = r.concat(t.source.className || [])),
+            a += o ? "a href='" + F(t.url) + "'" : "div",
+            a += " class='" + r.join(" ") + "' style='position:absolute;top:" + e.top + "px;left:" + e.left + "px;" + s + "'><div class='fc-event-inner'><div class='fc-event-time'>" + F(Z(t.start, t.end, N("timeFormat"))) + "</div><div class='fc-event-title'>" + F(t.title || "") + "</div></div><div class='fc-event-bg'></div>",
+            e.isEnd && c(t) && (a += "<div class='ui-resizable-handle ui-resizable-s'>=</div>"),
+            a += "</" + (o ? "a" : "div") + ">",
+            a
+        }
+        function l(o, e, t) {
+            var a = e.find("div.fc-event-time");
+            d(o) && s(o, e, a),
+            t.isEnd && c(o) && r(o, e, a),
+            g(o, e)
+        }
+        function s(c, f, e) {
+            function a() {
+                J(),
+                C && (z ? (e.hide(),
+                f.draggable("option", "grid", null),
+                X(ke(ze(c.start), P), ke(y(c), P))) : (t(Y),
+                e.css("display", ""),
+                f.draggable("option", "grid", [S, M])))
+            }
+            function t(t) {
+                var a, n = He(ze(c.start), t);
+                c.end && (a = He(ze(c.end), t)),
+                e.text(Z(n, a, N("timeFormat")))
+            }
+            var s, v, C, H, z, F, W, _, P, Y, I, V = o.getCoordinateGrid(), n = R(), S = O(), M = A(), x = L();
+            f.draggable({
+                scroll: !1,
+                grid: [S, M],
+                axis: 1 == n && "y",
+                opacity: N("dragOpacity"),
+                revertDuration: N("dragRevertDuration"),
+                start: function(e, t) {
+                    u("eventDragStart", f, c, e, t),
+                    B(c, f),
+                    V.build(),
+                    s = f.position(),
+                    v = V.cell(e.pageX, e.pageY),
+                    C = H = !0,
+                    z = F = m(v),
+                    W = _ = 0,
+                    P = 0,
+                    Y = I = 0
+                },
+                drag: function(l, e) {
+                    var t = V.cell(l.pageX, l.pageY);
+                    if (C = !!t,
+                    C) {
+                        if (z = m(t),
+                        W = Math.round((e.position.left - s.left) / S),
+                        W != _) {
+                            var i = T(0, v.col)
+                              , r = v.col + W;
+                            r = Math.max(0, r),
+                            r = Math.min(n - 1, r);
+                            var d = T(0, r);
+                            P = h(d, i)
+                        }
+                        z || (Y = Math.round((e.position.top - s.top) / M) * x)
+                    }
+                    (C != H || z != F || W != _ || Y != I) && (a(),
+                    H = C,
+                    F = z,
+                    _ = W,
+                    I = Y),
+                    f.draggable("option", "revert", !C)
+                },
+                stop: function(e, t) {
+                    J(),
+                    u("eventDragStop", f, c, e, t),
+                    C && (z || P || Y) ? j(this, c, P, z ? 0 : Y, z, e, t) : (C = !0,
+                    z = !1,
+                    W = 0,
+                    P = 0,
+                    Y = 0,
+                    a(),
+                    f.css("filter", ""),
+                    f.css(s),
+                    q(c, f))
+                }
+            })
+        }
+        function r(c, e, a) {
+            var g, h, n = A(), i = L();
+            e.resizable({
+                handles: {
+                    s: ".ui-resizable-handle"
+                },
+                grid: n,
+                start: function(a, t) {
+                    g = h = 0,
+                    B(c, e),
+                    u("eventResizeStart", this, c, a, t)
+                },
+                resize: function(s, r) {
+                    g = Math.round((Math.max(n, e.height()) - r.originalSize.height) / n),
+                    g != h && (a.text(Z(c.start, g || c.end ? He(t(c), i * g) : null, N("timeFormat"))),
+                    h = g)
+                },
+                stop: function(a, t) {
+                    u("eventResizeStop", this, c, a, t),
+                    g ? I(this, c, 0, i * g, a, t) : q(c, e)
+                }
+            })
+        }
+        var o = this;
+        o.renderEvents = function(t, a) {
+            var n, r = t.length, o = [], l = [];
+            for (n = 0; n < r; n++)
+                t[n].allDay ? o.push(t[n]) : l.push(t[n]);
+            N("allDaySlot") && (V(o, a),
+            p()),
+            e(i(l), a)
+        }
+        ,
+        o.clearEvents = function() {
+            f().empty(),
+            x().empty()
+        }
+        ,
+        o.slotSegHtml = C,
+        ae.call(o);
+        var N = o.opt
+          , u = o.trigger
+          , d = o.isEventDraggable
+          , c = o.isEventResizable
+          , t = o.eventEnd
+          , g = o.eventElementHandlers
+          , p = o.setHeight
+          , f = o.getDaySegmentContainer
+          , x = o.getSlotSegmentContainer
+          , w = o.getHoverListener
+          , E = o.getMaxMinute
+          , M = o.getMinMinute
+          , k = o.timePosition
+          , m = o.getIsCellAllDay
+          , H = o.colContentLeft
+          , z = o.colContentRight
+          , T = o.cellToDate
+          , R = o.getColCnt
+          , O = o.getColWidth
+          , A = o.getSnapHeight
+          , L = o.getSnapMinutes
+          , _ = o.getSlotContainer
+          , P = o.reportEventElement
+          , q = o.showEvents
+          , B = o.hideEvents
+          , j = o.eventDrop
+          , I = o.eventResize
+          , X = o.renderDayOverlay
+          , J = o.clearOverlays
+          , V = o.renderDayEvents
+          , U = o.calendar
+          , G = U.formatDate
+          , Z = U.formatDates;
+        o.draggableDayEvent = function(o, e, t) {
+            function a() {
+                d || (e.width(s).height("").draggable("option", "grid", null),
+                d = !0)
+            }
+            var s, D, C, E = t.isStart, d = !0, v = w(), S = O(), p = A(), f = L(), g = M();
+            e.draggable({
+                opacity: N("dragOpacity", "month"),
+                revertDuration: N("dragRevertDuration"),
+                start: function(t, n) {
+                    u("eventDragStart", e, o, t, n),
+                    B(o, e),
+                    s = e.width(),
+                    v.start(function(t, s) {
+                        if (J(),
+                        t) {
+                            D = !1;
+                            var n = T(0, s.col)
+                              , r = T(0, t.col);
+                            C = h(r, n),
+                            t.row ? E ? d && (e.width(S - 10),
+                            b(e, p * Math.round((o.end ? (o.end - o.start) / 6e4 : N("defaultEventMinutes")) / f)),
+                            e.draggable("option", "grid", [S, 1]),
+                            d = !1) : D = !0 : (X(ke(ze(o.start), C), ke(y(o), C)),
+                            a()),
+                            D = D || d && !C
+                        } else
+                            a(),
+                            D = !0;
+                        e.draggable("option", "revert", D)
+                    }, t, "drag")
+                },
+                stop: function(s, t) {
+                    if (v.stop(),
+                    J(),
+                    u("eventDragStop", e, o, s, t),
+                    D)
+                        a(),
+                        e.css("filter", ""),
+                        q(o, e);
+                    else {
+                        var n = 0;
+                        d || (n = Math.round((e.offset().top - _().offset().top) / p) * f + g - (60 * o.start.getHours() + o.start.getMinutes())),
+                        j(this, o, C, n, d, s, t)
+                    }
+                }
+            })
+        }
+    }
+    function Y(s) {
+        var e, r = B(s), a = r[0];
+        if (I(r),
+        a) {
+            for (e = 0; e < a.length; e++)
+                X(a[e]);
+            for (e = 0; e < a.length; e++)
+                J(a[e], 0, 0)
+        }
+        return V(r)
+    }
+    function B(r) {
+        var e, o, l, i = [];
+        for (e = 0; e < r.length; e++) {
+            for (o = r[e],
+            l = 0; l < i.length && !!U(o, i[l]).length; l++)
+                ;
+            (i[l] || (i[l] = [])).push(o)
+        }
+        return i
+    }
+    function I(o) {
+        var e, l, i, d, c;
+        for (e = 0; e < o.length; e++)
+            for (l = o[e],
+            i = 0; i < l.length; i++)
+                for (d = l[i],
+                d.forwardSegs = [],
+                c = e + 1; c < o.length; c++)
+                    U(d, o[c], d.forwardSegs)
+    }
+    function X(r) {
+        var e, o, l = r.forwardSegs, n = 0;
+        if (void 0 === r.forwardPressure) {
+            for (e = 0; e < l.length; e++)
+                o = l[e],
+                X(o),
+                n = Math.max(n, 1 + o.forwardPressure);
+            r.forwardPressure = n
+        }
+    }
+    function J(r, e, t) {
+        var a, o = r.forwardSegs;
+        if (void 0 === r.forwardCoord)
+            for (o.length ? (o.sort(Z),
+            J(o[0], e + 1, t),
+            r.forwardCoord = o[0].backwardCoord) : r.forwardCoord = 1,
+            r.backwardCoord = r.forwardCoord - (r.forwardCoord - t) / (e + 1),
+            a = 0; a < o.length; a++)
+                J(o[a], 0, r.forwardCoord)
+    }
+    function V(r) {
+        var e, o, l, i = [];
+        for (e = 0; e < r.length; e++)
+            for (o = r[e],
+            l = 0; l < o.length; l++)
+                i.push(o[l]);
+        return i
+    }
+    function U(s, e, t) {
+        t = t || [];
+        for (var r = 0; r < e.length; r++)
+            G(s, e[r]) && t.push(e[r]);
+        return t
+    }
+    function G(a, e) {
+        return a.end > e.start && a.start < e.end
+    }
+    function Z(a, e) {
+        return e.forwardPressure - a.forwardPressure || (a.backwardCoord || 0) - (e.backwardCoord || 0) || K(a, e)
+    }
+    function K(a, e) {
+        return a.start - e.start || e.end - e.start - (a.end - a.start) || (a.event.title || "").localeCompare(e.event.title)
+    }
+    function st(a, o, c) {
+        function s(a, e) {
+            var t = _[a];
+            return Se.isPlainObject(t) ? N(t, e || c) : t
+        }
+        function u(a, e) {
+            return o.trigger.apply(o, [a, e || E].concat(Array.prototype.slice.call(arguments, 2), [E]))
+        }
+        function e(s) {
+            x = {};
+            var e, r, o = s.length;
+            for (e = 0; e < o; e++)
+                r = s[e],
+                x[r._id] ? x[r._id].push(r) : x[r._id] = [r]
+        }
+        function i(t) {
+            return t.end ? ze(t.end) : S(t)
+        }
+        function n(a, e) {
+            H.push({
+                event: a,
+                element: e
+            }),
+            k[a._id] ? k[a._id].push(e) : k[a._id] = [e]
+        }
+        function r() {
+            Se.each(H, function(a, e) {
+                E.trigger("eventDestroy", e.event, e.event, e.element)
+            })
+        }
+        function l(o, e, t) {
+            var a, l = k[o._id], s = l.length;
+            for (a = 0; a < s; a++)
+                e && l[a][0] == e[0] || l[a][t]()
+        }
+        function d(i, t, e, a, n, s, r) {
+            var o = t.allDay
+              , l = t._id;
+            p(x[l], e, a, n),
+            u("eventDrop", i, t, e, a, n, function() {
+                p(x[l], -e, -a, o),
+                T(l)
+            }, s, r),
+            T(l)
+        }
+        function g(l, t, e, a, n, s) {
+            var r = t._id;
+            f(x[r], e, a),
+            u("eventResize", l, t, e, a, function() {
+                f(x[r], -e, -a),
+                T(r)
+            }, n, s),
+            T(r)
+        }
+        function p(e, t, a, o) {
+            a = a || 0;
+            for (var s, i = e.length, l = 0; l < i; l++)
+                s = e[l],
+                void 0 !== o && (s.allDay = o),
+                He(ke(s.start, t, !0), a),
+                s.end && (s.end = He(ke(s.end, t, !0), a)),
+                M(s, _)
+        }
+        function f(e, t, a) {
+            a = a || 0;
+            for (var o, d = e.length, r = 0; r < d; r++)
+                o = e[r],
+                o.end = He(ke(i(o), t, !0), a),
+                M(o, _)
+        }
+        function v() {
+            return F
+        }
+        function m(o, l) {
+            var i = E.getColCnt()
+              , a = Y ? -1 : 1
+              , n = Y ? i - 1 : 0;
+            "object" == typeof o && (l = o.col,
+            o = o.row);
+            var s = o * i + (l * a + n);
+            return s
+        }
+        function y(a) {
+            var s = E.visStart.getDay();
+            return a += A[s],
+            7 * Math.floor(a / F) + q[(a % F + F) % F] - s
+        }
+        function b(a) {
+            var e = ze(E.visStart);
+            return ke(e, a),
+            e
+        }
+        function D(t) {
+            return h(t, E.visStart)
+        }
+        function w(a) {
+            var s = E.visStart.getDay();
+            return a += s,
+            Math.floor(a / 7) * F + A[(a % 7 + 7) % 7] - A[s]
+        }
+        function C(r) {
+            var e = E.getColCnt()
+              , t = Y ? -1 : 1
+              , a = Y ? e - 1 : 0
+              , n = Math.floor(r / e);
+            return {
+                row: n,
+                col: (r % e + e) % e * t + a
+            }
+        }
+        var E = this;
+        E.element = a,
+        E.calendar = o,
+        E.name = c,
+        E.opt = s,
+        E.trigger = u,
+        E.isEventDraggable = function(a) {
+            var e = a.source || {};
+            return L(a.startEditable, e.startEditable, s("eventStartEditable"), a.editable, e.editable, s("editable")) && !s("disableDragging")
+        }
+        ,
+        E.isEventResizable = function(a) {
+            var e = a.source || {};
+            return L(a.durationEditable, e.durationEditable, s("eventDurationEditable"), a.editable, e.editable, s("editable")) && !s("disableResizing")
+        }
+        ,
+        E.setEventData = e,
+        E.clearEventData = function() {
+            x = {},
+            k = {},
+            H = []
+        }
+        ,
+        E.eventEnd = i,
+        E.reportEventElement = n,
+        E.triggerEventDestroy = r,
+        E.eventElementHandlers = function(s, e) {
+            e.click(function(t) {
+                if (!e.hasClass("ui-draggable-dragging") && !e.hasClass("ui-resizable-resizing"))
+                    return u("eventClick", this, s, t)
+            }).hover(function(e) {
+                u("eventMouseover", this, s, e)
+            }, function(e) {
+                u("eventMouseout", this, s, e)
+            })
+        }
+        ,
+        E.showEvents = function(a, e) {
+            l(a, e, "show")
+        }
+        ,
+        E.hideEvents = function(a, e) {
+            l(a, e, "hide")
+        }
+        ,
+        E.eventDrop = d,
+        E.eventResize = g;
+        var S = E.defaultEventEnd
+          , M = o.normalizeEvent
+          , T = o.reportEventChange
+          , x = {}
+          , k = {}
+          , H = []
+          , _ = o.options;
+        E.isHiddenDay = function(t) {
+            return "object" == typeof t && (t = t.getDay()),
+            O[t]
+        }
+        ,
+        E.skipHiddenDays = function(s, e, n) {
+            for (e = e || 1; O[(s.getDay() + (n ? e : 0) + 7) % 7]; )
+                ke(s, e)
+        }
+        ,
+        E.getCellsPerWeek = v,
+        E.dateToCell = function(s) {
+            var e = D(s)
+              , t = w(e)
+              , a = C(t);
+            return a
+        }
+        ,
+        E.dateToDayOffset = D,
+        E.dayOffsetToCellOffset = w,
+        E.cellOffsetToCell = C,
+        E.cellToDate = function() {
+            var s = m.apply(null, arguments)
+              , e = y(s)
+              , t = b(e);
+            return t
+        }
+        ,
+        E.cellToCellOffset = m,
+        E.cellOffsetToDayOffset = y,
+        E.dayOffsetToDate = b,
+        E.rangeToSegments = function(b, e) {
+            for (var t = E.getRowCnt(), a = E.getColCnt(), n = [], s = D(b), r = D(e), i = w(s), o = w(r) - 1, l = 0; l < t; l++) {
+                var S = l * a
+                  , c = Math.max(i, S)
+                  , g = Math.min(o, S + a - 1);
+                if (c <= g) {
+                    var h = C(c)
+                      , p = C(g)
+                      , u = [h.col, p.col].sort()
+                      , f = y(c) == s
+                      , v = y(g) + 1 == r;
+                    n.push({
+                        row: l,
+                        leftCol: u[0],
+                        rightCol: u[1],
+                        isStart: f,
+                        isEnd: v
+                    })
+                }
+            }
+            return n
+        }
+        ;
+        var F, P = s("hiddenDays") || [], O = [], A = [], q = [], Y = s("isRTL");
+        (function() {
+            !1 === s("weekends") && P.push(0, 6);
+            for (var a = 0, n = 0; 7 > a; a++)
+                A[a] = n,
+                O[a] = -1 != Se.inArray(a, P),
+                O[a] || (q[n] = a,
+                n++);
+            if (F = n,
+            !F)
+                throw "invalid hiddenDays"
+        }
+        )()
+    }
+    function ae() {
+        function a(n, l, t) {
+            var e = o([n], !0, !1)
+              , a = [];
+            return $(e, function(s, e) {
+                s.row === l && e.css("top", t),
+                a.push(e[0])
+            }),
+            a
+        }
+        function o(a, e, t) {
+            var s, n, g = X(), d = e ? Se("<div/>") : g, h = u(a);
+            return C(h),
+            s = i(h),
+            d[0].innerHTML = s,
+            n = d.children(),
+            e && g.append(n),
+            l(h, n),
+            $(h, function(a, e) {
+                a.hsides = D(e, !0)
+            }),
+            $(h, function(a, e) {
+                e.width(Math.max(0, a.outerWidth - a.hsides))
+            }),
+            $(h, function(a, e) {
+                a.outerHeight = e.outerHeight(!0)
+            }),
+            c(h, t),
+            h
+        }
+        function u(r) {
+            for (var e, o = [], a = 0; a < r.length; a++)
+                e = s(r[a]),
+                o.push.apply(o, e);
+            return o
+        }
+        function s(r) {
+            for (var e = r.start, t = y(r), a = K(e, t), n = 0; n < a.length; n++)
+                a[n].event = r;
+            return a
+        }
+        function C(t) {
+            for (var e = w("isRTL"), a = 0; a < t.length; a++) {
+                var i = t[a]
+                  , s = (e ? i.isEnd : i.isStart) ? Y : _
+                  , r = (e ? i.isStart : i.isEnd) ? B : q
+                  , o = s(i.leftCol)
+                  , l = r(i.rightCol);
+                i.left = o,
+                i.outerWidth = l - o
+            }
+        }
+        function i(s) {
+            for (var e = "", r = 0; r < s.length; r++)
+                e += n(s[r]);
+            return e
+        }
+        function n(t) {
+            var e = ""
+              , l = w("isRTL")
+              , n = t.event
+              , s = n.url
+              , r = ["fc-event", "fc-event-hori"];
+            E(n) && r.push("fc-event-draggable"),
+            t.isStart && r.push("fc-event-start"),
+            t.isEnd && r.push("fc-event-end"),
+            r = r.concat(n.className),
+            n.source && (r = r.concat(n.source.className || []));
+            var d = W(n, w);
+            return e += s ? "<a href='" + F(s) + "'" : "<div",
+            e += " class='" + r.join(" ") + "' style='position:absolute;left:" + t.left + "px;" + d + "'><div class='fc-event-inner'>",
+            !n.allDay && t.isStart && (e += "<span class='fc-event-time'>" + F(J(n.start, n.end, w("timeFormat"))) + "</span>"),
+            e += "<span class='fc-event-title'>" + F(n.title || "") + "</span></div>",
+            t.isEnd && M(n) && (e += "<div class='ui-resizable-handle ui-resizable-" + (l ? "w" : "e") + "'>&nbsp;&nbsp;&nbsp;</div>"),
+            e += "</" + (s ? "a" : "div") + ">",
+            e
+        }
+        function l(a, e) {
+            for (var t = 0; t < a.length; t++) {
+                var i = a[t]
+                  , s = i.event
+                  , r = e.eq(t)
+                  , d = S("eventRender", s, s, r);
+                !1 === d ? r.remove() : (d && !0 !== d && (d = Se(d).css({
+                    position: "absolute",
+                    left: i.left
+                }),
+                r.replaceWith(d),
+                r = d),
+                i.element = r)
+            }
+        }
+        function c(o, e) {
+            var t = d(o)
+              , a = p()
+              , n = [];
+            if (e)
+                for (var s = 0; s < a.length; s++)
+                    a[s].height(t[s]);
+            for (var s = 0; s < a.length; s++)
+                n.push(a[s].position().top);
+            $(o, function(a, e) {
+                e.css("top", n[a.row] + a.top)
+            })
+        }
+        function d(h) {
+            for (var e = L(), t = O(), a = [], n = g(h), s = 0; s < e; s++) {
+                for (var p = n[s], i = [], o = 0; o < t; o++)
+                    i.push(0);
+                for (var u, f = 0; f < p.length; f++) {
+                    u = p[f],
+                    u.top = R(i.slice(u.leftCol, u.rightCol + 1));
+                    for (var o = u.leftCol; o <= u.rightCol; o++)
+                        i[o] = u.top + u.outerHeight
+                }
+                a.push(R(i))
+            }
+            return a
+        }
+        function g(o) {
+            var l, i, d, c = L(), s = [];
+            for (l = 0; l < o.length; l++)
+                i = o[l],
+                d = i.row,
+                i.element && (s[d] ? s[d].push(i) : s[d] = [i]);
+            for (d = 0; d < c; d++)
+                s[d] = e(s[d] || []);
+            return s
+        }
+        function e(s) {
+            for (var e = [], t = r(s), a = 0; a < t.length; a++)
+                e.push.apply(e, t[a]);
+            return e
+        }
+        function r(r) {
+            r.sort(ee);
+            for (var e, o = [], a = 0; a < r.length; a++) {
+                e = r[a];
+                for (var l = 0; l < o.length && !!Q(e, o[l]); l++)
+                    ;
+                o[l] ? o[l].push(e) : o[l] = [e]
+            }
+            return o
+        }
+        function p() {
+            var s, n = L(), t = [];
+            for (s = 0; s < n; s++)
+                t[s] = P(s).find("div.fc-day-content > div");
+            return t
+        }
+        function f(s, r) {
+            var e = X();
+            $(s, function(t, e, a) {
+                var n = t.event;
+                n._id === r ? m(n, e, t) : e[0]._fci = a
+            }),
+            v(e, s, m)
+        }
+        function m(s, e, t) {
+            E(s) && b.draggableDayEvent(s, e, t),
+            t.isEnd && M(s) && b.resizableDayEvent(s, e, t),
+            x(s, e)
+        }
+        var b = this;
+        b.renderDayEvents = function(s, e) {
+            var t = o(s, !1, !0);
+            $(t, function(a, e) {
+                T(a.event, e)
+            }),
+            f(t, e),
+            $(t, function(a, e) {
+                S("eventAfterRender", a.event, a.event, e)
+            })
+        }
+        ,
+        b.draggableDayEvent = function(o, e) {
+            var a, l = Z();
+            e.draggable({
+                delay: 50,
+                opacity: w("dragOpacity"),
+                revertDuration: w("dragRevertDuration"),
+                start: function(s, t) {
+                    S("eventDragStart", e, o, s, t),
+                    H(o, e),
+                    l.start(function(n, t, s, r) {
+                        if (e.draggable("option", "revert", !n || !s && !r),
+                        U(),
+                        n) {
+                            var i = oe(t)
+                              , l = oe(n);
+                            a = h(l, i),
+                            V(ke(ze(o.start), a), ke(y(o), a))
+                        } else
+                            a = 0
+                    }, s, "drag")
+                },
+                stop: function(s, t) {
+                    l.stop(),
+                    U(),
+                    S("eventDragStop", e, o, s, t),
+                    a ? z(this, o, a, 0, o.allDay, s, t) : (e.css("filter", ""),
+                    k(o, e))
+                }
+            })
+        }
+        ,
+        b.resizableDayEvent = function(o, e, s) {
+            var n = w("isRTL")
+              , r = n ? "w" : "e"
+              , l = e.find(".ui-resizable-" + r)
+              , p = !1;
+            j(e),
+            e.mousedown(function(t) {
+                t.preventDefault()
+            }).click(function(t) {
+                p && (t.preventDefault(),
+                t.stopImmediatePropagation())
+            }),
+            l.mousedown(function(n) {
+                function l(t) {
+                    S("eventResizeStop", this, o, t),
+                    Se("body").css("cursor", ""),
+                    i.stop(),
+                    U(),
+                    b && N(this, o, b, 0, t),
+                    setTimeout(function() {
+                        p = !1
+                    }, 0)
+                }
+                if (1 == n.which) {
+                    p = !0;
+                    var b, D, i = Z(), c = L(), h = O(), u = e.css("top"), f = Se.extend({}, o), v = se(ne(o.start));
+                    G(),
+                    Se("body").css("cursor", r + "-resize").one("mouseup", l),
+                    S("eventResizeStart", this, o, n),
+                    i.start(function(e, n) {
+                        if (e) {
+                            var l = te(n)
+                              , i = te(e);
+                            if (i = Math.max(i, v),
+                            b = ae(i) - ae(l),
+                            b) {
+                                f.end = ke(t(o), b, !0);
+                                var d = D;
+                                D = a(f, s.row, u),
+                                D = Se(D),
+                                D.find("*").css("cursor", r + "-resize"),
+                                d && d.remove(),
+                                H(o)
+                            } else
+                                D && (k(o),
+                                D.remove(),
+                                D = null);
+                            U(),
+                            V(o.start, ke(y(o), b))
+                        }
+                    }, n)
+                }
+            })
+        }
+        ;
+        var w = b.opt
+          , S = b.trigger
+          , E = b.isEventDraggable
+          , M = b.isEventResizable
+          , t = b.eventEnd
+          , T = b.reportEventElement
+          , x = b.eventElementHandlers
+          , k = b.showEvents
+          , H = b.hideEvents
+          , z = b.eventDrop
+          , N = b.eventResize
+          , L = b.getRowCnt
+          , O = b.getColCnt
+          , A = b.getColWidth
+          , P = b.allDayRow
+          , _ = b.colLeft
+          , q = b.colRight
+          , Y = b.colContentLeft
+          , B = b.colContentRight
+          , I = b.dateToCell
+          , X = b.getDaySegmentContainer
+          , J = b.calendar.formatDates
+          , V = b.renderDayOverlay
+          , U = b.clearOverlays
+          , G = b.clearSelection
+          , Z = b.getHoverListener
+          , K = b.rangeToSegments
+          , oe = b.cellToDate
+          , te = b.cellToCellOffset
+          , ae = b.cellOffsetToDayOffset
+          , ne = b.dateToDayOffset
+          , se = b.dayOffsetToCellOffset
+    }
+    function Q(s, e) {
+        for (var t, r = 0; r < e.length; r++)
+            if (t = e[r],
+            t.leftCol <= s.rightCol && t.rightCol >= s.leftCol)
+                return !0;
+        return !1
+    }
+    function $(r, e) {
+        for (var t = 0; t < r.length; t++) {
+            var o = r[t]
+              , n = o.element;
+            n && e(o, n, t)
+        }
+    }
+    function ee(a, e) {
+        return e.rightCol - e.leftCol - (a.rightCol - a.leftCol) || e.event.allDay - a.event.allDay || a.event.start - e.event.start || (a.event.title || "").localeCompare(e.event.title)
+    }
+    function ie() {
+        function p(t) {
+            l && (l = !1,
+            o(),
+            s("unselect", null, t))
+        }
+        function u(r, e, t, a) {
+            l = !0,
+            s("select", null, r, e, t, a)
+        }
+        var e = this;
+        e.select = function(e, t, o) {
+            p(),
+            t || (t = n(e, o)),
+            r(e, t, o),
+            u(e, t, o)
+        }
+        ,
+        e.unselect = p,
+        e.reportSelection = u,
+        e.daySelectionMousedown = function(t) {
+            var s = e.cellToDate
+              , n = e.getIsCellAllDay
+              , l = e.getHoverListener()
+              , i = e.reportDayClick;
+            if (1 == t.which && a("selectable")) {
+                p(t);
+                var d, c = this;
+                l.start(function(a, e) {
+                    o(),
+                    a && n(a) ? (d = [s(e), s(a)].sort(k),
+                    r(d[0], d[1], !0)) : d = null
+                }, t),
+                Se(document).one("mouseup", function(t) {
+                    l.stop(),
+                    d && (+d[0] == +d[1] && i(d[0], !0, t),
+                    u(d[0], d[1], !0, t))
+                })
+            }
+        }
+        ;
+        var a = e.opt
+          , s = e.trigger
+          , n = e.defaultSelectionEnd
+          , r = e.renderSelection
+          , o = e.clearSelection
+          , l = !1;
+        a("selectable") && a("unselectAuto") && Se(document).mousedown(function(e) {
+            var t = a("unselectCancel");
+            t && Se(e.target).parents(t).length || p(e)
+        })
+    }
+    function ge() {
+        var a = this;
+        a.renderOverlay = function(a, s) {
+            var n = t.shift();
+            return n || (n = Se("<div class='fc-cell-overlay' style='position:absolute;z-index:3'/>")),
+            n[0].parentNode != s[0] && n.appendTo(s),
+            e.push(n.css(a).show()),
+            n
+        }
+        ,
+        a.clearOverlays = function() {
+            for (var s; s = e.shift(); )
+                t.push(s.hide().unbind())
+        }
+        ;
+        var e = []
+          , t = []
+    }
+    function he(t) {
+        var c, h, e = this;
+        e.build = function() {
+            c = [],
+            h = [],
+            t(c, h)
+        }
+        ,
+        e.cell = function(a, e) {
+            var t, n = c.length, r = h.length, o = -1, l = -1;
+            for (t = 0; t < n; t++)
+                if (e >= c[t][0] && e < c[t][1]) {
+                    o = t;
+                    break
+                }
+            for (t = 0; t < r; t++)
+                if (a >= h[t][0] && a < h[t][1]) {
+                    l = t;
+                    break
+                }
+            return 0 <= o && 0 <= l ? {
+                row: o,
+                col: l
+            } : null
+        }
+        ,
+        e.rect = function(a, e, t, s, n) {
+            var r = n.offset();
+            return {
+                top: c[a][0] - r.top,
+                left: h[e][0] - r.left,
+                width: h[s][1] - h[e][0],
+                height: c[t][1] - c[a][0]
+            }
+        }
+    }
+    function pe(c) {
+        function e(e) {
+            te(e);
+            var t = c.cell(e.pageX, e.pageY);
+            (!t != !h || t && (t.row != h.row || t.col != h.col)) && (t ? (!g && (g = t),
+            n(t, g, t.row - g.row, t.col - g.col)) : n(t, g),
+            h = t)
+        }
+        var a, n, g, h, t = this;
+        t.start = function(s, t, r) {
+            n = s,
+            g = h = null,
+            c.build(),
+            e(t),
+            a = r || "mousemove",
+            Se(document).bind(a, e)
+        }
+        ,
+        t.stop = function() {
+            return Se(document).unbind(a, e),
+            h
+        }
+    }
+    function te(t) {
+        void 0 === t.pageX && (t.pageX = t.originalEvent.pageX,
+        t.pageY = t.originalEvent.pageY)
+    }
+    function ue(o) {
+        function a(t) {
+            return l[t] = l[t] || o(t)
+        }
+        var n = this
+          , l = {}
+          , i = {}
+          , e = {};
+        n.left = function(t) {
+            return i[t] = void 0 === i[t] ? a(t).position().left : i[t]
+        }
+        ,
+        n.right = function(s) {
+            return e[s] = void 0 === e[s] ? n.left(s) + a(s).width() : e[s]
+        }
+        ,
+        n.clear = function() {
+            l = {},
+            i = {},
+            e = {}
+        }
+    }
+    var se = {
+        defaultView: "month",
+        aspectRatio: 1.35,
+        header: {
+            left: "title",
+            center: "",
+            right: "today prev,next"
+        },
+        weekends: !0,
+        weekNumbers: !1,
+        weekNumberCalculation: "iso",
+        weekNumberTitle: "W",
+        allDayDefault: !0,
+        ignoreTimezone: !0,
+        lazyFetching: !0,
+        startParam: "start",
+        endParam: "end",
+        titleFormat: {
+            month: "MMMM yyyy",
+            week: "MMM d[ yyyy]{ '&#8212;'[ MMM] d yyyy}",
+            day: "dddd, MMM d, yyyy"
+        },
+        columnFormat: {
+            month: "ddd",
+            week: "ddd M/d",
+            day: "dddd M/d"
+        },
+        timeFormat: {
+            "": "h(:mm)t"
+        },
+        isRTL: !1,
+        firstDay: 0,
+        monthNames: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
+        monthNamesShort: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+        dayNames: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+        dayNamesShort: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+        buttonText: {
+            prev: "<span class='fc-text-arrow'>&lsaquo;</span>",
+            next: "<span class='fc-text-arrow'>&rsaquo;</span>",
+            prevYear: "<span class='fc-text-arrow'>&laquo;</span>",
+            nextYear: "<span class='fc-text-arrow'>&raquo;</span>",
+            today: "today",
+            month: "month",
+            week: "week",
+            day: "day"
+        },
+        theme: !1,
+        buttonIcons: {
+            prev: "circle-triangle-w",
+            next: "circle-triangle-e"
+        },
+        unselectAuto: !0,
+        dropAccept: "*",
+        handleWindowResize: !0
+    }
+      , ne = {
+        header: {
+            left: "next,prev today",
+            center: "",
+            right: "title"
+        },
+        buttonText: {
+            prev: "<span class='fc-text-arrow'>&rsaquo;</span>",
+            next: "<span class='fc-text-arrow'>&lsaquo;</span>",
+            prevYear: "<span class='fc-text-arrow'>&raquo;</span>",
+            nextYear: "<span class='fc-text-arrow'>&laquo;</span>"
+        },
+        buttonIcons: {
+            prev: "circle-triangle-e",
+            next: "circle-triangle-w"
+        }
+    }
+      , re = Se.fullCalendar = {
+        version: "1.6.4"
+    }
+      , oe = re.views = {};
+    Se.fn.fullCalendar = function(a) {
+        if ("string" == typeof a) {
+            var o, l = Array.prototype.slice.call(arguments, 1);
+            return this.each(function() {
+                var e = Se.data(this, "fullCalendar");
+                if (e && Se.isFunction(e[a])) {
+                    var t = e[a].apply(e, l);
+                    void 0 === o && (o = t),
+                    "destroy" == a && Se.removeData(this, "fullCalendar")
+                }
+            }),
+            void 0 === o ? this : o
+        }
+        a = a || {};
+        var t = a.eventSources || [];
+        return delete a.eventSources,
+        a.events && (t.push(a.events),
+        delete a.events),
+        a = Se.extend(!0, {}, se, a.isRTL || void 0 === a.isRTL && se.isRTL ? ne : {}, a),
+        this.each(function(e, n) {
+            var s = Se(n)
+              , r = new Me(s,a,t);
+            s.data("fullCalendar", r),
+            r.render()
+        }),
+        this
+    }
+    ,
+    re.sourceNormalizers = [],
+    re.sourceFetchers = [];
+    var d = {
+        dataType: "json",
+        cache: !1
+    }
+      , le = 1;
+    re.addDays = ke,
+    re.cloneDate = ze,
+    re.parseDate = l,
+    re.parseISO8601 = g,
+    re.parseTime = e,
+    re.formatDate = p,
+    re.formatDates = u;
+    var de = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"]
+      , ce = {
+        s: function(t) {
+            return t.getSeconds()
+        },
+        ss: function(t) {
+            return z(t.getSeconds())
+        },
+        m: function(t) {
+            return t.getMinutes()
+        },
+        mm: function(t) {
+            return z(t.getMinutes())
+        },
+        h: function(t) {
+            return t.getHours() % 12 || 12
+        },
+        hh: function(t) {
+            return z(t.getHours() % 12 || 12)
+        },
+        H: function(t) {
+            return t.getHours()
+        },
+        HH: function(t) {
+            return z(t.getHours())
+        },
+        d: function(t) {
+            return t.getDate()
+        },
+        dd: function(t) {
+            return z(t.getDate())
+        },
+        ddd: function(a, e) {
+            return e.dayNamesShort[a.getDay()]
+        },
+        dddd: function(a, e) {
+            return e.dayNames[a.getDay()]
+        },
+        M: function(t) {
+            return t.getMonth() + 1
+        },
+        MM: function(t) {
+            return z(t.getMonth() + 1)
+        },
+        MMM: function(a, e) {
+            return e.monthNamesShort[a.getMonth()]
+        },
+        MMMM: function(a, e) {
+            return e.monthNames[a.getMonth()]
+        },
+        yy: function(t) {
+            return (t.getFullYear() + "").substring(2)
+        },
+        yyyy: function(t) {
+            return t.getFullYear()
+        },
+        t: function(t) {
+            return 12 > t.getHours() ? "a" : "p"
+        },
+        tt: function(t) {
+            return 12 > t.getHours() ? "am" : "pm"
+        },
+        T: function(t) {
+            return 12 > t.getHours() ? "A" : "P"
+        },
+        TT: function(t) {
+            return 12 > t.getHours() ? "AM" : "PM"
+        },
+        u: function(t) {
+            return p(t, "yyyy-MM-dd'T'HH:mm:ss'Z'")
+        },
+        S: function(a) {
+            var e = a.getDate();
+            return 10 < e && 20 > e ? "th" : ["st", "nd", "rd"][e % 10 - 1] || "th"
+        },
+        w: function(a, e) {
+            return e.weekNumberCalculation(a)
+        },
+        W: function(a) {
+            return t(a)
+        }
+    };
+    re.dateFormatters = ce,
+    re.applyAll = A,
+    oe.month = function(o, e) {
+        var i = this;
+        i.render = function(o, e) {
+            e && (xe(o, e),
+            o.setDate(1));
+            var a = n("firstDay")
+              , d = ze(o, !0);
+            d.setDate(1);
+            var c = xe(ze(d), 1)
+              , g = ze(d);
+            ke(g, -((g.getDay() - a + 7) % 7)),
+            s(g);
+            var p = ze(c);
+            ke(p, (7 - p.getDay() + a) % 7),
+            s(p, -1, !0);
+            var u = r()
+              , f = Math.round(h(p, g) / 7);
+            "fixed" == n("weekMode") && (ke(p, 7 * (6 - f)),
+            f = 6),
+            i.title = l(d, n("titleFormat")),
+            i.start = d,
+            i.end = c,
+            i.visStart = g,
+            i.visEnd = p,
+            t(f, u, !0)
+        }
+        ,
+        _.call(i, o, e, "month");
+        var n = i.opt
+          , t = i.renderBasic
+          , s = i.skipHiddenDays
+          , r = i.getCellsPerWeek
+          , l = e.formatDate
+    }
+    ,
+    oe.basicWeek = function(o, e) {
+        var h = this;
+        h.render = function(o, e) {
+            e && ke(o, 7 * e);
+            var a = ke(ze(o), -((o.getDay() - n("firstDay") + 7) % 7))
+              , l = ke(ze(a), 7)
+              , d = ze(a);
+            s(d);
+            var c = ze(l);
+            s(c, -1, !0);
+            var g = r();
+            h.start = a,
+            h.end = l,
+            h.visStart = d,
+            h.visEnd = c,
+            h.title = i(d, ke(ze(c), -1), n("titleFormat")),
+            t(1, g, !1)
+        }
+        ,
+        _.call(h, o, e, "basicWeek");
+        var n = h.opt
+          , t = h.renderBasic
+          , s = h.skipHiddenDays
+          , r = h.getCellsPerWeek
+          , i = e.formatDates
+    }
+    ,
+    oe.basicDay = function(o, e) {
+        var c = this;
+        c.render = function(o, e) {
+            e && ke(o, e),
+            s(o, 0 > e ? -1 : 1);
+            var a = ze(o, !0)
+              , l = ke(ze(a), 1);
+            c.title = r(o, n("titleFormat")),
+            c.start = c.visStart = a,
+            c.end = c.visEnd = l,
+            t(1, 1, !1)
+        }
+        ,
+        _.call(c, o, e, "basicDay");
+        var n = c.opt
+          , t = c.renderBasic
+          , s = c.skipHiddenDays
+          , r = e.formatDate
+    }
+    ,
+    a({
+        weekMode: "fixed"
+    }),
+    oe.agendaWeek = function(o, e) {
+        var h = this;
+        h.render = function(o, e) {
+            e && ke(o, 7 * e);
+            var a = ke(ze(o), -((o.getDay() - n("firstDay") + 7) % 7))
+              , l = ke(ze(a), 7)
+              , d = ze(a);
+            s(d);
+            var c = ze(l);
+            s(c, -1, !0);
+            var g = r();
+            h.title = i(d, ke(ze(c), -1), n("titleFormat")),
+            h.start = a,
+            h.end = l,
+            h.visStart = d,
+            h.visEnd = c,
+            t(g)
+        }
+        ,
+        q.call(h, o, e, "agendaWeek");
+        var n = h.opt
+          , t = h.renderAgenda
+          , s = h.skipHiddenDays
+          , r = h.getCellsPerWeek
+          , i = e.formatDates
+    }
+    ,
+    oe.agendaDay = function(o, e) {
+        var c = this;
+        c.render = function(o, e) {
+            e && ke(o, e),
+            s(o, 0 > e ? -1 : 1);
+            var a = ze(o, !0)
+              , l = ke(ze(a), 1);
+            c.title = r(o, n("titleFormat")),
+            c.start = c.visStart = a,
+            c.end = c.visEnd = l,
+            t(1)
+        }
+        ,
+        q.call(c, o, e, "agendaDay");
+        var n = c.opt
+          , t = c.renderAgenda
+          , s = c.skipHiddenDays
+          , r = e.formatDate
+    }
+    ,
+    a({
+        allDaySlot: !0,
+        allDayText: "all-day",
+        firstHour: 6,
+        slotMinutes: 30,
+        defaultEventMinutes: 120,
+        axisFormat: "h(:mm)tt",
+        timeFormat: {
+            agenda: "h:mm{ - h:mm}"
+        },
+        dragOpacity: {
+            agenda: .5
+        },
+        minTime: 0,
+        maxTime: 24,
+        slotEventOverlap: !0
+    })
+}
+)(jQuery);

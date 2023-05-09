@@ -1,0 +1,705 @@
+String.prototype.fmt=function(){
+  var a = arguments;
+  return this.replace(/{(\d+)}/g, function(m, n) {
+    return typeof a[n] != 'undefined' ? a[n] : m;
+  });
+};
+
+jQuery.ui.dialog.prototype.customEvent = function(args){
+  var objID = this.element.context.id.substring(2);
+  execEventBinded(objID, 'customEvent', args);
+};
+
+jQuery.ui.dialog.prototype.registerCallbacks = function(callbacks){
+  this.callbacks = this.callbacks || {};
+  for (name in callbacks){
+    this.callbacks[name] = callbacks[name];
+  }
+};
+
+jQuery.ui.dialog.prototype.executeCallback = function(name, params){
+  this.callbacks = this.callbacks || {};
+  var callback = this.callbacks[name];
+  if (callback)
+    callback(params);
+};
+
+function vdom_xd_load(dialogID, xmlData){
+
+  // remove CDATA scpecial wrapper
+  xmlData = jQuery.trim(xmlData).split('<!--[CDATA[').join('<![CDATA[').split(']]-->').join(']'+']>');
+  if (xmlData === '')
+    return;
+
+  var BOOL_MAP = {
+    "0": false,
+    "false": false,
+    "1": true,
+    "true": true
+  };
+
+  //Sort by key function
+  var sort_by_key = function(a ,b){
+    a = a[0].toLowerCase();
+    b = b[0].toLowerCase();
+    if (a == b)
+      return 0;
+
+    if (a > b)
+      return 1;
+
+    return -1;
+  };
+
+  // Sort by value function
+  var sort_by_val = function(a ,b){
+    a = a[1].toLowerCase();
+    b = b[1].toLowerCase();
+    if (a == b)
+      return 0;
+
+    if (a > b)
+      return 1;
+
+    return -1;
+  };
+
+  // Sorting map
+  SORT_MAP = {
+    "0": "default",
+    "1": sort_by_key,
+    "2": sort_by_val,
+    "key": sort_by_key,
+    "value": sort_by_val
+  };
+
+  //Sorting order map
+  SORT_ORDER_MAP = {
+    "0": "default",
+    "1": "asc",
+    "2": "desc",
+    "asc": "asc",
+    "desc": "desc"
+  };
+
+  //Components CSS classes map
+  var COMPONENTS_CSS_MAP = {
+    "heading" : "heading",
+    "textbox" : "textbox",
+    "password" : "password",
+    "dropdown" : "dropdown",
+    "radiobutton" : "radio",
+    "checkbox" : "checkbox",
+    "textarea" : "textarea",
+    "hypertext" : "hypertext",
+    "button" : "button",
+    "container": "container",
+    "livesearch": "livesearch",
+    "richtextarea": "richtextarea",
+    "fileupload" : "fileupload",
+  };
+
+  var escape_quote = function(text){
+    return text.replace(/"/g, "&quot;");
+  };
+
+  var get_elem_prop = function(elem, prop){
+    return elem.find('>Properties>Property[name=' + prop + ']').text();
+  };
+
+  var get_elem_attr = function(elem, attr){
+    return elem.attr(attr) || '';
+  };
+
+  var get_elem_props = function(elem){
+    var properties = {};
+    elem.find('>Properties>Property').each(function(index, property){
+      property = jQuery(property);
+      properties[property.attr('name').toLowerCase()] = property.text();
+    });
+
+    return function(elem, prop){
+      return properties[prop.toLowerCase()] || '';
+    }
+  };
+
+  var get_elem_attrs = function(elem){
+    var attributes = {};
+    $.each(elem[0].attributes, function(index, attribute){
+      attributes[attribute.name.toLowerCase()] = attribute.value;
+    });
+
+    return function(elem, attr){
+      return attributes[attr.toLowerCase()] || '';
+    }
+  };
+
+  var get_elem_options = function(elem){
+    var options = [];
+    elem.find(">Properties>Property[name=options]>option").each(function(){
+      // TODO - replace jquery with getAttribute code
+      var option = jQuery(this);
+      options.push([get_elem_attr(option, 'id'), option.text()]);
+    });
+    return options;
+  };
+
+  var is_visible = function(elem){
+    //check element's visibility
+    return (BOOL_MAP[get_elem_attr(elem, 'visible') || 'true']) ? '' : 'style="display: none"' ; 
+  };
+
+  var is_fullsize = function(elem){
+    //check is element fullsize or not
+    return (BOOL_MAP[get_elem_attr(elem, 'fullsize')] || false) ? 'fullsize' : ''; 
+  };
+
+  var is_multiple = function(elem){
+    //check is element fullsize or not
+    return (BOOL_MAP[get_elem_attr(elem, 'multiple')] || false) ? 'multiple="multiple"' : ''; 
+  };
+
+  var is_disabled = function(elem){
+    //check is element disabled or not
+    return (BOOL_MAP[get_elem_attr(elem, 'disabled')] || false) ? 'disabled="disabled"' : ''; 
+  };
+
+  var is_readonly = function(elem){
+    //check is element readonly or not
+    return (BOOL_MAP[get_elem_attr(elem, 'readonly')] || false) ? 'readonly="readonly"' : ''; 
+  };
+
+  var make_div_row = function(html, elem, label, onlyFullsize){
+    return "<div class='row {0} {1}' {2}><label class='title'>{3}</label><div class='item {4}'>{5}</div><br style='clear: both' /></div>".fmt(
+      (onlyFullsize ? "fullsize" : is_fullsize(elem)),
+      get_elem_attr(elem, 'class'),
+      is_visible(elem),
+      label,
+      COMPONENTS_CSS_MAP[elem[0].tagName.toLowerCase()],
+      html
+    );
+  };
+
+  var render_heading = function(elem){
+    level = parseInt(get_elem_prop(elem, 'level'), 10) || 3;
+    level = level >= 1 && level <=6 ? level : 3;
+
+    return "<h{0} class='{1}' id='{2}' {3}>{4}</h{0}>".fmt(
+      level,
+      get_elem_attr(elem, 'class'),
+      escape_quote(get_elem_attr(elem, 'id')),
+      is_visible(elem),
+      get_elem_prop(elem, 'text')
+      );
+  };
+
+  var render_textbox = function(elem){
+    var elem_props = get_elem_props(elem);
+    var elem_attrs = get_elem_attrs(elem);
+
+    var html = "<input type='text' name='{0}' value='{1}' {2} {3} />".fmt(
+      escape_quote(elem_attrs(elem, 'id')),
+      escape_quote(elem_props(elem, 'defaultValue')),
+      is_disabled(elem),
+      is_readonly(elem)
+    );
+
+    return make_div_row(html, elem, elem_props(elem, 'label'));
+  };
+
+  var render_password = function(elem){
+    var elem_props = get_elem_props(elem);
+    var elem_attrs = get_elem_attrs(elem);
+    
+    var html = "<input type='password' name='{0}' value='{1}' {2} {3} />".fmt(
+      escape_quote(elem_attrs(elem, 'id')),
+      escape_quote(elem_props(elem, 'defaultValue')),
+      is_disabled(elem),
+      is_readonly(elem)
+    );
+
+    return make_div_row(html, elem, elem_props(elem, 'label'));
+  };
+
+  var render_dropdown = function(elem){
+    var elem_props = get_elem_props(elem);
+    var elem_attrs = get_elem_attrs(elem);
+    
+    var rows = parseInt(elem_props(elem, "rows"), 10) || 0;
+    var options = get_elem_options(elem);
+    var sort_type = SORT_MAP[elem_attrs(elem, 'sort')] || 'default';
+    var sort_order = SORT_ORDER_MAP[elem_attrs(elem, 'order')] || 'default';
+    var selected_keys = jQuery.map(elem_props(elem, 'selected').split(','), jQuery.trim);
+    var disabled_keys = jQuery.map(elem_props(elem, 'disabled').split(','), jQuery.trim);
+
+    if (sort_type != 'default'){
+      options.sort(sort_type);
+
+      if (sort_order == 'desc')
+        options.reverse();
+    }
+
+    if (!is_multiple(elem) && selected_keys.length > 1){
+      var selected_keys = [selected_keys[selected_keys.length - 1]];
+    }
+
+    var options_result = [];
+    for (var i in options){
+      var option = options[i];
+      var opt_id = option[0];
+      options_result.push("<option value='{0}'{1}{2}>{3}</option>".fmt(
+        escape_quote(opt_id),
+        (jQuery.inArray(opt_id, selected_keys) >= 0 && jQuery.inArray(opt_id, disabled_keys) == -1) ? " selected='selected'" : "",
+        (jQuery.inArray(opt_id, disabled_keys) >= 0) ? " disabled='disabled'" : "",
+        option[1]
+      ));
+    }
+
+    var html = "<select name='{0}' {1} {2} {3}>{4}</select>".fmt(
+      escape_quote(elem_attrs(elem, 'id')),
+      rows ? ('size="' + rows + '"') : '',
+      is_multiple(elem),
+      is_disabled(elem),
+      options_result.join('')
+    );
+
+    return make_div_row(html, elem, elem_props(elem, 'label'));
+  };
+
+  var render_radiobutton = function(elem){
+    var elem_props = get_elem_props(elem);
+    var elem_attrs = get_elem_attrs(elem);
+    
+    var disabled = is_disabled(elem);
+    var options = get_elem_options(elem);
+    var sort_type = SORT_MAP[elem_attrs(elem, 'sort')] || 'default';
+    var sort_order = SORT_ORDER_MAP[elem_attrs(elem, 'order')] || 'default';
+    var breakline = (BOOL_MAP[elem_attrs(elem, 'breakline')] || false) ? "<br/>" : "";
+    var selected_keys = jQuery.map(elem_props(elem, 'selected').split(','), jQuery.trim);
+
+    if (sort_type != 'default'){
+      options.sort(sort_type);
+
+      if (sort_order == 'desc')
+        options.reverse();
+    }
+
+    var elem_id = elem_attrs(elem, 'id');
+    var options_result = [];
+    for (var i in options){
+      var option = options[i];
+      var opt_id = option[0];
+
+      options_result.push("<label><input autocomplete='off' type='radio' name='{0}' value='{1}'{2} {3} />&nbsp;{4}</label>{5}".fmt(
+        elem_id,
+        escape_quote(opt_id),
+        (jQuery.inArray(opt_id, selected_keys) >= 0) ? " checked='checked'" : "",
+        disabled,
+        option[1],
+        breakline
+      ));
+    }
+
+    var html = options_result.join('');
+
+    return make_div_row(html, elem, elem_props(elem, 'label'));
+  };
+
+  var render_checkbox = function(elem){
+    var elem_props = get_elem_props(elem);
+    var elem_attrs = get_elem_attrs(elem);
+    
+    var disabled = is_disabled(elem);
+    var options = get_elem_options(elem);
+    var sort_type = SORT_MAP[elem_attrs(elem, 'sort')] || 'default';
+    var sort_order = SORT_ORDER_MAP[elem_attrs(elem, 'order')] || 'default';
+    var breakline = (BOOL_MAP[elem_attrs(elem, 'breakline')] || false) ? "<br/>" : "";
+    var selected_keys = jQuery.map(elem_props(elem, 'selected').split(','), jQuery.trim);
+    var disabled_keys = jQuery.map(elem_props(elem, 'disabled').split(','), jQuery.trim);
+
+    if (sort_type != 'default'){
+      options.sort(sort_type);
+
+      if (sort_order == 'desc')
+        options.reverse();
+    }
+
+    var elem_id = elem_attrs(elem, 'id');
+    var options_result = [];
+    for (var i in options){
+      var option = options[i];
+      var opt_id = option[0];
+
+      options_result.push("<label><input autocomplete='off' type='checkbox' name='{0}[{1}]'{2}{3} />&nbsp;{4}</label>{5}".fmt(
+        elem_id,
+        escape_quote(opt_id),
+        (jQuery.inArray(opt_id, selected_keys) >= 0) ? " checked='checked'" : "",
+        (disabled || jQuery.inArray(opt_id, disabled_keys) >= 0) ? " disabled='disabled'" : "",
+        option[1],
+        breakline
+      ));
+    }
+
+    var html = options_result.join('');
+
+    return make_div_row(html, elem, elem_props(elem, 'label'));
+  };
+
+  var render_textarea = function(elem){
+    var elem_props = get_elem_props(elem);
+    var elem_attrs = get_elem_attrs(elem);
+    
+    var width = parseInt(elem_props(elem, 'width')) || 0;
+    var height = parseInt(elem_props(elem, 'height')) || 0;
+
+    var style = "style='{0}{1}'".fmt(
+      width ? "width: {0}px;".fmt(width) : "",
+      height ? "height: {0}px;".fmt(height) : ""
+    );
+
+    var html = "<textarea name='{0}' {1} {2} {3}>{4}</textarea>".fmt(
+      escape_quote(elem_attrs(elem, 'id')),
+      is_disabled(elem),
+      is_readonly(elem),
+      style,
+      elem_props(elem, 'defaultValue')
+    );
+
+    return make_div_row(html, elem, elem_props(elem, 'label'));
+  };
+
+  var render_hypertext = function(elem){
+    var elem_props = get_elem_props(elem);
+    var elem_attrs = get_elem_attrs(elem);
+    
+    return make_div_row(elem_props(elem, 'value'), elem, elem_props(elem, 'label'));
+  };
+
+  var render_button = function(elem){
+    var elem_props = get_elem_props(elem);
+    var elem_attrs = get_elem_attrs(elem);
+    
+    var align = elem_props(elem, 'buttonAlign').replace(/'/g,'&acute;');
+    var image = elem_props(elem, 'buttonImage').replace(/'/g,'&acute;');
+    var label = elem_props(elem, 'label').replace(/'/g,'&acute;');
+
+    var button = '';
+    if (image){
+      button = "<input type='image' alt='{0}' title='{0}' src='{1}' {2} />".fmt(
+        label,
+        image,
+        is_disabled(elem)
+      );
+    } else {
+      button = "<input type='submit' value='{0}' {1} />".fmt(
+        label,
+        is_disabled(elem)
+      );
+    }
+
+    return "<div class='row' {0}><div id='{4}' class='submit {3}' style='text-align: {1}'>{2}</div></div>".fmt(
+      is_visible(elem),
+      align,
+      button,
+      elem_attrs(elem, 'class'),
+      escape_quote(elem_attrs(elem, 'id'))
+    );
+  };
+
+  var render_default_button = function(){
+    return "<div class='submit'><input type='submit' /></div>";
+  };
+
+  var render_container = function(elem){
+    var elem_props = get_elem_props(elem);
+    var elem_attrs = get_elem_attrs(elem);
+    
+    var width = elem_props(elem, 'width');
+    var height = elem_props(elem, 'height');
+
+    var style = "style='{0}{1}{2}'".fmt(
+      width ? "width: {0};".fmt(width) : "",
+      height ? "height: {0};".fmt(height) : "",
+      is_visible(elem) ? "display: none;" : ""
+    );
+    var components = elem.find('>Components>*');
+
+      return "<div id='{0}' class='row fullsize {1}' {2}><div class='item'>{3}</div></div>".fmt(
+        escape_quote(elem_attrs(elem, 'id')),
+        elem_attrs(elem, 'class'),
+        style,
+        components.length > 0 ? render_components(components, elem.form_id) : ""
+      );
+  };
+
+  var render_livesearch = function(elem){
+    var elem_props = get_elem_props(elem);
+    var elem_attrs = get_elem_attrs(elem);
+    
+    var html = "<div id='xml-dialog-lvs-{0}-data'>{6}</div><input type='text' id='xml-dialog-lvs-{0}' name='{0}' {2} {3} sourceuri='{4}' sourceevent='{5}' value='{1}' />".fmt(
+      escape_quote(elem_attrs(elem, 'id')),
+      escape_quote(elem_props(elem, 'defaultValue')),
+      is_disabled(elem),
+      is_readonly(elem),
+      elem_props(elem, 'sourceURI'),
+      elem_props(elem, 'sourceEvent'),
+      elem_props(elem, 'sourceData').replace(/&/g, "&amp;").replace(/</g, "&lt;")
+    );
+
+    return make_div_row(html, elem, elem_props(elem, 'label'));
+  };
+  
+  var render_richtextarea = function(elem){
+    var elem_props = get_elem_props(elem);
+    var elem_attrs = get_elem_attrs(elem);
+    
+    var html = "<textarea id='xml-dialog-rte-{0}' name='{0}' {2} {3} eheight='{4}'>{1}</textarea>".fmt(
+      escape_quote(elem_attrs(elem, 'id')),
+      elem_props(elem, 'defaultValue'),
+      is_disabled(elem),
+      is_readonly(elem),
+      elem_props(elem, 'height') || ''
+    );
+
+    return make_div_row(html, elem, elem_props(elem, 'label'), true);
+  };
+  
+  var render_fileupload = function(elem){
+    var elem_props = get_elem_props(elem);
+    var elem_attrs = get_elem_attrs(elem);
+
+    var code = ('<script type="text/javascript">\n' +
+        'var max_fileupload_size = 15 * 1024 * 1024;\n' +
+        'var fileupload_next = 1;\n' +
+        'var fileupload_progress = 0;\n' +
+        'var update_selected_files = function() {\n' +
+        '    var val = "";\n' +
+        '    $(".{0}-guid").each(function(i) {\n' +
+        '        if (val != "") val = val + ",";\n' +
+        '        val = val + $(this)[0].value;\n' +
+        '    });\n' +
+        '    $("#{0}")[0].value = val;\n' +
+        '}\n' +
+        'var add_uploaded_file = function(filename, guid) {\n' +
+        '        var newelem = \'<input type="text" id="{0}_\' + fileupload_next + \'_name" name="{0}_\' + fileupload_next + \'_name" readonly="readonly" disabled="disabled" />\';\n' +
+        '        var newelement = $(newelem);\n' +
+        '        newelement[0].value = filename;\n' +
+        '        var removebtn = \'<button id="{0}_remove_\' + fileupload_next + \'" class="{0}-remove-me">x</button></div><div id="{0}_div">\';\n' +
+        '        var removebutton = $(removebtn);\n' +
+        '        var guidelem = \'<input type="hidden" id="{0}_\' + fileupload_next + \'" name="{0}_\' + fileupload_next + \'" class="{0}-guid" disabled="disabled" />\';\n' +
+        '        var guidelement = $(guidelem);\n' +
+        '        guidelement[0].value = guid;\n' +
+        '        $("#{0}_input").before(newelement);\n' +
+        '        $(newelement).after(guidelement);\n' +
+        '        $(guidelement).after(removebutton);\n' +
+        '        fileupload_next = fileupload_next + 1;\n' +
+        '        $(".{0}-remove-me").click(function(e) {\n' +
+        '            e.preventDefault();\n' +
+        '            var fieldnum = this.id.substring("{0}".length + 8);\n' +
+        '            $(this).remove();\n' +
+        '            $("#{0}_" + fieldnum + "_name").remove();\n' +
+        '            $("#{0}_" + fieldnum).remove();\n' +
+        '            update_selected_files();\n' +
+        '        });\n' +
+        '        update_selected_files();\n' +
+        '}\n' +
+        'var fileupload_started = function() {\n' +
+        '    if (fileupload_progress == 0) $(\'input[type="submit"]\', $("#{1}")).attr("disabled", true);\n' +
+        '    fileupload_progress = fileupload_progress + 1;\n' +
+        '}\n' +
+        'var fileupload_ended = function() {\n' +
+        '    if (fileupload_progress > 0) fileupload_progress = fileupload_progress - 1;\n' +
+        '    if (fileupload_progress == 0) {\n' +
+        '        $("#{0}_progress")[0].innerHTML = "";\n' +
+        '        $(\'input[type="submit"]\', $("#{1}")).attr("disabled", false);\n' +
+        '    }\n' +
+        '}\n' +
+        'var init_file_upload = function() {\n' +
+        '    $("#{1}").fileUploadUI({\n' +
+        '        url: "/upload.py",\n' +
+        '        dataType: "json",\n' +
+        '        dropZone: $("#{1}"),\n' +
+        '        autoUpload: true,\n' +
+        '        replaceFileInput: false,\n' +
+        '        onComplete: function (event, files, index, xhr, handler) {\n' +
+        '            var resp = xhr.response.trim();\n' +
+        '            if (xhr.status == 200 && resp.length == 36) add_uploaded_file(files[0].name, resp);\n' +
+        '            else {\n' +
+        '                if (xhr.status != 200) alert("Upload error: " + xhr.statusText);\n' +
+        '                else alert("Upload error");\n' +
+        '            }\n' +
+        '            fileupload_ended();\n' +
+        '        },\n' +
+        '        onSend: function (event, files, index, xhr, handler) {\n' +
+        '            if (!xhr.upload && handler.progressbar) handler.progressbar.progressbar("value", 100);\n' +
+        '            if (event.target.type == "file") event.target.value = "";\n' +
+        '            if (files[0].size <= max_fileupload_size) fileupload_started();\n' +
+        '            else alert("File is too big");\n' +
+        '        },\n' +
+        '        onError: function (event, files, index, xhr, handler) {\n' +
+        '        },\n' +
+        '        onProgressAll: function (event, list) {\n' +
+        '            if (fileupload_progress > 0) {\n' +
+        '                var percent = parseInt(event.loaded / event.total * 100, 10);\n' +
+        '                $("#{0}_progress")[0].innerHTML = "Uploading " + fileupload_progress + " file(s)... " + percent + "%";\n' +
+        '            }\n' +
+        '        },\n' +
+        '        onProgress: function (progressEvent, files, index, xhr, settings) {\n' +
+        '            if (files[0].size > max_fileupload_size) xhr.abort();\n' +
+        '        },\n' +
+        '    });\n' +
+        '}\n' +
+        '$(document).ready(function(){\n' +
+        '    init_file_upload();\n' +
+        '});\n' +
+        '</script>').fmt(escape_quote(elem_attrs(elem, 'id')), elem.form_id)
+
+    var html = ('<div id="{0}_div"><input id="{0}_input" name="{0}_input" type="file"/><div id="{0}_progress"></div><input id="{0}" name="{0}" type="hidden"/></div>').fmt(escape_quote(elem_attrs(elem, 'id')))
+
+    return make_div_row(html, elem, elem_props(elem, 'label')) + code
+  };
+
+
+  COMPONENTS_MAP = {
+    "heading" : render_heading,
+    "textbox" : render_textbox,
+    "password" : render_password,
+    "dropdown" : render_dropdown,
+    "radiobutton" : render_radiobutton,
+    "checkbox" : render_checkbox,
+    "textarea" : render_textarea,
+    "hypertext" : render_hypertext,
+    "button" : render_button,
+    "livesearch": render_livesearch,
+    "container": render_container,
+    "fileupload" : render_fileupload,
+    "richtextarea": render_richtextarea,
+  }
+
+  var render_components = function(components, form_id){
+    var data = [];
+    components.each(function(){
+      var component = jQuery(this);
+      var render = COMPONENTS_MAP[this.tagName.toLowerCase()];
+      if (render){
+        component.form_id = form_id;
+        data.push(render(component));
+      }
+    });
+    return data.join('');
+  };
+
+  var xmlDialog = jQuery(dialogID);
+  xmlDialog.html('');
+  xmlDialog.data('ev','');
+  
+  var result = [];
+  var xmlData = jQuery.parseXML(xmlData);
+  xmlData = jQuery(xmlData);
+
+  var form_id = 'xml_form_' + dialogID.substring(3);
+  var default_btn = xmlData.find('Button').length > 0 ? false : true;
+  var render_result = render_components(xmlData.find("VDOMFormContainer>Components>*"), form_id);
+
+  if (default_btn) {
+    render_result += render_default_button();
+  }
+
+  xmlDialog.html("<form id='" + form_id + "' action='' method='post' enctype='multipart/form-data' class='xml-dialog-form'>" + render_result + "</form>").dialog('close')
+  xmlDialog.dialog('option', 'title', xmlData.find("VDOMFormContainer>Properties>Property[name=label]").text());
+  xmlDialog.data('ev','1');
+  xmlDialog.dialog('open');
+  
+}
+
+function vdom_xd_create_richtextarea($dialog){
+
+  var editors = window["xmlDialogTinyEditors"] = [];
+  jQuery("div.richtextarea > textarea", $dialog).each(function(){
+    var $textarea = jQuery(this);
+
+    editors.push(new TINY.editor.edit('editor',{
+      id: $textarea.attr('id'),
+      cssclass: 'te',
+      controlclass: 'tecontrol',
+      rowclass: 'teheader',
+      dividerclass: 'tedivider',
+      controls:[
+          'bold', 'italic', 'underline', 'strikethrough', '|',
+          'orderedlist', 'unorderedlist', '|'
+          ,'outdent' ,'indent', '|',
+          'leftalign', 'centeralign', 'rightalign', 'blockjustify', '|',
+          'unformat', '|', 'font', 'size', 'style', '|',
+          'hr', 'link', 'unlink', '|', 'cut', 'copy', 'paste', 'print'
+      ],
+      fonts:['Verdana','Arial','Georgia','Trebuchet MS'],
+      height: parseInt($textarea.attr('eheight'), 10) || ''
+    }));
+
+    $textarea.removeAttr('eheight');  
+
+  });
+}
+
+function vdom_xd_create_livesearch($dialog){
+
+  jQuery("div.livesearch > input", $dialog).each(function(){
+
+    var textbox = this;
+    var $textbox = jQuery(this);
+    var sourceURI = $textbox.attr('sourceuri');
+    var sourceEvent = $textbox.attr('sourceevent');
+
+    var dataDiv = $textbox.parent().find("div#" + $textbox.attr('id') + "-data");
+    var sourceData = dataDiv.text().replace(/&lt;/g, "<").replace(/&amp;/g, "&");
+
+    dataDiv.remove();
+    $textbox.removeAttr("sourceuri").removeAttr("sourceevent");
+
+    var dataSource = [];
+
+    if (sourceURI){
+      dataSource = sourceURI;
+
+    } else if (sourceEvent){
+      dataSource = function(request, response){
+        response($dialog.dialog('executeCallback', 'liveSearch', {
+          'textbox': textbox,
+          'term': request.term
+        }));
+      };
+
+    } else if (sourceData){
+      dataSource = eval(sourceData);
+    }
+
+    $textbox.autocomplete({
+        source: dataSource,
+        appendTo: 'body', // jQuery(".xml-dialog-form textarea#" + objID).closest("form.xml-dialog-form").parent().parent(),
+        html:true,
+      select: function(ev, ui){
+        var input_name = jQuery(this).attr('name');
+        jQuery(this).before("<div class='selected-item'><span><div class='value'>" + ui.item.label + "<input type='hidden' name='" + input_name + "[" + ui.item.value.replace(/"/g, "&quot;") + "]' value='1'></div><div class='close' onclick='jQuery(this).parent().parent().remove()'></div></span></div>");
+        jQuery(this).val('');
+        return false; 
+      }
+    });
+
+    $textbox.keydown(function(event) {
+      if (event.keyCode == $.ui.keyCode.ENTER ||
+          event.keyCode == $.ui.keyCode.NUMPAD_ENTER ||
+          event.keyCode == $.ui.keyCode.TAB){
+        
+        if (jQuery(this).val().length >= 2) {
+          
+          var input_name = jQuery(this).attr('name');
+          var value = jQuery(this).val();
+          jQuery(this).before("<div class='selected-item'><span><div class='value'>" + value + "<input type='hidden' name='" + input_name + "[" + value.replace(/"/g, "&quot;") + "]' value='1'></div><div class='close' onclick='jQuery(this).parent().parent().remove()'></div></span></div>");
+          jQuery(this).val('');
+        }
+        if (event.keyCode != $.ui.keyCode.TAB)
+          event.preventDefault();
+      }
+    });
+  });
+}

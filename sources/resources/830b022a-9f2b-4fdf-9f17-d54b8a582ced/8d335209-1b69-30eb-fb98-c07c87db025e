@@ -1,0 +1,20 @@
+<svg width="17" height="17" viewBox="0 0 17 17" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<title>alignmentcenter</title>
+<desc>Created using Figma</desc>
+<g id="Canvas" transform="translate(1513 -12588)">
+<g id="alignmentcenter">
+<g id="Line 17">
+<use xlink:href="#path0_stroke" transform="translate(-1512.53 12590.2)" fill="#6496CB"/>
+</g>
+<g id="Line 17">
+<use xlink:href="#path0_stroke" transform="translate(-1512.53 12597.2)" fill="#6496CB"/>
+</g>
+<g id="Line 17">
+<use xlink:href="#path0_stroke" transform="translate(-1512.53 12604.2)" fill="#6496CB"/>
+</g>
+</g>
+</g>
+<defs>
+<path id="path0_stroke" d="M 0 0L 16 0L 16 -2L 0 -2L 0 0Z"/>
+</defs>
+</svg>

@@ -1,0 +1,175 @@
+.xml-dialog-form div.row {
+    text-align: left;
+    clear: both;
+    float: none;
+}
+.xml-dialog-form div.row > label {
+    float: left;
+    width: 45%;
+}
+.xml-dialog-form div.row > div.item {
+    float: right;
+    width: 50%;
+}
+.xml-dialog-form div.fullsize > label,
+.xml-dialog-form div.fullsize > div.item {
+    float: none;
+    width: 100%;
+}
+.xml-dialog-form div.row div.item > label {
+    float: none;
+    width: auto;
+}
+.xml-dialog-form div.row > div.livesearch > input,
+.xml-dialog-form div.row > div.textbox > input,
+.xml-dialog-form div.row > div.item > select,
+.xml-dialog-form div.row > div.item > textarea {
+    width: 99%;
+    resize: none;
+}
+.xml-dialog-form div.row > div.item br {
+    width: 100%;
+    display: block;
+    clear: both;
+    overflow: hidden;
+    height: 1px;
+}
+.xml-dialog-form div.submit {
+    text-align: center;
+    margin-top: 10px;
+}
+.xml-dialog-form div.submit img {
+    border: none;
+    cursor: pointer;
+}
+
+/* live search */
+.xml-dialog-form div.livesearch > div.selected-item {
+    padding-top: 2px;
+    font-size: 13px;
+    display: inline-block;
+    padding: 3px;
+    vertical-align: top;
+}
+.xml-dialog-form div.livesearch textarea {
+    resize: none;
+}
+.xml-dialog-form div.livesearch > div.selected-item > span {
+    background-color: #f5f5f5;
+    border: 1px solid #d9d9d9;
+    cursor: default;
+    display: block;
+    height: 20px;
+    white-space: nowrap;
+    -webkit-border-radius: 3px;
+    border-radius: 3px;
+}
+.xml-dialog-form div.livesearch > div.selected-item > span > div.value {
+    display: inline-block;
+    color: #222;
+    margin: 2px 5px;
+    max-width: 325px;
+    max-height: 17px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    direction: ltr;
+    cursor: pointer;
+}
+.xml-dialog-form div.livesearch > div.selected-item > span > div.close {
+    display: inline-block;
+    width: 14px;
+    height: 20px;
+    background: no-repeat url(/9f1c05cd-fee2-6055-2ef4-16fae45aaab1.res) -4px 0;
+    opacity: .6;
+    vertical-align: top;
+    cursor: pointer;
+}
+.xml-dialog-form div.livesearch > div.selected-item > span > div.close:hover {
+    opacity: 1;
+}
+.xml-dialog-form div.livesearch > div.selected-item > span:hover {
+    border-color: #b9b9b9;
+}
+
+/* rich text editor style */
+.xml-dialog-form div.row > div.item > div.te #input {
+    border: none;
+    margin: 0;
+    padding: 0;
+    font: 14px 'Courier New', Verdana;
+    border: 0
+}
+.xml-dialog-form div.row > div.item > div.te {
+    border: 1px solid #bbb;
+    padding: 0 1px 1px;
+    font: 12px Verdana, Arial;
+    width: 100% !important;
+}
+.xml-dialog-form div.row > div.item > div.te iframe {
+    border: none;
+    background-color: white;
+}
+.xml-dialog-form div.row > div.item > div.te .teheader {
+    border-bottom: 1px solid #bbb;
+    background: url(/9f1c05cd-fee2-6055-2ef4-16fae45dddd1.res) repeat;
+    padding-top: 1px
+}
+.xml-dialog-form div.row > div.item > div.te .teheader select {
+    float: left;
+    margin-top: 5px;
+    width: initial;
+}
+.xml-dialog-form div.row > div.item > div.te .tefont {
+    margin-left: 12px
+}
+.xml-dialog-form div.row > div.item > div.te .tesize {
+    margin: 0 3px
+}
+.xml-dialog-form div.row > div.item > div.te .testyle {
+    margin-right: 12px
+}
+.xml-dialog-form div.row > div.item > div.te .tedivider {
+    display: inline-block;
+    width: 1px;
+    height: 30px;
+    background: #ccc
+}
+.xml-dialog-form div.row > div.item > div.te .tecontrol {
+    display: inline-block;
+    width: 34px;
+    height: 30px;
+    cursor: pointer;
+    background-image: url(/9f1c05cd-fee2-6055-2ef4-16fae46cccc1.res)
+}
+.xml-dialog-form div.row > div.item > div.te .tecontrol:hover {
+    background-color: #fff;
+    background-position: 30px 0
+}
+.xml-dialog-form div.row > div.item > div.te .tefooter {
+    height: 32px;
+    border-top: 1px solid #bbb;
+    background: #f5f5f5
+}
+.xml-dialog-form div.row > div.item > div.te .toggle {
+    float: left;
+    background: url(/9f1c05cd-fee2-6055-2ef4-16fae46cccc1.res) -34px 2px no-repeat;
+    padding: 9px 13px 0 31px;
+    height: 23px;
+    border-right: 1px solid #ccc;
+    cursor: pointer;
+    color: #666
+}
+.xml-dialog-form div.row > div.item > div.te .toggle:hover {
+    background-color: #fff
+}
+.xml-dialog-form div.row > div.item > div.te .resize {
+    float: right;
+    height: 32px;
+    width: 32px;
+    background: url(/9f1c05cd-fee2-6055-2ef4-16fae45bbbb1.res) 15px 15px no-repeat;
+    cursor: s-resize
+}
+.xml-dialog-form div.row > div.item > div.te #editor {
+    cursor: text;
+    margin: 10px
+}

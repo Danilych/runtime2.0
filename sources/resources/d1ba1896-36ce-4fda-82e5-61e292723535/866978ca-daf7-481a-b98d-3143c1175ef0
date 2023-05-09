@@ -1,0 +1,242 @@
+// Добавить ленивуб загрузку моделей
+// Делаем надпись лоайдинг пока там запрос гуляет за файлом
+// + делаем модель ридонли
+
+class MonacoEditor {
+  constructor(container, config = {}) {
+    document.fonts.ready.then(() => {
+      this.init(container, config);
+    });
+  }
+
+  async init(container, config) {
+    this.container = container;
+    this.$container = $(container);
+    this.config = { ...config };
+    this.config.automaticLayout = true;
+    this.config.useShadowDOM = false;
+    delete this.config.value;
+    this.config.language = MonacoEditor.validateLanguage(this.config?.language);
+    this.config.theme = MonacoEditor.validateTheme(this.config?.theme);
+    this.editor = monaco.editor.create(this.container, this.config);
+    this.config.values = await this.validateConfigValues(this.config?.values);
+
+    // Add input for submit
+    this.initTextArea();
+
+    // loading files by url and create models;
+
+    for (const [key, value] of Object.entries(this.config.values)) {
+      this.config.values[key] = await this.processValue(value);
+    }
+    this.model = this.activeModelKey;
+  }
+
+  async processValue(value) {
+    // create model and get text by value url
+    if (value === undefined || value === null) {
+      value = {};
+    }
+
+    let model = value?.model || null;
+    const url = value?.url || null;
+    const language = MonacoEditor.validateLanguage(value?.language || null);
+    const active = value?.active || false;
+    let text = "";
+
+    if (model === null) {
+      try {
+        text = url ? await $.ajax(url, { dataType: "text", cache: false }) : "";
+      } catch (error) {
+        console.error(`Error when loading ${url} file.`);
+      }
+      model = monaco.editor.createModel(text, language);
+    }
+    this.initOnChangeEventListener(model);
+    return new Promise((resolve) => {
+      resolve({ model, url, language, active, state: null });
+    });
+  }
+
+  set model(modelKey) {
+    this.saveCurrentModelViewState();
+    const newValue = this.config.values[modelKey];
+    this.setModel(newValue.model);
+    this.restoreViewState(newValue.state);
+    this.focus();
+
+    this.activeModelKey = modelKey;
+
+    this.setTextAreaValue(this.value);
+  }
+
+  saveCurrentModelViewState() {
+    const currentValue = this.config.values[this.activeModelKey];
+    currentValue.state = this.saveViewState();
+  }
+
+  saveViewState() {
+    return this.editor.saveViewState();
+  }
+
+  setModel(model) {
+    this.editor.setModel(model);
+  }
+
+  restoreViewState(state) {
+    this.editor.restoreViewState(state);
+  }
+
+  focus() {
+    this.editor.focus();
+  }
+
+  get value() {
+    return this.editor.getValue();
+  }
+
+  initOnChangeEventListener(model) {
+    model.onDidChangeContent(() => {
+      this.setTextAreaValue(this.value);
+    });
+  }
+
+  setTextAreaValue(value) {
+    this.$textArea.val(value);
+  }
+
+  initTextArea() {
+    this.$textArea = $(`<textarea></textarea>`);
+    this.$textArea.attr("name", this.config.textAreaName);
+    this.$textArea.css("display", "none");
+    this.$container.prepend(this.$textArea);
+  }
+
+  get activeModelKey() {
+    const valuesEntries = Object.entries(this.config.values);
+    for (const [key, value] of valuesEntries) {
+      if (value?.active) return key;
+    }
+    const activeKey = valuesEntries[0][0];
+    this.config.values[activeKey].active = true;
+    return activeKey;
+  }
+
+  set activeModelKey(value) {
+    for (const key of Object.keys(this.config.values)) {
+      this.config.values[key].active = false;
+    }
+    this.config.values[value].active = true;
+  }
+
+  async addModel(id, value) {
+    if (id in this.config.values) return;
+    this.config.values[id] = await this.processValue(value);
+  }
+
+  async removeModel(modelKey) {
+    this.config.values[modelKey].model.dispose();
+    delete this.config.values[modelKey];
+  }
+
+  async validateConfigValues(values) {
+    return new Promise((resolve) => {
+      if (values === undefined || values == null || $.isEmptyObject(values)) {
+        this.processValue(null).then((data) => resolve({ "-1": data }));
+      } else {
+        resolve(values);
+      }
+    });
+  }
+
+  static validateTheme(theme) {
+    const allowed = ["vs", "vs-dark", "hc-black"];
+    return allowed.includes(theme) ? theme : allowed[0];
+  }
+
+  static validateLanguage(lang) {
+    const allowed = [
+      "abap",
+      "aes",
+      "apex",
+      "azcli",
+      "bat",
+      "bicep",
+      "c",
+      "cameligo",
+      "clojure",
+      "coffeescript",
+      "cpp",
+      "csharp",
+      "csp",
+      "css",
+      "dart",
+      "dockerfile",
+      "ecl",
+      "elixir",
+      "flow9",
+      "fsharp",
+      "go",
+      "graphql",
+      "handlebars",
+      "hcl",
+      "html",
+      "ini",
+      "java",
+      "javascript",
+      "json",
+      "julia",
+      "kotlin",
+      "less",
+      "lexon",
+      "liquid",
+      "lua",
+      "m3",
+      "markdown",
+      "mips",
+      "msdax",
+      "mysql",
+      "objective-c",
+      "pascal",
+      "pascaligo",
+      "perl",
+      "pgsql",
+      "php",
+      "pla",
+      "plaintext",
+      "postiats",
+      "powerquery",
+      "powershell",
+      "proto",
+      "pug",
+      "python",
+      "qsharp",
+      "r",
+      "razor",
+      "redis",
+      "redshift",
+      "restructuredtext",
+      "ruby",
+      "rust",
+      "sb",
+      "scala",
+      "scheme",
+      "scss",
+      "shell",
+      "sol",
+      "sparql",
+      "sql",
+      "st",
+      "swift",
+      "systemverilog",
+      "tcl",
+      "twig",
+      "typescript",
+      "vb",
+      "verilog",
+      "xml",
+      "yaml",
+    ];
+    return allowed.includes(lang) ? lang : "";
+  }
+}

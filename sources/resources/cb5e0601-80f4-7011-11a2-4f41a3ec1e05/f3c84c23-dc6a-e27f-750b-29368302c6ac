@@ -1,0 +1,35 @@
+* html #gritter-notice-wrapper{position:absolute}
+* html .gritter-top{margin-bottom:-10px}
+* html .gritter-item{padding-bottom:0}
+* html .gritter-bottom{margin-bottom:0}
+* html .gritter-close{background:url(/b249d7c2-4553-b2dc-e86a-0b2471976f1a.res);width:16px;height:16px;top:7px;left:7px;}
+#gritter-notice-wrapper{position:fixed;top:20px;right:20px;width:301px;z-index:9999;}
+.gritter-item-wrapper{position:relative;margin:0 0 10px 0;background:none;}
+.gritter-top{height:0;}
+.hover .gritter-top{}
+.gritter-bottom{height:8px;margin:0;}
+.hover .gritter-bottom{}
+.gritter-item {display:block;padding:2px 11px 8px 11px;font-size:11px;background:#FFF6BF;border:1px solid #FFD324;-moz-border-radius:8px;-webkit-border-radius:8px;-moz-box-shadow: 2px 2px 20px rgba(0,0,0,0.4);-webkit-box-shadow: 2px 2px 20px rgba(0,0,0,0.4);}
+.hover .gritter-item{}
+.gritter-item p{padding:0;margin:0;}
+.gritter-close{background:url(/b249d7c2-4553-b2dc-e86a-0b2471976f1a.res) no-repeat left top;position:absolute;top:8px;right:6px;cursor:pointer;width:16px;height:16px;}
+.gritter-title{font-size:14px;font-weight:bold;padding:0 0 7px 0;display:block;color:#4e4e4e;text-shadow: 2px 2px #d8cc81;}
+.gritter-image{width:48px;height:48px;float:left;}
+.gritter-with-image,
+.gritter-without-image{padding:0 0 5px 0;}
+.gritter-with-image{width:220px;float:right;}
+/* red */
+#gritter-notice-wrapper .red .gritter-item{ background: #f99; border: 1px solid #e88; }
+#gritter-notice-wrapper .red .gritter-title{ color: #fff; text-shadow: none; }
+/* green */
+#gritter-notice-wrapper .green .gritter-item{ background: #080; border: 1px solid #060; color: #fff; }
+#gritter-notice-wrapper .green .gritter-title{ color: #0f0; text-shadow: none; }
+/* blue */
+#gritter-notice-wrapper .blue .gritter-item{ background: #008; border:1px solid #006; color: #fff; }
+#gritter-notice-wrapper .blue .gritter-title{ color: #0ff; text-shadow :none;}
+/* black */
+#gritter-notice-wrapper .black .gritter-item{ background: #111; border:1px solid #000; color: #ddd; }
+#gritter-notice-wrapper .black .gritter-title{ color: #eee; text-shadow :none;}
+/* white */
+#gritter-notice-wrapper .white .gritter-item{ background: #fff; border:1px solid #ddd; color: #111; }
+#gritter-notice-wrapper .white .gritter-title{ color: #000; text-shadow :none;}

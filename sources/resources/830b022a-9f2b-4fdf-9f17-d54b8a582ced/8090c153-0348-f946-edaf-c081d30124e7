@@ -1,0 +1,20 @@
+<svg width="17" height="17" viewBox="0 0 17 17" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<title>borders</title>
+<desc>Created using Figma</desc>
+<g id="Canvas" transform="translate(1336 -12357)">
+<g id="borders">
+<g id="Group">
+<g id="Vector">
+<use xlink:href="#path0_fill" transform="translate(-1336 12357)" fill="#6496CB"/>
+</g>
+</g>
+<g id="Vector" opacity="0.2">
+<use xlink:href="#path1_fill" transform="translate(-1333.88 12357)" fill="#6496CB"/>
+</g>
+</g>
+</g>
+<defs>
+<path id="path0_fill" d="M 17 17L 0 17L 0 0L 17 0L 17 17ZM 2.125 14.875L 14.875 14.875L 14.875 2.125L 2.125 2.125L 2.125 14.875Z"/>
+<path id="path1_fill" d="M 12.75 7.4375L 7.4375 7.4375L 7.4375 0L 5.3125 0L 5.3125 7.4375L 0 7.4375L 0 9.5625L 5.3125 9.5625L 5.3125 17L 7.4375 17L 7.4375 9.5625L 12.75 9.5625L 12.75 7.4375Z"/>
+</defs>
+</svg>

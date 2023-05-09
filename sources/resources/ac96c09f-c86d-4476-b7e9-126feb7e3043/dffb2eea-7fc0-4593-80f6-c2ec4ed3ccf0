@@ -1,0 +1,902 @@
+(function ($) {
+    window.parcelRequire = "";
+    const loader = $(
+      `<div class="holder_loader"><div class="loader"></div></div>`
+    );
+    const getRandomItem = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  
+    class VideoGrid {
+      static get videosWrapperClass() { return "videos-wrapper"; }
+  
+      constructor() {
+        this.videosWrapperClass = VideoGrid.videosWrapperClass;
+        this.videoGrid = $("<div/>");
+        this.videoGrid.addClass(this.videosWrapperClass);
+      }
+  
+      recalculateVideoSize() {
+        const videos = this.videoGrid.find(`video`);
+        const countVideos = videos.length;
+        let rowCount;
+        let colCount;
+        const sqrt = Math.sqrt(countVideos);
+        if (!Number.isInteger(sqrt)) {
+          rowCount = Math.round(sqrt);
+          colCount = Math.ceil(sqrt);
+        } else {
+          rowCount = sqrt;
+          colCount = rowCount;
+        }
+        const minMax = "minmax(50px, 1fr)";
+        this.videoGrid
+          .css("grid-template-rows", `repeat(${rowCount}, ${minMax})`)
+          .css("grid-template-columns", `repeat(${colCount}, ${minMax})`);
+      }
+  
+      removeVideo(video) {
+        video.remove();
+        this.recalculateVideoSize();
+      }
+  
+      addVideoStream(video, stream, peerId) {
+        const { videoWrapper } = video.getVideoDOM();
+  
+        video.setStream(stream);
+  
+        video.loading(true);
+  
+        video.video.on("loadedmetadata", () => {
+          setTimeout(() => {
+            video.loading(false);
+            video.video.trigger("play");
+          }, 1000);
+        });
+  
+        video.video.attr("data-peer-id", peerId);
+  
+        this.videoGrid.prepend(videoWrapper);
+  
+        this.recalculateVideoSize();
+      }
+  
+      removeAllVideos() {
+        this.videoGrid.find(`.${this.videoWrapperClass}`).remove();
+      }
+    }
+  
+    class Control {
+      static get commonControlsClass() { return "control"; }
+    }
+  
+    class CallControl extends Control {
+      static get callControlClass() { return "call-control"; }
+  
+      constructor(callBack) {
+        super();
+        this.callBack = callBack;
+        this.btn = this.createCallBtn();
+      }
+  
+      createCallBtn() {
+        const btn = $("<i/>");
+        btn.addClass(Control.commonControlsClass);
+        btn.addClass(CallControl.callControlClass);
+        btn.on("click", () => {
+          this.callBack();
+        });
+        return btn;
+      }
+    }
+  
+    class DisableVideoControl extends Control {
+      static get videoControlClass() { return "video-control" }
+  
+      constructor(callBack) {
+        super();
+        this.callBack = callBack;
+        this.btn = this.createBtn();
+      }
+  
+      createBtn() {
+        const btn = $("<i/>");
+        btn.addClass(Control.commonControlsClass);
+        btn.addClass(DisableVideoControl.videoControlClass);
+        btn.on("click", () => {
+          this.callBack();
+        });
+        return btn;
+      }
+    }
+  
+    class DisableAudioControl extends Control {
+      static get microControlClass() { return "micro-control" }
+      static get audioIsDisabledClass() { return "disabled-audio" }
+  
+      constructor(callBack) {
+        super();
+        this.callBack = callBack;
+        this.btn = this.createBtn();
+      }
+  
+      createBtn() {
+        const btn = $("<i/>");
+        btn.addClass(Control.commonControlsClass);
+        btn.addClass(DisableAudioControl.microControlClass);
+        btn.on("click", () => {
+          this.callBack();
+        });
+        return btn;
+      }
+    }
+  
+    class ConferenceControl {
+      static get myControlsWrapperClass() { return "my-controls-wrapper" }
+  
+      constructor(container, video, callBacks) {
+        this.callBacks = callBacks;
+        this.container = container;
+        this.controlsWrapper = this.createMyVideoControls();
+        this.container.append(this.controlsWrapper);
+      }
+  
+      disableVideo() {
+        this.controlsWrapper.addClass(
+          P2PVideoConferenceConnector.videoIsDisabledClass
+        );
+      }
+  
+      enableVideo() {
+        this.controlsWrapper.removeClass(
+          P2PVideoConferenceConnector.videoIsDisabledClass
+        );
+      }
+  
+      disableAudio() {
+        this.controlsWrapper.addClass(
+          P2PVideoConferenceConnector.audioIsDisabledClass
+        );
+      }
+  
+      enableAudio() {
+        this.controlsWrapper.removeClass(
+          P2PVideoConferenceConnector.audioIsDisabledClass
+        );
+      }
+  
+      createMyVideoControls() {
+        const {
+          callControlClick,
+          videoControlClick,
+          audioControlClick,
+        } = this.callBacks;
+        const controlsWrapper = $(`<span/>`).addClass(
+          ConferenceControl.myControlsWrapperClass
+        );
+  
+        const callControl = new CallControl(callControlClick);
+        const disableVideoControl = new DisableVideoControl(videoControlClick);
+        const disableAudioControl = new DisableAudioControl(audioControlClick);
+        controlsWrapper
+          .append(disableVideoControl.btn)
+          .append(disableAudioControl.btn)
+          .append(callControl.btn);
+  
+        return controlsWrapper;
+      }
+    }
+  
+    class MuteVideoControl extends Control {
+      static get muteControlClass() { return "mute-control" }
+      static get muteControlMutedClass() { return "muted" }
+  
+      constructor(video) {
+        super();
+        this.btn = this.createMuteBtn(video);
+      }
+  
+      createMuteBtn(video) {
+        const muteBtn = $(`<i/>`);
+        muteBtn
+          .addClass(Control.commonControlsClass)
+          .addClass(MuteVideoControl.muteControlClass);
+  
+        muteBtn.click((e) => {
+          const videoIsMuted = video.isMuted();
+          videoIsMuted ? this.unmuteVideo(video) : this.muteVideo(video);
+        });
+  
+        return muteBtn;
+      }
+      unmuteVideo(video) {
+        video.setVideoMuteState(false);
+        const videoVolume = video.getVideoVolume();
+        if (videoVolume == 0) {
+          const newVolmueValue = 0.5;
+          video.setVideoVolume(newVolmueValue);
+        }
+      }
+      muteVideo(video) {
+        video.setVideoMuteState(true);
+      }
+    }
+  
+    class VolumeControl extends Control {
+      static get volumeControlClass() { return "volume-control" }
+  
+      constructor(video) {
+        super();
+        this.control = this.createVolumeControl(video);
+      }
+  
+      createVolumeControl(video) {
+        const volumeControlWrapper = $(`<div/>`);
+  
+        volumeControlWrapper
+          .addClass(VolumeControl.volumeControlClass)
+          .addClass(Control.commonControlsClass);
+  
+        const volumeRangeInput = $(
+          `<input type='range' min='0' max='1' step='0.01'/>`
+        );
+  
+        volumeRangeInput.on("input", (e) => {
+          const input = $(e.currentTarget);
+          const volumeValue = input.val();
+          video.setVideoVolume(volumeValue);
+  
+          if (volumeValue == 0) video.setVideoMuteState(true);
+          else video.setVideoMuteState(false);
+        });
+  
+        return volumeControlWrapper.append(volumeRangeInput);
+      }
+    }
+  
+    class VideoControls {
+      static get controlsWrapperClass() { return "controls-wrapper" }
+      static get myControlsWrapperClass() { return "my-controls-wrapper" }
+  
+      constructor(video) {
+        this.video = video;
+        this.createVideoControls(video);
+      }
+  
+      createVideoControls(video) {
+        const controlsWrapper = $(`<span/>`).addClass(
+          VideoControls.controlsWrapperClass
+        );
+        const { videoWrapper } = video.getVideoDOM();
+  
+        videoWrapper.append(controlsWrapper);
+        const muteBtn = new MuteVideoControl(video);
+  
+        controlsWrapper.append(muteBtn.btn);
+        const volumeInput = new VolumeControl(video);
+  
+        volumeInput.control.prepend(muteBtn.btn);
+  
+        controlsWrapper.append(volumeInput.control);
+      }
+    }
+  
+    class Video {
+      static get videoWrapperClass() { return "video-wrapper" }
+      static get myVideoWrapperClass() { return "my-video-wrapper" }
+      static get nameLabelClass() { return "name-label" }
+      static get userVideoWrapperClass() { return "user-video-wrapper" }
+  
+      constructor(options) {
+        this.createVideoObject(options);
+      }
+  
+      static createFromVideo(video) {
+        const obj = new Video({});
+        obj.video = video;
+        return obj;
+      }
+  
+      setVideoVolume(volume) {
+        const { video, volumeInput } = this.getVideoDOM();
+        video.prop("volume", volume);
+        volumeInput.val(volume);
+        if (volume === 0) {
+          this.setVideoMuteState(true);
+        } else {
+          this.setVideoMuteState(false);
+        }
+      }
+  
+      setVideoMuteState(isMute) {
+        const { video, controlsWrapper } = this.getVideoDOM();
+        video.prop("muted", isMute);
+        if (isMute) {
+          controlsWrapper.addClass(MuteVideoControl.muteControlMutedClass);
+        } else {
+          controlsWrapper.removeClass(MuteVideoControl.muteControlMutedClass);
+        }
+      }
+  
+      createNameLabel() {
+        const { videoWrapper } = this.getVideoDOM();
+        const nameLabel = $(`<div />`);
+  
+        nameLabel.addClass(Video.nameLabelClass);
+        videoWrapper.prepend(nameLabel);
+      }
+  
+      createVideoObject(options) {
+        const videoWrapper = $(`<div/>`);
+        const video = $(`<video/>`);
+        this.video = video;
+        video.attr("playsinline", "true");
+  
+        videoWrapper.addClass(Video.videoWrapperClass);
+        videoWrapper.append(video);
+  
+        const defaultOptions = {
+          muted: false,
+          volume: 1,
+          showName: true,
+        };
+  
+        options = { ...defaultOptions, ...options };
+  
+        const optionHandler = {
+          controls: (value) => {
+            value ? new VideoControls(this) : null;
+          },
+          muted: (value) => {
+            this.setVideoMuteState(value);
+          },
+          volume: (value) => {
+            this.setVideoVolume(value);
+          },
+          myVideo: (value) => {
+            if (value) {
+              const { videoWrapper } = this.getVideoDOM();
+              videoWrapper.addClass(Video.myVideoWrapperClass);
+              this.setVideoMuteState(true);
+            } else {
+            }
+          },
+          showName: (value) => {
+            value ? this.createNameLabel() : null;
+          },
+        };
+  
+        for (const [key, value] of Object.entries(options || {})) {
+          try {
+            optionHandler[key](value);
+          } catch (err) {
+            console.warn(err);
+          }
+        }
+        return video;
+      }
+  
+      getVideoDOM() {
+        const video = this.video;
+        let controlsWrapper = video.siblings(
+          `.${VideoControls.controlsWrapperClass}`
+        );
+        const videoWrapper = video.parent();
+  
+        if (videoWrapper.hasClass(Video.myVideoWrapperClass))
+          controlsWrapper = $();
+  
+        const muteBtn = controlsWrapper.find(`.${this.muteControlClass}`);
+        const volumeInput = controlsWrapper.find(
+          `.${VolumeControl.volumeControlClass} input`
+        );
+        const callControl = controlsWrapper.find(`.${this.callControlClass}`);
+        const nameLabel = videoWrapper.find(`.${Video.nameLabelClass}`);
+  
+        return {
+          videoWrapper,
+          controlsWrapper,
+          muteBtn,
+          volumeInput,
+          video,
+          callControl,
+          nameLabel,
+        };
+      }
+  
+      isMuted() {
+        const { video } = this.getVideoDOM();
+        return video.prop("muted");
+      }
+  
+      getVideoVolume() {
+        const { video } = this.getVideoDOM();
+        return video.prop("volume");
+      }
+  
+      setStream(stream) {
+        const { video } = this.getVideoDOM();
+        video.prop("srcObject", stream);
+      }
+  
+      getStream() {
+        const { video } = this.getVideoDOM();
+        return video.prop("srcObject");
+      }
+  
+      loading(state) {
+        const { videoWrapper } = this.getVideoDOM();
+        const videoLoader = loader.clone();
+        if (state) {
+          videoWrapper.append(videoLoader);
+          videoWrapper.css("background", "black");
+        } else {
+          videoWrapper.attr("style", "");
+          videoWrapper.find(`.${videoLoader.attr("class")}`).remove();
+        }
+      }
+  
+      enableVideo() {
+        const { videoWrapper, controlsWrapper } = this.getVideoDOM();
+        videoWrapper.removeClass(
+          P2PVideoConferenceConnector.videoIsDisabledClass
+        );
+        controlsWrapper.removeClass(
+          P2PVideoConferenceConnector.videoIsDisabledClass
+        );
+      }
+  
+      disableVideo() {
+        const { videoWrapper, controlsWrapper } = this.getVideoDOM();
+        videoWrapper.addClass(P2PVideoConferenceConnector.videoIsDisabledClass);
+        controlsWrapper.addClass(P2PVideoConferenceConnector.videoIsDisabledClass);
+      }
+  
+      enableAudio() {
+        const { videoWrapper, controlsWrapper } = this.getVideoDOM();
+        videoWrapper.removeClass(P2PVideoConferenceConnector.audioIsDisabledClass);
+        controlsWrapper.removeClass(P2PVideoConferenceConnector.audioIsDisabledClass);
+      }
+  
+      disableAudio() {
+        const { videoWrapper, controlsWrapper } = this.getVideoDOM();
+        videoWrapper.addClass(P2PVideoConferenceConnector.audioIsDisabledClass);
+        controlsWrapper.addClass(P2PVideoConferenceConnector.audioIsDisabledClass);
+      }
+  
+      setName(name) {
+        const { nameLabel } = this.getVideoDOM();
+        nameLabel.text(name);
+      }
+  
+      getTraksFromStream() {
+        const stream = this.getStream();
+  
+        const tracks = stream.getTracks();
+  
+        const audioTrack = tracks.find((el) => {
+          if (el.kind == "audio") return true;
+          return false;
+        });
+  
+        const videoTrack = tracks.find((el) => {
+          if (el.kind == "video") return true;
+          return false;
+        });
+  
+        return { audioTrack, videoTrack };
+      }
+  
+      createEmptyAudioTrack() {
+        const ctx = new AudioContext();
+        const oscillator = ctx.createOscillator();
+        const dst = oscillator.connect(ctx.createMediaStreamDestination());
+        oscillator.start();
+        const track = dst.stream.getAudioTracks()[0];
+        return Object.assign(track, { enabled: false });
+      };
+      
+      createEmptyVideoTrack({ width, height }) {
+        const canvas = Object.assign(document.createElement('canvas'), { width, height });
+        canvas.getContext('2d').fillRect(0, 0, width, height);
+      
+        const stream = canvas.captureStream();
+        const track = stream.getVideoTracks()[0];
+      
+        return Object.assign(track, { enabled: false });
+      };
+  
+  
+      userDeniedWebCamAccess() {
+        const { videoWrapper, controlsWrapper } = this.getVideoDOM();
+  
+        videoWrapper.addClass(P2PVideoConferenceConnector.permissionDeniedWebCamClass);
+        controlsWrapper.addClass(P2PVideoConferenceConnector.permissionDeniedWebCamClass);
+      }
+      
+      userDeniedMicrophoneAccess() {
+        const { videoWrapper, controlsWrapper } = this.getVideoDOM();
+        
+        videoWrapper.addClass(P2PVideoConferenceConnector.permissionDeniedMicrophoneClass);
+        controlsWrapper.addClass(P2PVideoConferenceConnector.permissionDeniedMicrophoneClass);
+      }
+      
+      userDeniedAccess() {
+        const { videoWrapper, controlsWrapper } = this.getVideoDOM();
+  
+        videoWrapper.addClass(P2PVideoConferenceConnector.permissionDenied);
+        controlsWrapper.addClass(P2PVideoConferenceConnector.permissionDenied);
+      }
+  
+      remove() {
+        const { videoWrapper } = this.getVideoDOM();
+        videoWrapper.remove();
+      }
+    }
+  
+    class P2PVideoConferenceConnector {
+      static get videoConfIsEnabledClass() { return "conf-enabled" }
+      static get videoConfIsDisabledClass() { return "conf-disabled" }
+      static get audioIsDisabledClass() { return "disabled-audio" }
+      static get videoIsDisabledClass() { return "disabled-video" }
+      static get permissionDeniedMicrophoneClass() { return "permission-denied-microphone" }
+      static get permissionDeniedWebCamClass() { return "permission-denied-webcam" }
+      static get permissionDenied() { return "permission-denied" }
+  
+      constructor(containerId, roomId, options) {
+        this.containerId = containerId;
+        this.roomId = roomId;
+        this.autoConnect = options.autoConnect || false;
+  
+        this.protocol = options.protocol || "https://";
+        this.host = options.socketIoHost || "/";
+        this.port = options.socketIoPort || "";
+        this.peerJsHost = options.peerJsHost || "/";
+        this.peerJsPort = options.peerJsPort || "443";
+        this.peerJsPath = options.peerJsPath || "/";
+        this.socketUrl = `${this.protocol}${this.host}${this.port ? ":" + this.port : ""}`;
+  
+        this.container = $(`#${this.containerId}`);
+        this.container.empty();
+  
+        //Set up video grid
+        this.videoGrid = new VideoGrid({});
+        this.container.append(this.videoGrid.videoGrid);
+        this.userName = options.userName || 'Username';
+        this.myPeer = null;
+        this.myAudioIsEnabled = true;
+        this.myVideoIsEnabled = true;
+        this.socket = null;
+        this.myVideo = new Video({
+          muted: true,
+          volume: 1,
+          myVideo: true,
+        });
+        this.conferenceControl = new ConferenceControl(
+          this.container,
+          this.myVideo,
+          {
+            callControlClick: () => this.callControlClickCallback(),
+            videoControlClick: () => this.videoControlClickCallBack(),
+            audioControlClick: () => this.audioControlClickCallBack(),
+          }
+        );
+        this.peers = {};
+  
+        this.markConferenceAsDisabled();
+        this.initMyVideo();
+      }
+  
+      setUpSocketConnection() {
+        this.socket = io(this.socketUrl);
+        this.socket.on("error", (reason) => {
+          console.warn(`Unable to connect Socket.IO ${reason}`);
+        });
+  
+        this.socket.on("user-disconnected", (userId) => {
+          if (this.peers[userId]) this.peers[userId].close();
+        });
+  
+        this.socket.on("user-connected", ({ userId, userMetadata }) => {
+          this.connectToNewUser(userId, this.myVideo.getStream(), userMetadata);
+        });
+  
+        this.socket.on("user-disable-microphone", (userId) => {
+          this.userDisableMicrophone(userId);
+        });
+  
+        this.socket.on("user-enable-microphone", (userId) => {
+          this.userEnableMicrophone(userId);
+        });
+  
+        this.socket.on("user-disable-video", (userId) => {
+          this.userDisableVideo(userId);
+        });
+        this.socket.on("user-enable-video", (userId) => {
+          this.userEnableVideo(userId);
+        });
+      }
+  
+      userDisableMicrophone(userId) {
+        const $video =  $(`#${this.containerId} video[data-peer-id="${userId}"]`);
+        const video = Video.createFromVideo($video);
+        video.disableAudio();
+      }
+      userEnableMicrophone(userId) {
+        const $video = $(`#${this.containerId} video[data-peer-id="${userId}"]`);
+        const video = Video.createFromVideo($video);
+        video.enableAudio();
+      }
+      userDisableVideo(userId) {
+        const $video = $(`#${this.containerId} video[data-peer-id="${userId}"]`);
+        const video = Video.createFromVideo($video);
+        video.disableVideo();
+      }
+      userEnableVideo(userId) {
+        const $video = $(`#${this.containerId} video[data-peer-id="${userId}"]`);
+        const video = Video.createFromVideo($video);
+        video.enableVideo();
+      }
+  
+      async setUpPeerJsConnection() {
+        await import("/9818e257-2ac0-4161-984b-1c5a29c6d750.js");
+  
+        this.myPeer = new Peer(undefined, {
+          host: this.peerJsHost,
+          port: this.peerJsPort,
+          path: this.peerJsPath,
+          debug: 2,
+        });
+  
+        this.myPeer.on("error", (err) => {
+          console.warn("Peer js error", err);
+        });
+  
+        this.myPeer.on("open", (userId) => {
+          const { videoTrack, audioTrack } = this.myVideo.getTraksFromStream();
+  
+          const audioIsEnabled = audioTrack.enabled;
+          const videoIsEnabled = videoTrack.enabled;
+  
+          const userMetadata = {
+            userName: this.userName,
+            audioIsEnabled,
+            videoIsEnabled,
+          };
+  
+          this.socket.emit("join-room", this.roomId, { userId, userMetadata });
+  
+          this.myVideo.loading(false);
+        });
+  
+        this.myPeer.on("call", async (call) => {
+          await this.sleep(1500); // The bootlleneck
+  
+          call.answer(this.myVideo.getStream());
+  
+          const video = new Video({ controls: true });
+          const self = this;
+  
+          call.on("stream", function (userStream) {
+            const { audioIsEnabled, videoIsEnabled, userName } = this.metadata;
+  
+            if (!audioIsEnabled) self.userDisableMicrophone(this.peer);
+            if (!videoIsEnabled) self.userDisableVideo(this.peer);
+  
+            video.setName(userName);
+  
+            self.videoGrid.addVideoStream(video, userStream, this.peer);
+            self.peers[this.peer] = this;
+          });
+          call.on("close", () => {
+            this.videoGrid.removeVideo(video);
+          });
+        });
+      }
+  
+      isConnected() {
+        return this.myPeer ? this.myPeer.open || false : false;
+      }
+  
+      markConferenceAsDisabled() {
+        this.container.addClass(
+          P2PVideoConferenceConnector.videoConfIsDisabledClass
+        );
+        this.container.removeClass(
+          P2PVideoConferenceConnector.videoConfIsEnabledClass
+        );
+      }
+  
+      markConferenceAsEnebled() {
+        this.container.removeClass(
+          P2PVideoConferenceConnector.videoConfIsDisabledClass
+        );
+        this.container.addClass(
+          P2PVideoConferenceConnector.videoConfIsEnabledClass
+        );
+      }
+  
+      endCall() {
+        this.markConferenceAsDisabled();
+        this.myPeer.destroy();
+        this.socket.disconnect(true);
+        this.videoGrid.removeAllVideos();
+      }
+  
+      callControlClickCallback() {
+        const isConnected = this.isConnected();
+        if (isConnected) {
+          this.endCall();
+        } else {
+          this.myVideo.loading(true);
+          this.connect();
+        }
+      }
+  
+      audioControlClickCallBack() {
+        const { audioTrack: myAudioTrack } = this.myVideo.getTraksFromStream();
+  
+        myAudioTrack.enabled = !myAudioTrack.enabled;
+  
+        this.myAudioIsEnabled = myAudioTrack.enabled;
+  
+        if (myAudioTrack.enabled) {
+          this.socket
+            ? this.socket.emit("user-enable-microphone", this.myPeer.id)
+            : null;
+          this.myVideo.enableAudio();
+          this.conferenceControl.enableAudio();
+        } else {
+          this.socket
+            ? this.socket.emit("user-disable-microphone", this.myPeer.id)
+            : null;
+          this.myVideo.disableAudio();
+          this.conferenceControl.disableAudio();
+        }
+      }
+  
+      videoControlClickCallBack() {
+        const { videoTrack: myVideoTrack } = this.myVideo.getTraksFromStream();
+  
+        myVideoTrack.enabled = !myVideoTrack.enabled;
+  
+        this.myVideoIsEnabled = myVideoTrack.enabled;
+  
+        if (myVideoTrack.enabled) {
+          this.socket
+            ? this.socket.emit("user-enable-video", this.myPeer.id)
+            : null;
+          this.myVideo.enableVideo();
+          this.conferenceControl.enableVideo();
+        } else {
+          this.socket
+            ? this.socket.emit("user-disable-video", this.myPeer.id)
+            : null;
+          this.myVideo.disableVideo();
+          this.conferenceControl.disableVideo();
+        }
+      }
+  
+      // WHER USER CONNECT TO US
+      async connectToNewUser(userId, stream, userMetadata) {
+        const video = new Video({ controls: true });
+  
+        const { audioTrack, videoTrack } = this.myVideo.getTraksFromStream();
+  
+        const myMetadata = {
+          audioIsEnabled: audioTrack.enabled,
+          videoIsEnabled: videoTrack.enabled,
+          userName: this.userName,
+        };
+  
+        const call = this.myPeer.call(userId, stream, { metadata: myMetadata });
+  
+        const { userName, audioIsEnabled, videoIsEnabled } = userMetadata;
+  
+        video.setName(userName);
+  
+        call.on("stream", (userVideoStream) => {
+          this.videoGrid.addVideoStream(video, userVideoStream, userId);
+  
+          audioIsEnabled ? null : this.userDisableMicrophone(userId);
+          videoIsEnabled ? null : this.userDisableVideo(userId);
+        });
+  
+        call.on("close", () => {
+          this.videoGrid.removeVideo(video);
+        });
+  
+        this.peers[userId] = call;
+      }
+  
+      sleep(ms) {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+      }
+  
+      async setUpMyConnection() {
+        this.setUpSocketConnection();
+        await this.setUpPeerJsConnection();
+  
+      }
+  
+      initMyVideo() {
+        navigator.mediaDevices.getUserMedia({ audio: true, video: true }).then(
+          async (stream) => {
+            this.myVideo.setStream(stream);
+  
+            const { audioTrack, videoTrack } = this.myVideo.getTraksFromStream();
+  
+            this.myAudioIsEnabled ? null : (audioTrack.enabled = false);
+            this.myVideoIsEnabled ? null : (videoTrack.enabled = false);
+  
+            this.videoGrid.addVideoStream(
+              this.myVideo,
+              this.myVideo.getStream(),
+              null
+            );
+      
+            this.myVideo.setName(this.userName + "(You)");
+      
+            this.autoConnect ? this.connect() : null;
+          },
+          (err) => {
+            this.myVideo.loading(false);
+            const audioTrack = this.myVideo.createEmptyAudioTrack();
+            const videoTrack = this.myVideo.createEmptyVideoTrack({width:640, height:480});
+            
+            console.log(err);
+  
+            if ( err.name == "NotFoundError" || err.name == "DevicesNotFoundError" ) {
+              //required track is missing
+              navigator.mediaDevices.getUserMedia({audio:true, video:false})
+              .then((stream)=>{
+                this.myVideo.setStream(stream);
+                const {audioTrack} = this.myVideo.getTraksFromStream(stream);
+                this.myVideo.setStream(new MediaStream([audioTrack, videoTrack]));
+                this.connect();
+                this.myVideo.userDeniedWebCamAccess();
+              });
+  
+              navigator.mediaDevices.getUserMedia({audio:false, video:true})
+              .then((stream)=>{
+                this.myVideo.setStream(stream);
+                const { videoTrack } = this.myVideo.getTraksFromStream();
+                this.myVideo.setStream(new MediaStream([audioTrack, videoTrack]));
+                this.video.userDeniedMicrophoneAccess();
+              });
+            } else if ( err.name == "NotReadableError" || err.name == "TrackStartError") {
+              //webcam or mic are already in use
+            } else if ( err.name == "OverconstrainedError" || err.name == "ConstraintNotSatisfiedError") {
+              //constraints can not be satisfied by avb. devices
+            } else if ( err.name == "NotAllowedError" || err.name == "PermissionDeniedError" ) {
+              //permission denied in browser
+              this.myVideo.setStream(new MediaStream([audioTrack, videoTrack]));
+              this.myVideo.userDeniedAccess()
+            } else if (err.name == "TypeError" || err.name == "TypeError") {
+              //empty constraints object
+            } else {
+              //other errors
+            }
+  
+            this.videoGrid.addVideoStream(
+              this.myVideo,
+              this.myVideo.getStream(),
+              null
+            );
+      
+            this.myVideo.setName(this.userName + "(You)");
+      
+            this.autoConnect ? this.connect() : null;
+          }
+        );
+      }
+  
+  
+      async connect() {
+        if (this.isConnected()) return;
+        this.setUpMyConnection();
+        this.markConferenceAsEnebled();
+      }
+    }
+  
+    $.P2PVideoConferenceConnector = P2PVideoConferenceConnector;
+  })(jQuery);
+  

@@ -1,0 +1,125 @@
+            (function ($) {
+    class SubmitVDOMFormJs {
+        constructor(formId, reportAboutValidity) {
+            this.formId = formId;
+            this.$form = $(`#${formId}`);
+            this.reportAboutValidity = reportAboutValidity;
+            this.body = $("body");
+            this.initFormSubmitEvent();
+        }
+
+        initFormSubmitEvent() {
+            this.$form.submit(e => {
+                const result = this.submitForm(this.$form, e);
+                e.preventDefault();
+                return result;
+            });
+        }
+
+        submitForm(form, e) {
+            //add native html validate from $(...).submit() method.
+            const formIsValid = this.reportValidity(form);
+            if (!formIsValid) {
+              const fakeSubmitBtn = $(`<button type='submit' style='display: none'>`);
+              form.append(fakeSubmitBtn);
+              fakeSubmitBtn.click();
+              fakeSubmitBtn.remove();
+              return false;
+            };
+
+            //THIS IS FIX FORM SPAM
+            const formIsSubmitted = this.formIsSubmitted(this.formId);
+            if (formIsSubmitted) return false;
+
+            this.addSubmitterMixinToForm(form, e);
+
+            const formData = {};
+            this.serealizeForm(formData, form);
+
+            this.sendFormThroughE2VDOM(formData);
+
+            return false;
+        }
+
+        serealizeForm(formData, form) {
+            const submitTrigger = form.children("input[name='__submit_trigger__']");
+            if (submitTrigger.length) {
+                formData[submitTrigger.val()] = submitTrigger.attr('data-value');
+                submitTrigger.remove();
+            }
+
+            const objHasKey = (obj, key) => obj.hasOwnProperty(key);
+            const dataIsArray = (value) => $.isArray(value);
+
+            const serealizedFormData = form.serializeArray();
+            for (let k of serealizedFormData) {
+                const key = k.name;
+                const value = k.value;
+                const dataIsValid =
+                    typeof key !== "undefined" && typeof value !== "undefined";
+                if (dataIsValid) {
+                    if (objHasKey(formData, key)) {
+                        if (dataIsArray(formData[key])) {
+                            formData[key].push(value);
+                        } else {
+                            const formValue = formData[key];
+                            formData[key] = new Array(formValue, value);
+                        }
+                    } else {
+                        formData[key] = value;
+                    }
+                }
+            }
+        }
+
+        reportValidity(form) {
+            if (this.reportAboutValidity) {
+                return form[0].checkValidity();
+            }
+            return true;
+        }
+
+        addSubmitterMixinToForm(form, e) {
+            const hasSubmitter = (e) => e.hasOwnProperty('originalEvent');
+            if (!hasSubmitter(e)) return false;
+
+            const submitter = $(e.originalEvent.submitter);
+            const submitterName = submitter.attr("name");
+            const formHasSubmitTrigger = form.children(
+                "input[name=__submit_trigger__]"
+            ).length;
+
+            const hiddenInput = $(
+                `<input type='hidden' name='__submit_trigger__'></input>`
+            );
+
+            if (!formHasSubmitTrigger) {
+              hiddenInput.attr('data-value', submitter.attr('value'));
+              form.append(hiddenInput.val(submitterName));
+            } else {
+              form.children("input[name=__submit_trigger__]").val(submitterName);
+            }
+        }
+
+        sendFormThroughE2VDOM(formData) {
+            const vdomId = this.formId.slice(2);
+            const event = "submit";
+            execEventBinded(vdomId, event, formData);
+        }
+
+        formIsSubmitted(formId) {
+            const dataKey = `${formId}_submitted`;
+            const formIsSubmitted = this.body.data(dataKey) == "1";
+
+            if (formIsSubmitted) return true;
+
+            this.body.data(dataKey, "1");
+            setTimeout(() => {
+                this.body.data(dataKey, "");
+            }, 1000);
+
+            return false;
+        }
+    }
+    $.SubmitVDOMFormJs = SubmitVDOMFormJs;
+})(jQuery);

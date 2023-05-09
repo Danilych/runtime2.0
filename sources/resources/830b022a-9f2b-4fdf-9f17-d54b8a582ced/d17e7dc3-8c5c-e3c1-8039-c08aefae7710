@@ -1,0 +1,22 @@
+<svg width="16" height="17" viewBox="0 0 16 17" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<title>timew</title>
+<desc>Created using Figma</desc>
+<g id="Canvas" transform="translate(1899 -12566)">
+<g id="timew">
+<g id="Ellipse 7 (Stroke)">
+<use xlink:href="#path0_fill" transform="translate(-1898.69 12566.6)" fill="#FFFFFF"/>
+</g>
+<g id="Line 8 (Stroke)">
+<use xlink:href="#path1_fill" transform="matrix(6.12323e-17 1 -1 6.12323e-17 -1889.97 12570)" fill="#FFFFFF"/>
+</g>
+<g id="Line 8.1 (Stroke)">
+<use xlink:href="#path2_fill" transform="matrix(-1 1.22465e-16 -1.22465e-16 -1 -1886.57 12575.3)" fill="#FFFFFF"/>
+</g>
+</g>
+</g>
+<defs>
+<path id="path0_fill" fill-rule="evenodd" d="M 7.72168 13.4434C 10.8817 13.4434 13.4434 10.8817 13.4434 7.72168C 13.4434 4.56168 10.8817 2 7.72168 2C 4.56168 2 2 4.56168 2 7.72168C 2 10.8817 4.56168 13.4434 7.72168 13.4434ZM 7.72168 15.4434C 11.9862 15.4434 15.4434 11.9862 15.4434 7.72168C 15.4434 3.45711 11.9862 0 7.72168 0C 3.45711 0 0 3.45711 0 7.72168C 0 11.9862 3.45711 15.4434 7.72168 15.4434Z"/>
+<path id="path1_fill" fill-rule="evenodd" d="M 4.9632 2L 0 2L 0 0L 4.9632 0L 4.9632 2Z"/>
+<path id="path2_fill" fill-rule="evenodd" d="M 5.39172 2L 0 2L 0 0L 5.39172 0L 5.39172 2Z"/>
+</defs>
+</svg>

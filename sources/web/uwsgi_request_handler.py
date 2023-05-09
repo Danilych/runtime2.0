@@ -56,6 +56,8 @@ class VDOM_uwsgi_request_handler(object):
     """server version string"""
     server_version = SERVER_NAME
 
+   
+
     responses = {
         100: ('Continue', 'Request received, please continue'),
         101: ('Switching Protocols',
@@ -215,28 +217,18 @@ class VDOM_uwsgi_request_handler(object):
         return env
 
     def handle_wsgi_request(self, environ, start_response):
-        #start_response('200 OK', [('Content-Type', 'text/html')])
-        #return [b"Hello World"]
+
 #        try:
- #           print("===========================")
- #           print(str(environ['wsgi.input'].readline()))
- #           print("===========================")
+
             self.command = environ['REQUEST_METHOD']
             mname = 'do_' + self.command
             self.headers = environ
             self.path = environ["PATH_INFO"]
             host = environ["HTTP_HOST"]
-#            print("content length = " + str(environ))
-#            print("input " + str(environ['wsgi.input'].read(int(environ["CONTENT_LENGTH"]))))
 
- #           print("Request = " + mname)
-
-            
             self.wsgidav_app = None
 
             self.response = {'code': '', 'response_body': []}
-  #          print("=====================")
-  #          print(mname + " = " + host)
         
             #try:
                 #appl = managers.memory.get_application(app_id)
@@ -263,20 +255,7 @@ class VDOM_uwsgi_request_handler(object):
 
             method = getattr(self, mname)
             method()
-#            response["body"]
-#            response["code"]
-#            response["response_body"]
-#            print("++++++++++++++++++++++++++++++++")
-#            print("test = " + str(response))
-           # self.wfile["response"].append("test123")
-           # self.wfile["response"].append("test123")
-#            print(response['response_body'])
- #           print(str(response['response_body']))
- #           print("==================")
- #           print("response code = " + response['code'])
- #           print("response body = " + str(response['response_body']))
- #           print("wfile = " + str(self.wfile["response"]))
- #           print("++++++++++++++++++")
+
             start_response(self.response['code'], self.response['response_body'])
             
             return self.wfile["response"] #actually send the response if not already done.
@@ -329,15 +308,9 @@ class VDOM_uwsgi_request_handler(object):
         if f:
             sys.setcheckinterval(0)
             for line in f:
-#                print("line = " + line)
                 self.wfile["response"].append(line)
-#            shutil.copyfileobj(f, self.wfile)
             sys.setcheckinterval(100)
-            #self.copyfile(f, self.wfile)
             f.close()
-#        if not self.wfile.closed:
-#            if self.__request.nokeepalive:
-#                self.close_connection = 1
 
     def do_HEAD(self):
         """serve a HEAD request"""
@@ -362,11 +335,7 @@ class VDOM_uwsgi_request_handler(object):
             sys.setcheckinterval(0)
             shutil.copyfileobj(f, self.wfile)
             sys.setcheckinterval(100)
-            #self.copyfile(f, self.wfile)
             f.close()
-        #if not self.wfile.closed:
-        #	if self.__request.nokeepalive:
-        #		self.close_connection = 1		
 
     def create_request(self, method):
         """initialize request, <method> is either 'post' or 'get'"""
@@ -417,10 +386,6 @@ class VDOM_uwsgi_request_handler(object):
             self.response['code'] = '200'
             self.response['response_body'].append(('Content-type', 'text/xml'))
             self.response['response_body'].append(('Content-Length', str(len(wsdl))))
- #           self.send_header("Content-type", "text/xml")
- #           self.send_header("Content-Length", str(len(wsdl)))
- #           print("WSDL = " + str(wsdl))
-
             return StringIO(wsdl)
         if self.__request.environment().environment()["REQUEST_URI"] == "/crossdomain.xml":
             data = """<?xml version="1.0"?>
@@ -442,9 +407,7 @@ class VDOM_uwsgi_request_handler(object):
         # process requested URI, call module manager
         try:
             (code, ret) = managers.module_manager.process_request(self.__request)
-  #          print("===========================")
-  #          print(str(ret))
-  #          print("===========================")
+ 
             self.__request.collect_files()
         except Exception as e:
             requestline = "<br>"
@@ -464,6 +427,34 @@ class VDOM_uwsgi_request_handler(object):
             self.response['code'] = '302'
             self.response['response_body'] = [('Location', str(self.__request.redirect_to))]
             return
+        elif code == 25:
+
+   #         print("Send X-sendfile")
+            
+   #         print("Path = " + str(ret))
+            self.response['code'] = '200 OK'
+            
+#            self.response['response_body'].append(('Content-Type', 'text/html'))
+
+#            stats = os.stat(".." + ret)
+         #   stats = os.stat("test.txt")
+                    
+          #  print("@@@file size is " + str(stats.st_size))
+
+#            self.response['response_body'].append(('Content-Length', str(stats.st_size)))
+     #       filepath = '/home/nixion/uwsgI/uwsgi-2.0.20/VDOM_WSGI/runtime2.0/resources/' + ret
+  #          print("path traveled = " + filepath)
+#            self.response['response_body'].append(('X-Sendfile', '/home/nixion/uwsgI/uwsgi-2.0.20/VDOM_WSGI/runtime2.0/resources/' + ret))
+            self.response['response_body'].append(('X-Sendfile', ret))
+            #/home/nixion/uwsgI/uwsgi-2.0.20/VDOM_WSGI/runtime2.0/sources/web/uwsgi_request_handler.py
+        #    print("Path = " + str(os.path.realpath(__file__)))
+            #if self.__request.nokeepalive:
+            #    self.response['response_body'].append(('Connection', "Close"))
+            #else:
+#            self.response['response_body'].append(('Connection', "Keep-Alive"))
+      #      print(str(self.response['response_body']))
+            self.wfile['response'] = []
+            return None
         elif ret:
 #            self.send_response(200)
             self.response['code'] = '200'

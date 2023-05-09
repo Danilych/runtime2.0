@@ -1,0 +1,11 @@
+			$(function($){
+	if (typeof $.growl === 'undefined') {
+		$.growl=function(t,m){
+			$.gritter.add({'title':t,'text':m,'sticky':false,'time':''});
+		}
+	}
+	$('span.growls').each(function(){
+		var t=$.trim($('>span',this).html()), m=$.trim($('>div',this).html());
+		if (t!='' && m!='' && $.growl) $.growl(t,m);
+	});
+});

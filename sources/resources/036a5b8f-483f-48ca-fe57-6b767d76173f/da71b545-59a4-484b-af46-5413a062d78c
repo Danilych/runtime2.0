@@ -1,0 +1,68 @@
+
+function parseRruleSources( sources )
+{
+	function formatedDate( date )
+	{
+		/*return [ date.getFullYear(), date.getMonth(), date.getDate()].join("-") + "T" + [ date.getHours(), date.getMinutes(), date.getSeconds()].join(":")+"Z";*/
+		return date.toISOString();
+	}
+
+	var startDate    = new Date( sources.start || 0 );
+	var endDate      = new Date( sources.end || 0 );
+	var eventSources = [];
+	var source       = sources.source || [];
+
+	for ( var i = 0; i < source.length; i++ )
+	{
+		var cal = source[ i ] ;
+		var color = cal.color;
+		var textColor = cal.textColor;
+		var borderColor = cal.borderColor;
+
+		for ( var j = 0; j < cal.events.length; j++ )
+		{
+			var event          = cal.events[ j ] || [];
+			event.textColor    = textColor || "";
+			event.borderColor  = borderColor || "";
+			event.color        = color || "";
+
+			if ( event.hasOwnProperty( "rrule" ) && event.rrule != null )
+			{
+				var event_start = new Date( event.start || 0 );
+				var event_end   = new Date( event.end || 0 );
+				var delta = event_end.getTime() - event_start.getTime();
+
+				var sch = new Scheduler( event_start, event.rrule.toUpperCase() );
+
+				if ( event.hasOwnProperty( "exdates" ) && event.exdates != null )
+				{
+					var exdates = [];
+					for ( var k = 0 ; k < event.exdates.length; k++ )
+						exdates.push( new Date( event.exdates[ k ] ) );
+
+					sch.add_exception_dates( exdates );
+				}
+
+				var occurrences = sch.occurrences_between( startDate, endDate );
+
+				for ( var k = 0; k < occurrences.length; k++ )
+				{
+					var copy = {};
+					jQuery.extend( copy, event );
+					var t_start = occurrences[ k ];
+					copy.start = formatedDate( t_start );
+					copy.instance = k+1;
+					copy.end = formatedDate(new Date( t_start.getTime() + delta ));
+					eventSources.push( copy );
+				}
+			}
+			else
+			{
+				event.start = formatedDate(new Date( event.start || 0 ));
+				event.end = formatedDate(new Date( event.end || 0 ));
+				eventSources.push( event );
+			}
+		}
+	}
+	return eventSources;
+}

@@ -1,0 +1,208 @@
+class SensetiveDragAndDropUploader {
+  constructor(containerId, dropZone, options) {
+    this.container = $(`#${containerId}`);
+    this.dropZone = dropZone || containerId;
+    this.maxFileSizeKb = options?.maxFileSizeKb;
+    this.bannedExt = options?.bannedExt || [];
+    this.disabled = options?.disabled || false;
+    this.checkBrowserSupport();
+    this.initListeners();
+    this.uploadedFiles = [];
+    this.errorFiles = [];
+    this.allFiles = [];
+  }
+
+  setErrorText(text) {
+    this.container.attr("data-error-text", text);
+    this.container.addClass("error");
+  }
+
+  checkBrowserSupport() {
+    if (typeof window.FileReader == "undefined") {
+      this.setErrorText("Browser is not support drag and drop!");
+      this.throwContainerError("Browser is not support drag and drop!");
+    }
+  }
+
+  setDroppedState() {
+    this.container.removeClass("hover");
+    this.container.addClass("drop");
+  }
+
+  fileToJson(file) {
+    const result = {
+      lastModified: file.lastModified,
+      lastModifiedDate: file.lastModifiedDate,
+      name: file.name,
+      size: file.size,
+      type: file.type,
+    };
+    if (file.hasOwnProperty("guid")) {
+      result["guid"] = file.guid;
+    }
+    if (file.hasOwnProperty("errors")) {
+      result["errors"] = file.errors;
+    }
+
+    return result;
+  }
+
+  initListeners() {
+    // this is fix bug of js leave event generating
+    let counter = 0;
+    const dropZoneSelector = this.container.find(this.dropZone).selector;
+
+    this.container.bind("dragover", dropZoneSelector, () => false);
+
+    this.container.bind("dragenter", dropZoneSelector, () => {
+      if (this.disabled) return false;
+      counter++;
+      this.container.addClass("hover");
+      return false;
+    });
+
+    this.container.bind("dragleave", dropZoneSelector, () => {
+      if (this.disabled) return false;
+      counter--;
+      if (counter === 0) {
+        this.container.removeClass("hover");
+      }
+      return false;
+    });
+
+    this.container.bind("drop", dropZoneSelector, (event) => {
+      if (this.disabled) return false;
+      event = event.originalEvent;
+      counter = 0;
+      event.preventDefault();
+      this.setDroppedState();
+      this.uploadedFiles = [];
+      this.errorFiles = [];
+      this.allFiles = Array.from(event.dataTransfer.files);
+
+      // uploading start event
+      this.generateEvent("uploadingFiles", {
+        files: this.allFiles.map(this.fileToJson),
+      });
+
+      // uploading end event
+      Promise.allSettled(
+        this.allFiles.map((file) => this.sendFile(file))
+      ).then(() => {
+        this.generateEvent("filesUploaded", {
+          uploaded: this.uploadedFiles.map(this.fileToJson),
+          errors: this.errorFiles.map(this.fileToJson),
+        });
+      });
+    });
+  }
+
+  async updateUploadedState() {
+    this.container.attr('data-progress', parseInt((this.uploadedFiles.length / this.allFiles.length) * 100));
+    this.generateEvent("updateUploadingState", {
+      uploaded: this.uploadedFiles.map(this.fileToJson),
+      errors: this.errorFiles.map(this.fileToJson),
+      files: this.allFiles.map(this.fileToJson),
+    });
+  }
+
+
+  async generateUploadingFileErrorEvent(file) {
+    this.errorFiles.push(file);
+    this.generateEvent("uploadingFileError", {
+      name: file.name,
+      errors: file.errors,
+    });
+  }
+
+  async generateFileUploadedEvent(file) {
+    this.uploadedFiles.push(file);
+    this.generateEvent("fileUploaded", { name: file.name, guid: file.guid });
+  }
+
+  checkFile(file) {
+    // application/x-msdownload
+    // image/png
+    // video/mp4
+    // image/svg+xml
+    // application/vnd.openxmlformats-officedocument.wordprocessingml.document - docx
+    // text/xml
+    // text/x-python-script
+    // '' - folder, pages, ...
+    //console.log(file.type);
+    const errors = [];
+    if (file.size > this.maxFileSizeKb && this.maxFileSizeKb !== 0) {
+      errors.push("File is so big!");
+    }
+    // if (this.bannedExt.includes(file.type)) {
+    //   errors.push("File ext is not allowed.");
+    // }
+    return { name: file.name, errors };
+  }
+
+  async generateEvent(eventName, payload) {
+    execEventBinded(
+      this.container.attr("id").slice(2),
+      eventName.toLowerCase(),
+      payload
+    );
+  }
+
+  throwContainerError(error) {
+    this.generateEvent("sensetiveError", { error });
+  }
+
+  async sendFile(file) {
+    return new Promise((resolve, reject) => {
+      const error = this.checkFile(file);
+      if (error.errors.length > 0) reject(error);
+
+      const formData = new FormData();
+      formData.append("file", file);
+      const xhr = new XMLHttpRequest();
+      // // If using not form way
+      // xhr.upload.addEventListener(
+      //   "progress",
+      //   (event) => {
+      //     this.uploadProgress(event, file);
+      //   },
+      //   false
+      // );
+      xhr.onreadystatechange = (event) => {
+        this.stateChange(event, file)
+          .then((data) => {
+            resolve(data);
+          })
+          .catch((err) => {
+            reject(err);
+          });
+      };
+      xhr.open("POST", "/upload.py");
+      xhr.send(formData);
+    });
+  }
+
+  // uploadProgress(event, file) {
+  //   const percent = parseInt((event.loaded / event.total) * 100);
+  //   console.log("Uploading: " + percent + "%");
+  // }
+
+  async stateChange(event, file) {
+    return new Promise((resolve, reject) => {
+      if (event.target.readyState == 4) {
+        const name = file.name;
+        if ([200].includes(event.target.status)) {
+          file.guid = event.target.responseText.replaceAll("\n", "").trim();
+          this.generateFileUploadedEvent(file);
+          this.updateUploadedState();
+          resolve(file);
+        } else {
+          file.errors = ["Something went wrong."];
+          this.generateUploadingFileErrorEvent(file);
+          this.updateUploadedState();
+          reject(file);
+        }
+      }
+    });
+  }
+}

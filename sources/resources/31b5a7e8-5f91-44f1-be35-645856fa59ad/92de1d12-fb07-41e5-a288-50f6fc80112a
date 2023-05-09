@@ -1,0 +1,302 @@
+(function ($) {
+    function getObjID(obj) {
+      var id = obj.attr("id");
+      return id.substring(2, id.length);
+    }
+  
+    function hasMultiSelect(obj) {
+      return obj.attr("selectionmode") == "multiselection" ? true : false;
+    }
+  
+    function getSelectOnClick(obj) {
+      return obj.attr("select-on-click");
+    }
+  
+    function raiseClickEvent(evt, vdomList_v2, obj, is_dbl, is_ctrl) {
+      var is_child = false;
+      var li_obj;
+  
+      if (obj.get(0).nodeName.toLowerCase() != "li" && !obj.attr("itemid")) {
+        is_child = true;
+        li_obj = obj.closest("li[itemid]");
+      } else {
+        li_obj = obj;
+      }
+  
+      var item_id = li_obj.attr("itemid");
+      var evt_name =
+        "item" + (is_ctrl ? "ctrl" : "") + (is_dbl ? "dbl" : "") + "click";
+  
+      if (!is_child) {
+        var select_on_click = getSelectOnClick(vdomList_v2);
+        var need_select =
+          (select_on_click == "ctrldblclick" && is_dbl && is_ctrl) ||
+          (select_on_click == "dblclick" && is_dbl) ||
+          (select_on_click == "ctrlclick" && is_ctrl) ||
+          select_on_click == "click";
+  
+        if (need_select) {
+          vdomList_v2.vdomList_v2(
+            hasMultiSelect(vdomList_v2) ? "toogleSelection" : "markAsSelected",
+            [item_id]
+          );
+        }
+      }
+  
+      var child_data = !is_child
+        ? ""
+        : JSON.stringify({
+            class: obj.attr("class"),
+            tag: obj.get(0).nodeName.toLowerCase(),
+            name: obj.attr("name"),
+            id: obj.attr("id"),
+          });
+  
+      vdomList_v2.vdomList_v2("markAsActive", item_id);
+      execEventBinded(getObjID(vdomList_v2), evt_name, {
+        itemid: item_id,
+        selected: vdomList_v2.vdomList_v2("getSelectedIDs"),
+        X: evt.pageX,
+        Y: evt.pageY,
+        child: child_data,
+      });
+    }
+  
+    function raiseItemSelectedEvent(vdomList_v2) {
+      execEventBinded(getObjID(vdomList_v2), "rowsselected", {
+        selected: vdomList_v2.vdomList_v2("getSelectedIDs"),
+      });
+    }
+  
+    function toogleSelection(item) {
+      if (item.hasClass("selectable")) {
+        if (item.hasClass("selected")) {
+          item.removeClass("selected");
+        } else {
+          item.addClass("selected");
+        }
+      }
+    }
+  
+    var methods = {
+      setData: function (data) {
+        try {
+          data = JSON.parse(data);
+        } catch (error) {
+          console.error(error);
+          data = data;
+        }
+        $(">ul", this).empty();
+        let index = 0;
+        const dataLength = Object.keys(data).length;
+        (Array.isArray(data) ? data : Object.entries(data)).forEach(([key, value]) => {
+          const cssClass = `
+                  list-item-${index} 
+                  ${index == 0 ? "list-item-first" : ""} 
+                  ${index == dataLength - 1 ? "list-item-last" : ""}
+                  ${index % 2 == 0 ? "list-item-odd" : ""}
+              `;
+          $(">ul", this).append(
+            `<li itemid="${key}" class="${cssClass}">${value}</li>`
+          );
+          index++;
+        });
+      },
+  
+      getSelectedIDs: function () {
+        ids = [];
+        $(">ul>li[itemid].selected", this).each(function () {
+          ids.push($(this).attr("itemid"));
+        });
+        return ids;
+      },
+  
+      getSelectedItems: function () {
+        return $(">ul>li[itemid].selected", this);
+      },
+  
+      toogleSelection: function (ids, raiseEvent) {
+        if (typeof ids === "undefined") {
+          if (hasMultiSelect(this)) {
+            $(">ul>li[itemid]", this).each(function () {
+              toogleSelection($(this));
+            });
+          }
+        } else {
+          if (hasMultiSelect(this)) {
+            for (var i in ids) {
+              toogleSelection($('>ul>li[itemid="' + ids[i] + '"]', this));
+            }
+          } else {
+            toogleSelection($('>ul>li[itemid="' + ids[0] + '"]', this));
+          }
+        }
+        if (raiseEvent) {
+          raiseItemSelectedEvent(this);
+        }
+      },
+  
+      markAsSelected: function (ids, raiseEvent) {
+        if (typeof ids === "undefined") {
+          if (hasMultiSelect(this)) {
+            $(">ul>li[itemid].selectable", this).addClass("selected");
+          }
+        } else {
+          if (hasMultiSelect(this)) {
+            for (var i in ids) {
+              $('>ul>li[itemid="' + ids[i] + '"].selectable', this).addClass(
+                "selected"
+              );
+            }
+          } else {
+            var new_sel_item = $(
+              '>ul>li[itemid="' + ids[0] + '"].selectable',
+              this
+            );
+            if (new_sel_item.length) {
+              $(">ul>li[itemid].selectable.selected", this).removeClass(
+                "selected"
+              );
+              new_sel_item.addClass("selected");
+            }
+          }
+        }
+        if (raiseEvent) {
+          raiseItemSelectedEvent(this);
+        }
+      },
+  
+      unmarkAsSelected: function (ids, raiseEvent) {
+        if (typeof ids === "undefined") {
+          $(">ul>li[itemid].selectable", this).removeClass("selected");
+        } else {
+          for (var i in ids) {
+            $('>ul>li[itemid="' + ids[i] + '"].selected', this).removeClass(
+              "selected"
+            );
+          }
+        }
+        if (raiseEvent) {
+          raiseItemSelectedEvent(this);
+        }
+      },
+  
+      markAsActive: function (itemid) {
+        $(">ul>li[itemid].active", this).removeClass("active");
+        $('>ul>li[itemid="' + itemid + '"]', this).addClass("active");
+      },
+  
+      markAsInactive: function (itemid) {
+        if (itemid) {
+          $('>ul>li[itemid="' + itemid + '"]', this).removeClass("active");
+        } else {
+          $(">ul>li[itemid].active", this).removeClass("active");
+        }
+      },
+  
+      multiSelectionMode: function () {
+        this.attr("selectionmode", "multiselection");
+      },
+  
+      singleSelectionMode: function () {
+        this.attr("selectionmode", "singleselection");
+      },
+  
+      toogleSelectionMode: function () {
+        if (hasMultiSelect(this)) {
+          this.attr("selectionmode", "singleselection");
+        } else {
+          this.attr("selectionmode", "multiselection");
+        }
+      },
+  
+      removeItems: function (ids, start, length, raiseEvent) {
+        if (ids) {
+          for (var i in ids) {
+            $('>ul>li[itemid="' + ids[i] + '"]', this).remove();
+          }
+        } else if (typeof start !== "undefined") {
+          length = length || 1;
+          $(">ul>li[itemid]", this)
+            .slice(start, start + length)
+            .remove();
+        } else {
+          $(">ul>li[itemid]", this).remove();
+        }
+  
+        if (raiseEvent) {
+          raiseItemSelectedEvent(this);
+        }
+      },
+  
+      init: function (options) {
+        var vdomList_v2 = this;
+        var obj_id = vdomList_v2.attr("id");
+  
+        if (options["droppable"]) {
+          $(">ul>li.droppable", this).droppable({
+            addClasses: false,
+            hoverClass: "ui-state-active",
+            tolerance: "pointer",
+            drop: function (ev, ui) {
+              execEventBinded(getObjID(vdomList_v2), "drop", {
+                itemid: $(this).attr("itemid"),
+              });
+            },
+          });
+        }
+  
+        var selectors = [">ul>li"];
+        if (options["clickClasses"]) {
+          var classes = options["clickClasses"];
+          classes.forEach(i => {
+            selectors.push(selectors[0] + " " + classes[i]);
+          }); 
+        }
+  
+        $(this).on("click dblclick", selectors.join(","), function (e) {
+          if (e.preventDefault) {
+            e.preventDefault();
+          } else {
+            e.returnValue = false;
+          }
+  
+          var $this = $(e.target);
+  
+          if (e.type == "dblclick") {
+            $this.data("isSingleClick", false);
+            if (e.ctrlKey || e.metaKey) {
+              raiseClickEvent(e, vdomList_v2, $this, true, true);
+            } else {
+              raiseClickEvent(e, vdomList_v2, $this, true, false);
+            }
+          } else {
+            setTimeout(function () {
+              if ($this.data("isSingleClick") == true) {
+                if (e.ctrlKey || e.metaKey) {
+                  raiseClickEvent(e, vdomList_v2, $this, false, true);
+                } else {
+                  raiseClickEvent(e, vdomList_v2, $this, false, false);
+                }
+              }
+            }, 200);
+            $this.data("isSingleClick", true);
+          }
+          return false;
+        });
+      },
+    };
+  
+    $.fn.vdomList_v2 = function (method) {
+      if (methods[method]) {
+        return methods[method].apply(
+          this,
+          Array.prototype.slice.call(arguments, 1)
+        );
+      } else if (typeof method == "object" || !method) {
+        return methods.init.apply(this, arguments);
+      } else {
+        $.error("VDOM List V2: unknown method " + method);
+      }
+    };
+  })(jQuery);

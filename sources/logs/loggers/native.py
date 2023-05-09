@@ -124,6 +124,7 @@ class Logger(BaseLogger):
                     stream_socket.settimeout(RECONNECT_TIMEOUT) # self.quantum
                     try:
                         stream_socket.connect((self._address, self._port))
+                        print("connection successful")
                         break
                     except socket.timeout:
                         if not self.running:

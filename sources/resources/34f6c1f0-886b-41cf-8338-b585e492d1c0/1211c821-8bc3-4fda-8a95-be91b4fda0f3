@@ -1,0 +1,133 @@
+if(typeof EventQueue === 'undefined')EventQueue=new VDOM_EventQueue;
+function VDOM_Type_315381b8_f3f1_496c_92be_b65ebdd6b8a1(id, eventEngine){
+this.Base=VDOM_Object;
+this.Base(id, eventEngine);
+this.registerEvents(["mouseup", "mousemove", "mousedown", "mouseout", "ctrlclick", "mouseover", "click", "dblclick"]);};
+VDOM_Type_315381b8_f3f1_496c_92be_b65ebdd6b8a1.prototype=new VDOM_Object;
+
+VDOM_Type_315381b8_f3f1_496c_92be_b65ebdd6b8a1.prototype.disable=function(){$j('#'+this.domCont.id+' a').addClass('disabled');
+$j('#'+this.domCont.id+'_e2vdomhelper.disabled-over').show(0);}
+VDOM_Type_315381b8_f3f1_496c_92be_b65ebdd6b8a1.prototype.hide=function(fade){vdom_ui_hide(this.domCont, fade);}
+VDOM_Type_315381b8_f3f1_496c_92be_b65ebdd6b8a1.prototype.show=function(fade){vdom_ui_show(this.domCont, fade, undefined, undefined, '');}
+VDOM_Type_315381b8_f3f1_496c_92be_b65ebdd6b8a1.prototype.removeClass=function(className){$q(this.domCont).removeClass(className);}
+VDOM_Type_315381b8_f3f1_496c_92be_b65ebdd6b8a1.prototype.setText=function(text){$q('a span',this.domCont).text(text);}
+VDOM_Type_315381b8_f3f1_496c_92be_b65ebdd6b8a1.prototype.addClass=function(className){$q(this.domCont).addClass(className);}
+VDOM_Type_315381b8_f3f1_496c_92be_b65ebdd6b8a1.prototype.moveZindexTo=function(newZindex){this.domCont.style.zindex = parseInt(newZindex,10);}
+VDOM_Type_315381b8_f3f1_496c_92be_b65ebdd6b8a1.prototype.enable=function(){$j('#'+this.domCont.id+' a').removeClass('disabled');
+$j('#'+this.domCont.id+'_e2vdomhelper.disabled-over').hide(0);}
+VDOM_Type_315381b8_f3f1_496c_92be_b65ebdd6b8a1.prototype.moveTo=function(newX, newY, Effect){vdom_ui_moveTo(this.domCont, newX, newY, Effect);}
+VDOM_Type_315381b8_f3f1_496c_92be_b65ebdd6b8a1.prototype.setLink=function(containerUrl){vdom_ui_setLink(this.domCont, containerUrl);}
+VDOM_Type_315381b8_f3f1_496c_92be_b65ebdd6b8a1.prototype.toggleClass=function(className){$q(this.domCont).toggleClass(className);}
+VDOM_Type_315381b8_f3f1_496c_92be_b65ebdd6b8a1.prototype.setClass=function(className){$q(this.domCont).attr('class',className);}
+VDOM_Type_315381b8_f3f1_496c_92be_b65ebdd6b8a1.prototype.setButtonImage=function(resourceUrl){vdom_ui_setButtonImage(this.domCont, resourceUrl);}
+VDOM_Type_315381b8_f3f1_496c_92be_b65ebdd6b8a1.prototype.setButtonRollover=function(resourceUrl){vdom_ui_setButtonRollover(this.domCont, resourceUrl);}
+
+function VDOM_Type_73a54f2e_4001_4676_93a0_804048a57081(id, eventEngine){
+this.Base=VDOM_Object;
+this.Base(id, eventEngine);
+this.registerEvents(["mouseup", "mousemove", "mousedown", "mouseout", "ctrlclick", "mouseover", "click", "dblclick"]);};
+VDOM_Type_73a54f2e_4001_4676_93a0_804048a57081.prototype=new VDOM_Object;
+
+VDOM_Type_73a54f2e_4001_4676_93a0_804048a57081.prototype.hide=function(fade){vdom_ui_hide(this.domCont, fade);}
+VDOM_Type_73a54f2e_4001_4676_93a0_804048a57081.prototype.show=function(fade){vdom_ui_show(this.domCont, fade);}
+VDOM_Type_73a54f2e_4001_4676_93a0_804048a57081.prototype.removeClass=function(className){$j(this.domCont).removeClass(className);}
+VDOM_Type_73a54f2e_4001_4676_93a0_804048a57081.prototype.setText=function(text){jQuery(this.domCont).text(text);}
+VDOM_Type_73a54f2e_4001_4676_93a0_804048a57081.prototype.addClass=function(newClass){$q(this.domCont).addClass(newClass);}
+VDOM_Type_73a54f2e_4001_4676_93a0_804048a57081.prototype.setHTML=function(text){jQuery(this.domCont).html(text);}
+VDOM_Type_73a54f2e_4001_4676_93a0_804048a57081.prototype.moveTo=function(newX, newY, Effect){vdom_ui_moveTo(this.domCont, newX, newY, Effect);}
+VDOM_Type_73a54f2e_4001_4676_93a0_804048a57081.prototype.setFontSize=function(size){jQuery(this.domCont).css("font-size", size);}
+VDOM_Type_73a54f2e_4001_4676_93a0_804048a57081.prototype.setFontFamily=function(familyName){vdom_ui_setFontFamily(this.domCont, familyName);}
+VDOM_Type_73a54f2e_4001_4676_93a0_804048a57081.prototype.changeClass=function(newClass, oldClass){if ($j(this.domCont).hasClass(oldClass)){
+  $j(this.domCont).removeClass(oldClass);
+  $j(this.domCont).addClass(newClass);
+}else{
+  console.info("Object " + this.domCont.id + " hasn't class " + oldClass);
+}}
+VDOM_Type_73a54f2e_4001_4676_93a0_804048a57081.prototype.toggleClass=function(className){$q(this.domCont).toggleClass(className);}
+VDOM_Type_73a54f2e_4001_4676_93a0_804048a57081.prototype.setClass=function(cssClass){$j(this.domCont).attr('class', cssClass);}
+
+function VDOM_Type_2330fe83_8cd6_4ed5_907d_11874e7ebcf4(id, eventEngine){
+this.Base=VDOM_Object;
+this.Base(id, eventEngine);
+this.registerEvents(["load", "sharedvariablechanged", "mouseup", "custom", "ctrlclick", "labelchanged", "mousedown", "dblclick", "mouseout", "erroreventengine", "mouseover", "mousemove", "click", "resize"]);};
+VDOM_Type_2330fe83_8cd6_4ed5_907d_11874e7ebcf4.prototype=new VDOM_Object;
+
+VDOM_Type_2330fe83_8cd6_4ed5_907d_11874e7ebcf4.prototype.clearSharedVariables=function(){if (e2vdomSV !== 'undefined') {
+    delete(e2vdomSV);
+}
+e2vdomSV = {};}
+VDOM_Type_2330fe83_8cd6_4ed5_907d_11874e7ebcf4.prototype.hide=function(fade){vdom_ui_hide(this.domCont, fade);}
+VDOM_Type_2330fe83_8cd6_4ed5_907d_11874e7ebcf4.prototype.changeCursor=function(cursorType){this.domCont.style.cursor = cursorType;}
+VDOM_Type_2330fe83_8cd6_4ed5_907d_11874e7ebcf4.prototype.show=function(fade){vdom_ui_show(this.domCont, fade);}
+VDOM_Type_2330fe83_8cd6_4ed5_907d_11874e7ebcf4.prototype.loadHTML=function(value){$(this.domCont).html(value);}
+VDOM_Type_2330fe83_8cd6_4ed5_907d_11874e7ebcf4.prototype.browserZoom=function(zoom){zoom = $(window).width()/zoom*100;
+            document.body.style.zoom = zoom + "%"}
+VDOM_Type_2330fe83_8cd6_4ed5_907d_11874e7ebcf4.prototype.goToLabel=function(label){window.location.href=e2vdompageurl+'#'+label;
+/*
+var id = this.domCont.id;
+execEventBinded(id.substring(2, id.length), "labelchanged", {label:label});
+*/}
+VDOM_Type_2330fe83_8cd6_4ed5_907d_11874e7ebcf4.prototype.setSharedVariable=function(key, value){if (e2vdomSV !== 'undefined') {
+    e2vdomSV[key] = value;
+}}
+VDOM_Type_2330fe83_8cd6_4ed5_907d_11874e7ebcf4.prototype.changeSharedVariable=function(key, value, action){if (typeof e2vdomSV !== 'undefined') {
+    if (action == 'add') {
+        e2vdomSV[key] = value;
+    } else if (action == 'remove') {
+        if (typeof e2vdomSV[key] !== 'undefined') delete(e2vdomSV[key]);
+    } else if (action == 'push') {
+        var a = (typeof e2vdomSV[key] !== 'undefined') ? e2vdomSV[key] : [];
+        if ($.inArray(value,a)) a.push(value);
+        e2vdomSV[key] = a;
+    } else if (action == 'pop') {
+        if (typeof e2vdomSV[key][value] !== 'undefined') delete(e2vdomSV[key][value]);
+    }
+}}
+VDOM_Type_2330fe83_8cd6_4ed5_907d_11874e7ebcf4.prototype.goTo=function(url){/*document.location.href=url; return false;*//* not working in chrome */
+window.setTimeout(function(){
+    window.location = url;
+},500);
+return false;}
+VDOM_Type_2330fe83_8cd6_4ed5_907d_11874e7ebcf4.prototype.addHTML=function(value){$(this.domCont).append(value);}
+VDOM_Type_2330fe83_8cd6_4ed5_907d_11874e7ebcf4.prototype.consoleMessage=function(msg){console.info(msg);}
+VDOM_Type_2330fe83_8cd6_4ed5_907d_11874e7ebcf4.prototype.custom=function(custom){eval(custom);}
+VDOM_Type_2330fe83_8cd6_4ed5_907d_11874e7ebcf4.prototype.removeSharedVariable=function(key){if (e2vdomSV !== 'undefined') {
+    if (e2vdomSV[key] !== 'undefined') {
+        delete(e2vdomSV[key]);
+    }
+}}
+VDOM_Type_2330fe83_8cd6_4ed5_907d_11874e7ebcf4.prototype.moveZindexTo=function(newZindex){this.domCont.style.zindex = parseInt(newZindex,10);}
+
+function VDOM_Type_0d36c35d_9508_440f_bfec_668f3db8cfeb(id, eventEngine){
+this.Base=VDOM_Object;
+this.Base(id, eventEngine);
+this.registerEvents(["mouseup", "mousemove", "mousedown", "mouseout", "ctrlclick", "corner", "mouseover", "border", "click", "dblclick"]);};
+VDOM_Type_0d36c35d_9508_440f_bfec_668f3db8cfeb.prototype=new VDOM_Object;
+
+VDOM_Type_0d36c35d_9508_440f_bfec_668f3db8cfeb.prototype.hide=function(fade){vdom_ui_hide(this.domCont, fade);}
+VDOM_Type_0d36c35d_9508_440f_bfec_668f3db8cfeb.prototype.changeCursor=function(cursorType){this.domCont.style.cursor = cursorType;}
+VDOM_Type_0d36c35d_9508_440f_bfec_668f3db8cfeb.prototype.setImage=function(resource){jQuery('img',this.domCont).attr('src', resource);}
+VDOM_Type_0d36c35d_9508_440f_bfec_668f3db8cfeb.prototype.setAlt=function(text){jQuery(this.domCont).attr('alt', text);}
+VDOM_Type_0d36c35d_9508_440f_bfec_668f3db8cfeb.prototype.startResizeXY=function(){vdom_ui_startResizeXY(this.domCont);}
+VDOM_Type_0d36c35d_9508_440f_bfec_668f3db8cfeb.prototype.moveZindexTo=function(newZindex){vdom_ui_moveZindexTo(this.domCont, newZindex);}
+VDOM_Type_0d36c35d_9508_440f_bfec_668f3db8cfeb.prototype.moveTo=function(newX, newY, Effect){vdom_ui_moveTo(this.domCont, newX, newY, Effect);}
+VDOM_Type_0d36c35d_9508_440f_bfec_668f3db8cfeb.prototype.dragStart=function(){vdom_ui_dragStart(this.domCont);}
+VDOM_Type_0d36c35d_9508_440f_bfec_668f3db8cfeb.prototype.dragStop=function(){vdom_ui_dragStop();}
+VDOM_Type_0d36c35d_9508_440f_bfec_668f3db8cfeb.prototype.show=function(fade){vdom_ui_show(this.domCont, fade);}
+VDOM_Type_0d36c35d_9508_440f_bfec_668f3db8cfeb.prototype.startResizeY=function(){vdom_ui_startResizeY(this.domCont);}
+VDOM_Type_0d36c35d_9508_440f_bfec_668f3db8cfeb.prototype.startResizeX=function(){vdom_ui_startResizeX(this.domCont);}
+
+function initE2VDOM(){
+
+if(typeof Obj_dcb94524_de6a_43a4_ab04_500f708dad1d_EventEngine!=='undefined'){Obj_dcb94524_de6a_43a4_ab04_500f708dad1d_EventEngine.stop();delete Obj_dcb94524_de6a_43a4_ab04_500f708dad1d_EventEngine;}
+if(typeof Obj_dcb94524_de6a_43a4_ab04_500f708dad1d_Dispatcher!=='undefined'){delete Obj_dcb94524_de6a_43a4_ab04_500f708dad1d_Dispatcher;}
+Obj_dcb94524_de6a_43a4_ab04_500f708dad1d_Dispatcher=new VDOM_EventDispatcher();
+Obj_dcb94524_de6a_43a4_ab04_500f708dad1d_EventEngine=new VDOM_EventEngine(Obj_dcb94524_de6a_43a4_ab04_500f708dad1d_Dispatcher, EventQueue);
+Obj_dcb94524_de6a_43a4_ab04_500f708dad1d=new VDOM_Type_2330fe83_8cd6_4ed5_907d_11874e7ebcf4("o_dcb94524_de6a_43a4_ab04_500f708dad1d", Obj_dcb94524_de6a_43a4_ab04_500f708dad1d_EventEngine);
+Obj_dcb94524_de6a_43a4_ab04_500f708dad1d_Dispatcher.addDispatchEvent("o_10c50375_933b_43b3_8064_368fcd49e0da:click", "Obj_deb5e309_9e44_4995_ab03_ae00b72058bc:show(0)");
+Obj_10c50375_933b_43b3_8064_368fcd49e0da=new VDOM_Type_315381b8_f3f1_496c_92be_b65ebdd6b8a1("o_10c50375_933b_43b3_8064_368fcd49e0da", Obj_dcb94524_de6a_43a4_ab04_500f708dad1d_EventEngine);
+Obj_deb5e309_9e44_4995_ab03_ae00b72058bc=new VDOM_Type_0d36c35d_9508_440f_bfec_668f3db8cfeb("o_deb5e309_9e44_4995_ab03_ae00b72058bc", Obj_dcb94524_de6a_43a4_ab04_500f708dad1d_EventEngine);
+Obj_ffef1c38_9246_4974_89e1_08d6195a05c2=new VDOM_Type_73a54f2e_4001_4676_93a0_804048a57081("o_ffef1c38_9246_4974_89e1_08d6195a05c2", Obj_dcb94524_de6a_43a4_ab04_500f708dad1d_EventEngine);
+Obj_dcb94524_de6a_43a4_ab04_500f708dad1d_EventEngine.start();
+};
+initE2VDOM();

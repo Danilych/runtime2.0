@@ -1,0 +1,12 @@
+<svg width="5" height="8" viewBox="0 0 5 8" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<title>zpt</title>
+<desc>Created using Figma</desc>
+<g id="Canvas" transform="translate(2059 -12524)">
+<g id="zpt">
+<use xlink:href="#path0_fill" transform="translate(-2058.42 12524.2)" fill="#6496CB"/>
+</g>
+</g>
+<defs>
+<path id="path0_fill" d="M 0.6 7.824L 0 6.312C 0.784 6.008 1.384 5.6 1.8 5.088C 2.232 4.576 2.44 4.016 2.424 3.408L 2.208 3.408C 1.744 3.408 1.328 3.264 0.96 2.976C 0.608 2.672 0.432 2.248 0.432 1.704C 0.432 1.192 0.608 0.784 0.96 0.48C 1.328 0.16 1.768 0 2.28 0C 2.936 0 3.44 0.247999 3.792 0.743999C 4.16 1.24 4.344 1.936 4.344 2.832C 4.344 4.016 4.016 5.04 3.36 5.904C 2.72 6.768 1.8 7.408 0.6 7.824Z"/>
+</defs>
+</svg>

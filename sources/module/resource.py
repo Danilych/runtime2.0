@@ -1,6 +1,8 @@
 """resource module"""
 import sys
+import os
 import managers
+import file_access
 from module import VDOM_module
 from utils.exception import *
 
@@ -81,5 +83,5 @@ class VDOM_module_resource(VDOM_module):
 			else:
 				ext = self.extension
 			request_object.add_header("Content-Disposition", "attachment; filename=\"%s.%s\""%(self.downloadname.encode("utf-8"), ext))
-
-		return self.fd
+		path = str(os.path.join(os.getcwd()[0:-7], managers.file_manager.locate(category = file_access.RESOURCE, owner = ro.application_id, name = ro.id)[3:]))
+		return (self.fd, path)
