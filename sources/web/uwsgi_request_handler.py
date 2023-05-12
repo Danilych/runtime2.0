@@ -221,6 +221,7 @@ class VDOM_uwsgi_request_handler(object):
 
         self.response = {'code': '', 'response_body': []}
     
+        app_id = (managers.module_manager.getVHosting().virtual_hosting().get_site(host.lower()) if host else None) or managers.module_manager.getVHosting().virtual_hosting().get_def_site()
         #try:
             #appl = managers.memory.get_application(app_id)
             #self.wsgidav_app = getattr(appl, 'wsgidav_app', None)

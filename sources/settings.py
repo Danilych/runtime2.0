@@ -8,7 +8,7 @@ DEFAULT_APPLICATION = None
 # server
 
 SERVER_ADDRESS = ""
-SERVER_PORT = 23300
+SERVER_PORT = 8000
 
 # locations
 
