@@ -42,6 +42,7 @@ class VDOM_request(object):
         self.__headers_out = VDOM_headers({})
 
         self.__cookies = BaseCookie(headers.get("cookie"))
+        print("Request cookie = " + str(self.__cookies))
         self.__response_cookies = BaseCookie()
         self.__environment = VDOM_environment(headers, handler)
         self.files = {}

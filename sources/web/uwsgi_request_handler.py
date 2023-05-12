@@ -132,6 +132,11 @@ class VDOM_uwsgi_request_handler(object):
         self.wfile = {"response":[]}
         self.response = {'code': '', 'response_body': []}
 
+    def remove_prefix(self, text, prefix):
+        if text.startswith(prefix):
+            return text[len(prefix):]
+        return text
+
     def start_response(self, status, response_headers, exc_info=None):
         if exc_info:
             try:
@@ -454,8 +459,10 @@ class VDOM_uwsgi_request_handler(object):
 
             self.wfile['response'] = []
             
-            cookie = self.__request.response_cookies().output()
-            self.response['response_body'].append(("set-cookie", str("%s\r\n" % cookie)))
+
+            print("Cookies to response = " + str(self.__request.response_cookies().output()))
+            cookie = self.remove_prefix(self.__request.response_cookies().output(), "Set-Cookie: ") 
+            self.response['response_body'].append(("Set-Cookie", str("%s\r\n" % cookie)))
             
 
             #print(str(self.__request.headers().headers()))
@@ -482,7 +489,7 @@ class VDOM_uwsgi_request_handler(object):
                 return StringIO(ret)
         elif "" == ret:
             self.response['code'] = '204 OK'
-            cookie = self.__request.response_cookies().output()
+            cookie = self.remove_prefix(self.__request.response_cookies().output(), "Set-Cookie: ") 
             self.response['response_body'].append(("set-cookie", str("%s\r\n" % cookie)))
             return None
         elif code:
@@ -491,12 +498,14 @@ class VDOM_uwsgi_request_handler(object):
         else:
             self.send_error(404, self.responses[404][0])
             return None
+        
+    
 
     def redirect(self, to):
         self.response['code'] = '302'
         self.response['response_body'] = [('Location', str(to))]
 
-        cookie = self.__request.response_cookies().output()
+        cookie = self.remove_prefix(self.__request.response_cookies().output(), "Set-Cookie: ") 
         self.response['response_body'].append(("set-cookie", str("%s\r\n" % cookie)))
 
     def address_string(self):
