@@ -171,6 +171,7 @@ class VDOM_module_manager(object):
     def process_request(self, request_object):
         """process request"""
         script_name = request_object.environment().environment()["SCRIPT_NAME"]
+        
  #       if "127.0.0.1" != request_object.handler().client_address[0]:
  #           debug("Requested URL: '" + script_name + "'")
         # dirty HACK!!!
@@ -219,7 +220,7 @@ class VDOM_module_manager(object):
 
         #parts1 = script_name.split("/")
         url_parts= filter(lambda x: "" != x, script_name.split("/"))
-
+        
         #parts = parts1[-1]
         #parts = parts.split(".")
         #if len(parts) == 1 and parts[0] != "":
@@ -263,6 +264,7 @@ class VDOM_module_manager(object):
             return (404, None)  # empty request
 
         request_type = url_parts[0].rpartition(".")[2] if '.' in url_parts[0] else 'vdom'
+        
         request_object.request_type = request_type
  #       print("request type = " + str(request_object.request_type))
         # this acts as Communication Dispatcher
@@ -281,16 +283,17 @@ class VDOM_module_manager(object):
                 debug(ret)
                 return (None, ret)
             target = url_parts[0]
+            
             if target.endswith('.vdom'):
                 target = target[:-5]
             container_id = target
+            
             #request_object.container_id = container_id
             #debug("Container id: " + container_id)
             # get container object and check if it can be a top level container
             _a = managers.memory.applications[request_object.app_id()]
             #check for both guid, low case and original case
             obj = _a.objects.get(container_id) or _a.objects.catalog.get(container_id) or _a.objects.catalog.get(url_parts[0])
-
             # CHECK: if not obj:
             # CHECK:    for _i in _a.objects:
             # CHECK:        if _a.objects[_i].name == container_id:
@@ -322,7 +325,8 @@ class VDOM_module_manager(object):
             request_object.add_header("Content-type", obj.type.http_content_type.lower())
 
             request_object.container_id = obj.id
-            debug("Container id: " + obj.id)
+            
+ #           debug("Container id: " + obj.id)
 
             # execute session start action
             if not request_object.session().on_start_executed:
@@ -333,11 +337,22 @@ class VDOM_module_manager(object):
             # CHECK: if not request_object.session().on_start_executed and _a.global_actions["session"]["sessiononstart"].code:
             # CHECK:    managers.engine.special(_a, _a.global_actions["session"]["sessiononstart"])
             # CHECK:    request_object.session().on_start_executed = True
-
             with start_stop_request(_a.actions):
                 result = ""
                 try:
+                    print("==========")
+                    print("target = " + str(target))
+                    print("Script name = " + script_name)
+                    print("url parts = " + str(url_parts))
+                    print("request type = " + str(request_type))
+                    print("Container id for vdom = " + str(container_id))
+                    print("Container id from id = " + obj.id)
+                    print("obj = " + str(obj))
+                    print("render type = " + str(obj.type.render_type.lower()))
+                    print("request object = " + str(request_object.environment().environment()["REQUEST_URI"].split(".")[0]))
+                    print("request app id = " + str(request_object.app_id()))
                     result = managers.engine.render(obj, render_type=obj.type.render_type.lower())
+                    print("==========")
                     # result = managers.engine.render(obj, None, obj.type.render_type.lower())
                     # CHECK: result = managers.engine.render(_a, obj, None, obj.type.render_type.lower())
                 except VDOM_exception, e:
@@ -384,7 +399,6 @@ class VDOM_module_manager(object):
     #           except:
     #               debug(_("Module manager: post processing error: %s") % sys.exc_info()[0])
     #               traceback.print_exc(file=debugfile)
-
                 return None, result.encode("utf-8")
 
         elif "py" == request_type:  # dynamic python script, this doesn't require an application to be registered

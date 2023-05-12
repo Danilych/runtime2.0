@@ -209,7 +209,7 @@ class VDOM_uwsgi_request_handler(object):
                 env['HTTP_'+k] = v
         return env
 
-    def handle_wsgi_request(self, environ, start_response):
+    def handle_uwsgi_request(self, environ, start_response):
             
         self.command = environ['REQUEST_METHOD']
         mname = 'do_' + self.command
@@ -306,6 +306,7 @@ class VDOM_uwsgi_request_handler(object):
             f.close()
 
     def do_POST(self):
+        print("===== Post triggered! =====")
         """serve a POST request"""
         # create request object
         #debug("DO POST %s"%self)
@@ -315,10 +316,13 @@ class VDOM_uwsgi_request_handler(object):
             if self.__card:
                 self.do_SOAP()
             return
+        print("===== Post triggered (on request) ! =====")
+        
         f = self.on_request("post")
         if f:
             sys.setcheckinterval(0)
-            shutil.copyfileobj(f, self.wfile)
+            for line in f:
+                self.wfile["response"].append(line)
             sys.setcheckinterval(100)
             f.close()
 
@@ -340,8 +344,8 @@ class VDOM_uwsgi_request_handler(object):
         # put request to the manager
         managers.request_manager.current = self.__request
 
-        if "127.0.0.1" != self.client_address[0]:
-            debug("Session is " + self.__request.sid)
+ #       if "127.0.0.1" != self.client_address[0]:
+ #           debug("Session is " + self.__request.sid)
 
     def on_request(self, method):
         """request handling code the method <method>"""
@@ -392,7 +396,7 @@ class VDOM_uwsgi_request_handler(object):
             return
         # process requested URI, call module manager
         try:
-            (code, ret) = managers.module_manager.process_request(self.__request)
+            (code, ret) = managers.module_manager.process_request(self.__request) ############
  
             self.__request.collect_files()
         except Exception as e:

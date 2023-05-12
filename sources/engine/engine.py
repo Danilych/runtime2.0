@@ -73,14 +73,21 @@ class Engine(object):
             self.select(previous)
 
     def render(self, object, parent=None, render_type=None):
+        print("rendering (1)")
         if settings.DETAILED_LOGGING:
             log.write("Render %s" % object)
+            
+        print("rendering (2) = " + str(object))
         previous = self.select(object.application)
+        print("rendering (3) = " + str(previous))
         managers.script_manager.constrain(settings.RENDER_TIMEOUT)
         try:
+            print("rendering (4)")
             with profiler:
                 instance = object.factory(RENDER_CONTEXT)(parent)
+                print("rendering (5) = " + str(instance))
                 instance.execute()
+                print("rendering (6)")
                 return instance.render()
         except RenderTermination:
             return ""
