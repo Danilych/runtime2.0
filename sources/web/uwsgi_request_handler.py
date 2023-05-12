@@ -1,12 +1,11 @@
 """server request handler module"""
-
 import sys, os, posixpath, urllib, shutil, mimetypes, thread, re, socket, threading, time, SOAPpy, traceback, select, cgi
 import io
 import uwsgi
 if sys.platform.startswith("freebsd"):
     import vdomlib
 
-import SocketServer, BaseHTTPServer, SimpleHTTPServer
+import BaseHTTPServer
 from cStringIO import StringIO
 import xml.sax.saxutils
 #import webdav_server
@@ -25,7 +24,6 @@ from utils.exception import VDOM_exception
 from utils.pages import compose_page, compose_trace
 #from server import VDOM_WSGI_Vhosting
 #from server.uwsgi_vhosting import VDOM_WSGI_Vhosting
-
 
 # A class to describe how header messages are handled
 class HeaderHandler:
@@ -55,8 +53,6 @@ class VDOM_uwsgi_request_handler(object):
 
     """server version string"""
     server_version = SERVER_NAME
-
-   
 
     responses = {
         100: ('Continue', 'Request received, please continue'),
@@ -136,9 +132,6 @@ class VDOM_uwsgi_request_handler(object):
         self.wfile = {"response":[]}
         self.response = {'code': '', 'response_body': []}
 
-
-
-
     def start_response(self, status, response_headers, exc_info=None):
         if exc_info:
             try:
@@ -217,53 +210,45 @@ class VDOM_uwsgi_request_handler(object):
         return env
 
     def handle_wsgi_request(self, environ, start_response):
-
-#        try:
-
-            self.command = environ['REQUEST_METHOD']
-            mname = 'do_' + self.command
-            self.headers = environ
-            self.path = environ["PATH_INFO"]
-            host = environ["HTTP_HOST"]
-
-            self.wsgidav_app = None
-
-            self.response = {'code': '', 'response_body': []}
-        
-            #try:
-                #appl = managers.memory.get_application(app_id)
-                #self.wsgidav_app = getattr(appl, 'wsgidav_app', None)
-            #except VDOM_exception as e:
-                #debug(e)			
-            #else:
-                #realm = environ["PATH_INFO"].strip("/").split("/").pop(0)
-                #objects_list = appl.search_objects_by_name(realm)
-                #for o in objects_list:
-                    #if managers.webdav_manager.get_webdav_share_path(appl.id, o.id) != None:
-                        #self.wsgidav_app = appl.wsgidav_app
-                        #mname = 'do_WebDAV'
-                        #break
-
-            #if self.command not in ("GET", "POST"):
-                #mname = 'do_WebDAV'
-
-            if not hasattr(self, mname):
-                self.send_error(501, "Unsupported method (%r)" % self.command)
-                start_response(self.response['code'], self.response['response_body'])
-                return self.wfile["response"]
             
+        self.command = environ['REQUEST_METHOD']
+        mname = 'do_' + self.command
+        self.headers = environ
+        self.path = environ["PATH_INFO"]
+        host = environ["HTTP_HOST"]
 
-            method = getattr(self, mname)
-            method()
+        self.wsgidav_app = None
 
+        self.response = {'code': '', 'response_body': []}
+    
+        #try:
+            #appl = managers.memory.get_application(app_id)
+            #self.wsgidav_app = getattr(appl, 'wsgidav_app', None)
+        #except VDOM_exception as e:
+            #debug(e)			
+        #else:
+            #realm = environ["PATH_INFO"].strip("/").split("/").pop(0)
+            #objects_list = appl.search_objects_by_name(realm)
+            #for o in objects_list:
+                #if managers.webdav_manager.get_webdav_share_path(appl.id, o.id) != None:
+                    #self.wsgidav_app = appl.wsgidav_app
+                    #mname = 'do_WebDAV'
+                    #break
+
+        #if self.command not in ("GET", "POST"):
+            #mname = 'do_WebDAV'
+
+        if not hasattr(self, mname):
+            self.send_error(501, "Unsupported method (%r)" % self.command)
             start_response(self.response['code'], self.response['response_body'])
-            
-            return self.wfile["response"] #actually send the response if not already done.
-#        except socket.timeout, e:
-            #a read or a write timed out.  Discard this connection
-#            self.close_connection = 1
-#            start_response('200 OK', [('Content-Type', 'text/html')])
- #           return	[b"Hello World"]
+            return self.wfile["response"]
+        
+
+        method = getattr(self, mname)
+        method()
+
+        start_response(self.response['code'], self.response['response_body'])
+        return self.wfile["response"] #actually send the response if not already done.
 
 
     def do_WebDAV(self):
@@ -403,7 +388,8 @@ class VDOM_uwsgi_request_handler(object):
         # management
 
         if self.__request.environment().environment()["REQUEST_URI"] == VDOM_CONFIG["MANAGEMENT-URL"]:
-            return self.redirect("/index.py")
+            self.redirect("/index.py")
+            return
         # process requested URI, call module manager
         try:
             (code, ret) = managers.module_manager.process_request(self.__request)
@@ -423,40 +409,14 @@ class VDOM_uwsgi_request_handler(object):
 
         # check redirect
         if self.__request.redirect_to:
-            #return self.redirect(self.__request.redirect_to, response)
-            self.response['code'] = '302'
-            self.response['response_body'] = [('Location', str(self.__request.redirect_to))]
+            self.redirect(self.__request.redirect_to)
             return
-        elif code == 25:
-
-   #         print("Send X-sendfile")
-            
-   #         print("Path = " + str(ret))
+        elif code == 25:    #Send files via X-Sendfile with uwsgi server
             self.response['code'] = '200 OK'
-            
-#            self.response['response_body'].append(('Content-Type', 'text/html'))
-
-#            stats = os.stat(".." + ret)
-         #   stats = os.stat("test.txt")
-                    
-          #  print("@@@file size is " + str(stats.st_size))
-
-#            self.response['response_body'].append(('Content-Length', str(stats.st_size)))
-     #       filepath = '/home/nixion/uwsgI/uwsgi-2.0.20/VDOM_WSGI/runtime2.0/resources/' + ret
-  #          print("path traveled = " + filepath)
-#            self.response['response_body'].append(('X-Sendfile', '/home/nixion/uwsgI/uwsgi-2.0.20/VDOM_WSGI/runtime2.0/resources/' + ret))
             self.response['response_body'].append(('X-Sendfile', ret))
-            #/home/nixion/uwsgI/uwsgi-2.0.20/VDOM_WSGI/runtime2.0/sources/web/uwsgi_request_handler.py
-        #    print("Path = " + str(os.path.realpath(__file__)))
-            #if self.__request.nokeepalive:
-            #    self.response['response_body'].append(('Connection', "Close"))
-            #else:
-#            self.response['response_body'].append(('Connection', "Keep-Alive"))
-      #      print(str(self.response['response_body']))
             self.wfile['response'] = []
             return None
         elif ret:
-#            self.send_response(200)
             self.response['code'] = '200'
             ret_len = None
 
@@ -507,119 +467,14 @@ class VDOM_uwsgi_request_handler(object):
             self.send_error(404, self.responses[404][0])
             return None
 
-    def send_headers(self):
-        """send all headers"""
-        headers = self.__request.headers_out().headers()
-        cookies = self.__request.cookies().output()
-        #debug("Outgoing headers---")
-        #for h in headers:
-        #	debug(h + ": " + headers[h])
-        #debug('-'*40)
-        for hh in headers:
-            #debug(hh + " : " + headers[hh])
-            self.send_header(hh, headers[hh])
-        if len(cookies)>0:
-            self.wfile.write("%s\r\n" % cookies)
-
-    def finish(self):
-        """finish processing request"""
-        #debug("FINISH REQUEST %s"%self)
-        SimpleHTTPServer.SimpleHTTPRequestHandler.finish(self)
-        """tell the server that processing is finished"""
-        self.server.notify_finish(self.client_address)
-        # remove request
-        del managers.request_manager.current
-        try:
-            del(self.__request.vdom)
-            del(self.__request)
-        except: pass
-
     def redirect(self, to):
-        #start_response('302', [('Location', str(to))])
-#        response['body'] = []
         self.response['code'] = '302'
         self.response['response_body'] = [('Location', str(to))]
-
-#        self.send_response(302)
-        #if len(self.__request.cookies)>0:
-        #	for key in self.__request.cookies():
-        #			self.__request.add_header("Set-cookie",self.__request.cookies()[key].output())
-            #self.__request.add_header(self.__request.cookies.output())		
-        #if len(self.__request.cookies().cookies()) > 0:
-        #	self.__request.add_header("Set-cookie", self.__request.cookies().get_string())
-#        self.__request.add_header("Location", to)
-#        self.send_headers()
-#        self.end_headers()
-#        return StringIO()
-
-    def log_message(self, format, *args):
-        """log an arbitrary message to stderr"""
-        if "127.0.0.1" != self.client_address[0]:
-            debug("%s %s {%d}" % (self.address_string(), format%args, self.server.get_cur_con()))
-        #sys.stderr.write("%s - Thread %d - [%s] %s {%d}\n" % (self.address_string(), thread.get_ident(), self.log_date_time_string(), format%args, self.server.get_cur_con()))
-
-    def print_list(self, list, f):
-        """print contents of the dictionary in the form of list"""
-        for k in list.keys():
-            f.write("%s: \"%s\"<br>\n" % (k.upper(), list[k]))
-        f.write("<hr>")
 
     def address_string(self):
         """Return the client address formatted for logging"""
         host, port = self.client_address[:2]
-        return host
-
-    def sample_page(self, method):
-        """generate sample output page"""
-        debug("Returning sample page")
-        f = StringIO()
-        f.write("<b>Application id:</b> %s<br>" % str(self.__request.app_id()))
-        f.write("<b>Registered types:</b><br>")
-        mngr = managers.memory
-        typelst = mngr.get_types()
-        for typeid in typelst:
-            tp = None
-            try: tp = mngr.get_type(typeid)
-            except: pass
-            if tp:
-                typename = tp.name
-                if "" == typename:
-                    typename = _("Not specified")
-                f.write("%s %s<br>" % (typename, typeid))
-        f.write("<b>Registered applications:</b><br>")
-        applst = mngr.applications
-        for appid in applst:
-            app = None
-            try: app = mngr.get_application(appid)
-            except: pass
-            if app:
-                appname = app.name
-                if "" == appname:
-                    appname = _("Not specified")
-                f.write("%s %s&nbsp;" % (appname, appid))
-                f.write("[")
-                for o in app.get_objects_list():
-                    f.write("%s&nbsp;" % o.id)
-                f.write("]<br>")
-        f.write("<hr>\n")
-        f.write("<h2>Sample output for the %s method:</h2><hr>\n" % method.upper())
-        f.write("<h2>Request headers:</h2>\n")
-        self.print_list(self.__request.headers().headers(), f)
-        f.write("<h2>Cookies:</h2>\n")
-        self.print_list(self.__request.cookies().cookies(), f)
-        f.write("<h2>Environment:</h2>\n")
-        self.print_list(self.__request.environment().environment(), f)
-        f.write("<h2>Request arguments:</h2>\n")
-        f.write(str(self.__request.arguments().arguments()))
-        f.write("<hr>\n")
-        length = f.tell()
-        f.seek(0)
-        self.send_response(200)
-        self.send_header("Content-type", "text/html")
-        self.send_header("Content-Length", str(length))
-        self.end_headers()
-        return f
-    
+        return host 
 
     def do_SOAP(self):
         global _contexts
@@ -972,15 +827,13 @@ class VDOM_uwsgi_request_handler(object):
         else:
             # got a valid SOAP response
             self.response['code'] = str(status)
-#            self.send_response(status)
+
             t = 'text/xml';
             if managers.module_manager.getSOAPModule().encoding != None:
                 t += '; charset="%s"' % managers.module_manager.getSOAPModule().encoding
- #           self.send_header("Content-type", t)
- #           self.send_header("Content-length", str(len(resp)))
+
             self.response['response_body'].append(('Content-type', str(t)))
             self.response['response_body'].append(('Content-length', str(len(resp))))
- #           self.end_headers()
 
             if dumpHeadersOut and \
                self.request_version != 'HTTP/0.9':
@@ -1008,8 +861,6 @@ class VDOM_uwsgi_request_handler(object):
 
             #resp = xml.sax.saxutils.unescape(resp)
             self.wfile["response"].append(str(resp))
- #           self.wfile.write(resp)
- #           self.wfile.flush()
 
             # We should be able to shut down both a regular and an SSL
             # connection, but under Python 2.1, calling shutdown on an
@@ -1023,7 +874,6 @@ class VDOM_uwsgi_request_handler(object):
             else:
                 #self.connection.shutdown(1)
                 pass
-
 
     def date_time_string(self):
         self.__last_date_time_string = BaseHTTPServer.BaseHTTPRequestHandler.date_time_string(self)
@@ -1052,7 +902,6 @@ class VDOM_uwsgi_request_handler(object):
 
         if self.command != "HEAD" and content:
             self.wfile["response"].append(str(content))
-
 
     def version_string(self):
         """Return the server software version string."""
