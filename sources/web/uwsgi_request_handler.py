@@ -323,7 +323,7 @@ class VDOM_uwsgi_request_handler(object):
             f.close()
 
     def do_POST(self):
-        print("===== Post triggered! =====")
+   #     print("===== Post triggered! =====")
         """serve a POST request"""
         # create request object
         #debug("DO POST %s"%self)
@@ -333,7 +333,7 @@ class VDOM_uwsgi_request_handler(object):
             if self.__card:
                 self.do_SOAP()
             return
-        print("===== Post triggered (on request) ! =====")
+ #       print("===== Post triggered (on request) ! =====")
         
         f = self.on_request("post")
         if f:
@@ -413,7 +413,7 @@ class VDOM_uwsgi_request_handler(object):
  
             self.__request.collect_files()
         except Exception as e:
-            print("Brrrrrrrrrrrrrrr")
+      #      print("Brrrrrrrrrrrrrrr")
             requestline = "<br>"
             if hasattr(self, "requestline"):
                 requestline = "<br>" + self.requestline + "<br>" + '-'*80
@@ -454,8 +454,8 @@ class VDOM_uwsgi_request_handler(object):
                 
 #                print("test header = " + str(hh) + " : " + str(self.__request.headers_out().headers()[hh]))
                 self.response['response_body'].append((str(hh), str(self.__request.headers_out().headers()[hh])))
-            print("Headers = " + str(self.__request.headers_out().headers()))
-            print("My headers = " + str(self.response['response_body']))
+#            print("Headers = " + str(self.__request.headers_out().headers()))
+#            print("My headers = " + str(self.response['response_body']))
 
             self.wfile['response'] = []
             
@@ -489,6 +489,7 @@ class VDOM_uwsgi_request_handler(object):
                 return StringIO(ret)
         elif "" == ret:
             self.response['code'] = '204 OK'
+    #        print("cookie to response = " + str(self.__request.response_cookies().output()))
             cookie = self.remove_prefix(self.__request.response_cookies().output(), "Set-Cookie: ") 
             self.response['response_body'].append(("set-cookie", str("%s\r\n" % cookie)))
             return None
@@ -505,6 +506,7 @@ class VDOM_uwsgi_request_handler(object):
         self.response['code'] = '302'
         self.response['response_body'] = [('Location', str(to))]
 
+  #      print("cookie to response = " + str(self.__request.response_cookies().output()))
         cookie = self.remove_prefix(self.__request.response_cookies().output(), "Set-Cookie: ") 
         self.response['response_body'].append(("set-cookie", str("%s\r\n" % cookie)))
 
