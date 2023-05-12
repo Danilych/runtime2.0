@@ -8,7 +8,7 @@ DEFAULT_APPLICATION = None
 # server
 
 SERVER_ADDRESS = ""
-SERVER_PORT = 8000
+SERVER_PORT = 8080
 
 # locations
 
@@ -92,7 +92,7 @@ CONSOLE_LOG_LEVEL = 0  # separate log level for console output
 DETAILED_LOGGING = False  # log elementary operations, can change at runtime
 
 LOGGING_ADDRESS = "127.0.0.1"
-LOGGING_PORT = 23355
+LOGGING_PORT = 23354
 
 OVH_LOGGING_ADDRESS = "discover.logs.ovh.com"
 OVH_LOGGING_PORT = 12202  # 2201 (LTSV TCP), 2202 (GELF TCP), 12201 (LTSV TLS), 12202 (GELF TLS)
@@ -130,7 +130,7 @@ ANALYZE_SCRIPT_STRUCTURE = True  # analyze actions to collect dependencies
 
 WATCHER = True
 WATCHER_ADDRESS = "127.0.0.1"
-WATCHER_PORT = 23356
+WATCHER_PORT = 23357
 MONITOR = None  # monitor running threads for debugging
 WATCHER_SNAPSHOT_INTERVAL = 5.0  # interval to refresh snapshot for memorize
 

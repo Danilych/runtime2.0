@@ -217,17 +217,22 @@ class VDOM_uwsgi_request_handler(object):
         self.path = environ["PATH_INFO"]
         host = environ["HTTP_HOST"]
 
-        self.wsgidav_app = None
+        
 
         self.response = {'code': '', 'response_body': []}
     
         app_id = (managers.module_manager.getVHosting().virtual_hosting().get_site(host.lower()) if host else None) or managers.module_manager.getVHosting().virtual_hosting().get_def_site()
-        #try:
-            #appl = managers.memory.get_application(app_id)
-            #self.wsgidav_app = getattr(appl, 'wsgidav_app', None)
-        #except VDOM_exception as e:
-            #debug(e)			
-        #else:
+        if not app_id:
+            app_id = managers.memory.applications.default.id if managers.memory.applications.default else None
+        self.wsgidav_app = None
+        if app_id:
+            try:
+                #if app_id not in managers.memory.applications:
+                appl = managers.memory.applications[app_id]
+                self.wsgidav_app = getattr(appl, 'wsgidav_app', None)
+            except KeyError as e:
+                debug(e)			
+            else:
             #realm = environ["PATH_INFO"].strip("/").split("/").pop(0)
             #objects_list = appl.search_objects_by_name(realm)
             #for o in objects_list:
@@ -235,16 +240,22 @@ class VDOM_uwsgi_request_handler(object):
                     #self.wsgidav_app = appl.wsgidav_app
                     #mname = 'do_WebDAV'
                     #break
+                realm = self.path.strip("/").split("/").pop(0)
+                if managers.webdav_manager.check_webdav_share_path(appl.id, realm):
+                    mname = 'do_WebDAV'
 
-        #if self.command not in ("GET", "POST"):
-            #mname = 'do_WebDAV'
+        if self.command not in ("GET", "POST"):
+            mname = 'do_WebDAV'
+
+        if mname == 'do_WebDAV' and self.wsgidav_app is None:
+            managers.webdav_manager.load_webdav(app_id)
+            self.wsgidav_app = appl.wsgidav_app
 
         if not hasattr(self, mname):
             self.send_error(501, "Unsupported method (%r)" % self.command)
             start_response(self.response['code'], self.response['response_body'])
             return self.wfile["response"]
         
-
         method = getattr(self, mname)
         method()
 
@@ -379,12 +390,8 @@ class VDOM_uwsgi_request_handler(object):
             return StringIO(wsdl)
         if self.__request.environment().environment()["REQUEST_URI"] == "/crossdomain.xml":
             data = """<?xml version="1.0"?>
-<!DOCTYPE cross-domain-policy SYSTEM
-"http://www.adobe.com/xml/dtds/cross-domain-policy.dtd">
 <cross-domain-policy>
- <site-control permitted-cross-domain-policies="all"/>
- <allow-access-from domain="*" secure="false"/>
- <allow-http-request-headers-from domain="*" headers="*" secure="false"/>
+     <allow-access-from domain="*"/>
 </cross-domain-policy>"""
             self.response['code'] = '200'
             self.response['response_body'].append(('Content-type', 'text/xml'))
@@ -401,6 +408,7 @@ class VDOM_uwsgi_request_handler(object):
  
             self.__request.collect_files()
         except Exception as e:
+            print("Brrrrrrrrrrrrrrr")
             requestline = "<br>"
             if hasattr(self, "requestline"):
                 requestline = "<br>" + self.requestline + "<br>" + '-'*80
@@ -438,8 +446,17 @@ class VDOM_uwsgi_request_handler(object):
             else:
                 self.__request.add_header("Connection", "Keep-Alive")
             for hh in self.__request.headers_out().headers():
+                
 #                print("test header = " + str(hh) + " : " + str(self.__request.headers_out().headers()[hh]))
                 self.response['response_body'].append((str(hh), str(self.__request.headers_out().headers()[hh])))
+            print("Headers = " + str(self.__request.headers_out().headers()))
+            print("My headers = " + str(self.response['response_body']))
+
+            self.wfile['response'] = []
+            
+            cookie = self.__request.response_cookies().output()
+            self.response['response_body'].append(("set-cookie", str("%s\r\n" % cookie)))
+            
 
             #print(str(self.__request.headers().headers()))
             # cookies
@@ -451,7 +468,7 @@ class VDOM_uwsgi_request_handler(object):
                 #self.__request.add_header("Set-cookie", self.__request.cookies().get_string())
 
 #            response['response_body'] = self.__request.headers_out().headers().items()
-            self.wfile['response'] = []
+            
 #            self.send_headers()
 #            self.end_headers()
             if isinstance(ret, (file, io.IOBase)):
@@ -464,6 +481,9 @@ class VDOM_uwsgi_request_handler(object):
             else:
                 return StringIO(ret)
         elif "" == ret:
+            self.response['code'] = '204 OK'
+            cookie = self.__request.response_cookies().output()
+            self.response['response_body'].append(("set-cookie", str("%s\r\n" % cookie)))
             return None
         elif code:
             self.send_error(code, self.responses[code][0])
@@ -475,6 +495,9 @@ class VDOM_uwsgi_request_handler(object):
     def redirect(self, to):
         self.response['code'] = '302'
         self.response['response_body'] = [('Location', str(to))]
+
+        cookie = self.__request.response_cookies().output()
+        self.response['response_body'].append(("set-cookie", str("%s\r\n" % cookie)))
 
     def address_string(self):
         """Return the client address formatted for logging"""
