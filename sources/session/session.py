@@ -57,12 +57,14 @@ class VDOM_session(dict):
 		return self.keys()
 
 	def __setitem__(self, key, value):
+		print("SET ITEM SESSION = " + str(key) + " == " + str(value))
 		self.update()
 		if not isinstance(key, basestring):
 			raise TypeError()
 		dict.__setitem__(self, key, value)
 
 	def __getitem__(self, key):
+		print("GET ITEM SESSION = " + str(key))
 		self.update()
 		if not isinstance(key, basestring):
 			raise TypeError()
@@ -82,6 +84,7 @@ class VDOM_session(dict):
 		return dict.__contains__(self, key)
 
 	def get(self, key, default=None):
+		print("GET (2) ITEM SESSION = " + str(key) + " === " + str(dict.get(self, key, default)))
 		self.update()
 		if not isinstance(key, basestring):
 			raise TypeError()
