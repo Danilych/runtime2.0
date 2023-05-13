@@ -489,6 +489,7 @@ class VDOM_uwsgi_request_handler(object):
 #            print("My headers = " + str(self.response['response_body']))
 
             self.wfile['response'] = []
+           # self.wfile['response'].append("test")
             
             cookie = self.remove_prefix(self.__request.response_cookies().output(), "Set-Cookie: ") 
             self.response['response_body'].append(("Set-Cookie", str("%s\r" % cookie)))

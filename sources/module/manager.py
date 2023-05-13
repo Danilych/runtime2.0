@@ -366,12 +366,19 @@ class VDOM_module_manager(object):
                 #             if not request_object.files[key][0].closed:
                 #                 request_object.files[key][0].close()
                 #             os.remove(request_object.files[key][0].name)
-
+                print("!!!!!!!!!!!!!!!!!!!!!!")
                 if request_object.fh:
+                    print("??????????????????")
 #                    print("request object!")
-                    from logs import log
+                    request_object.wfile["response"] = []
+                    for line in request_object.fh:
+                    #    print(str(request_object.wfile["response"]))
+                     #   print("(374) = " + str(line))
+                #        self.wfile["response"].append(line)
+                        request_object.wfile["response"].append(str(line))
                     # log.debug("REQUEST FILE HANDLER: %r" % request_object.fh)
-                    shutil.copyfileobj(request_object.fh, request_object.wfile)
+          #          shutil.copyfileobj(request_object.fh, request_object.wfile)
+                    print("append success!!!")
                     return (None, "")
 
                 outp = request_object.output()
