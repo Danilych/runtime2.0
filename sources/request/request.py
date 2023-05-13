@@ -222,7 +222,7 @@ class VDOM_request(object):
 
         try:
             print("ENV = " + str(env))
-            args1 = cgi.parse_qs(env["QUERY_STRING"], True)
+            args1 = cgi.parse_qs(env["HTTP_QUERY_STRING"], True)
             print("ARGS1 = " + str(args1))
             for key in args1.keys():
                 args[key] = args1[key]
