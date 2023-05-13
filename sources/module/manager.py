@@ -171,7 +171,6 @@ class VDOM_module_manager(object):
     def process_request(self, request_object):
         """process request"""
         script_name = request_object.environment().environment()["SCRIPT_NAME"]
-        print("Requested url = " + str(script_name))
         
  #       if "127.0.0.1" != request_object.handler().client_address[0]:
  #           debug("Requested URL: '" + script_name + "'")
@@ -267,7 +266,6 @@ class VDOM_module_manager(object):
         request_type = url_parts[0].rpartition(".")[2] if '.' in url_parts[0] else 'vdom'
         
         request_object.request_type = request_type
-        print("request type = " + str(request_type))
  #       print("request type = " + str(request_object.request_type))
         # this acts as Communication Dispatcher
         if "vdom" == request_type:  # VDOM container request
@@ -343,19 +341,15 @@ class VDOM_module_manager(object):
                 result = ""
                 try:
                 #    print("render start")
-                    print("_+_+_+_+_+_+_+_")
                     result = managers.engine.render(obj, render_type=obj.type.render_type.lower())
-                    print("_+_+_+_+_+_+_+_")
                #     print("render result = " + str(result))
                     # result = managers.engine.render(obj, None, obj.type.render_type.lower())
                     # CHECK: result = managers.engine.render(_a, obj, None, obj.type.render_type.lower())
                 except VDOM_exception as e:
-                    print("EXCEPTION 1!!!!!!!!!")
                     debug("Render exception: " + str(e))
                     show_exception_trace(caption="Module Manager: Render exception", locals=True)
                     return (None, str(e))
                 except Exception as ee:
-                    print("EXCEPTION 2!!!!!!!!!")
                     show_exception_trace(caption="Module Manager: Render exception", locals=True)
                     action = _a.actions.get("requestonerror")
                     if action and action.source_code:

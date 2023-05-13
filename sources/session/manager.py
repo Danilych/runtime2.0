@@ -33,7 +33,6 @@ class VDOM_session_manager(dict):
 		return min(120, self.__timeout)
 
 	def create_session(self):
-		print("CREATE SESSION (MANAGER)")
 		"""create session & return it`s id"""
 		s = VDOM_session(self.get_unique_sid())
 		self.__sem.lock()
@@ -47,11 +46,9 @@ class VDOM_session_manager(dict):
 		self.__delitem__(session_id)
 
 	def session_exists(self, session_id):
-		print("SESSION EXISTS (MANAGER)")
 		return self.__contains__(session_id)
 
 	def get_session(self, session_id):
-		print("GET SESSION (MANAGER)")
 		return self.__getitem__(session_id)
 
 	def __setitem__(self, key, value):
@@ -111,7 +108,6 @@ class VDOM_session_manager(dict):
 	current = property(__get_current, __set_current)
 
 	def get_unique_sid(self):
-		print("GET UNIQUE SID (MANAGER)")
 		sid = vdomid()
 		while dict.__contains__(self, sid):
 

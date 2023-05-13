@@ -291,7 +291,7 @@ class VDOM_uwsgi_request_handler(object):
 
 
     def do_WebDAV(self):
-        print("DO_WEBDAV!!!")
+
         if self.__reject:
             self.send_error(503, self.responses[503][0])
             return None		
@@ -325,7 +325,6 @@ class VDOM_uwsgi_request_handler(object):
 
 
     def do_GET(self):
-        print("DO_GET!!!")
         """serve a GET request"""
         # create request object
         #debug("DO GET %s"%self)
@@ -339,7 +338,6 @@ class VDOM_uwsgi_request_handler(object):
             f.close()
 
     def do_HEAD(self):
-        print("DO_HEAD!!!")
         """serve a HEAD request"""
         # create request object
         self.create_request("get")
@@ -348,7 +346,6 @@ class VDOM_uwsgi_request_handler(object):
             f.close()
 
     def do_POST(self):
-        print("DO_POST!!!")
    #     print("===== Post triggered! =====")
         """serve a POST request"""
         # create request object
@@ -441,7 +438,6 @@ class VDOM_uwsgi_request_handler(object):
             self.__request.collect_files()
         except Exception as e:
       #      print("Brrrrrrrrrrrrrrr")
-            print("EXCEPTION!!!!!!!!!!!!!")
             requestline = "<br>"
             if hasattr(self, "requestline"):
                 requestline = "<br>" + self.requestline + "<br>" + '-' * 80
@@ -543,7 +539,6 @@ class VDOM_uwsgi_request_handler(object):
         return host 
 
     def do_SOAP(self):
-        print("DO_SOAP")
         global _contexts
         status = 500
 

@@ -106,9 +106,6 @@ class VDOM_user_manager:
 				self.sync()
 
 	def get_user_by_id(self, id):
-		print("GET USER BY ID = " + str(self.users.get(id)))
-		print("GET USER BY ID (id) = " + str(self.users.get(id).id))
-		print("GET USER BY ID (login) = " + str(self.users.get(id).login))
 		"""Returns user with uid identifier or None"""
 		return self.users.get(id)
 

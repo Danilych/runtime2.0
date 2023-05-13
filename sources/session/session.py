@@ -11,12 +11,10 @@ class VDOM_session(dict):
 	"""session class"""
 
 	def __init__(self, sid):
-		print("SESSION INIT = " + str(sid))
 		"""session constructor"""
 		dict.__init__(self)
 
 		self.__id = sid or managers.session_manager.get_unique_sid()
-		print("SESSION ID = " + str(self.__id))
 		self.context={}
 		self.on_start_executed = False
 		self.__user = ""
@@ -43,10 +41,8 @@ class VDOM_session(dict):
 		
 		if value is not None:
 			self[key] = value
-			print("GET SESSION VALUE = " + str(key) + " === " + str(value))
 			return value
 		elif key in self:
-			print("GET SESSION VALUE = " + str(key) + " === " + str(self[key]))
 			return self[key]
 		else:
 			return None
@@ -60,14 +56,12 @@ class VDOM_session(dict):
 		return self.keys()
 
 	def __setitem__(self, key, value):
-		print("SET SESSION ITEM = " + str(key) + " === " + str(value))
 		self.update()
 		if not isinstance(key, basestring):
 			raise TypeError()
 		dict.__setitem__(self, key, value)
 
 	def __getitem__(self, key):
-		print("GET SESSION ITEM = " + str(key))
 		self.update()
 		if not isinstance(key, basestring):
 			raise TypeError()
@@ -90,7 +84,6 @@ class VDOM_session(dict):
 		self.update()
 		if not isinstance(key, basestring):
 			raise TypeError()
-		print("GET (2) SESSION ITEM = " + str(key) + " === " + str(dict.get(self, key, default)))
 		return dict.get(self, key, default)
 	
 	def set_user(self, login, password, md5 = False):
@@ -105,7 +98,6 @@ class VDOM_session(dict):
 		raise VDOM_exception_sec("Authentication failed")
 
 	def __get_user(self):
-		print("SESSION GET USER = " + str(self.__user))
 		return self.__user
 
 	user = property(__get_user)
