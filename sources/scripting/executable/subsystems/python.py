@@ -57,4 +57,9 @@ class PythonBytecode(Bytecode):
         elif context:
             namespace["self"] = context
         namespace.update(environment)
+        print("(4) CONTEXT = " + str(context))
+        print("(4) NAMESPACE = " + str(namespace))
+        print("(4) ARGS = " + str(arguments))
+        print("(4) PYTHON = " + str(self))
+        print("(4) BYTECODE = " + str(self._bytecode))
         exec(self._bytecode, namespace)
