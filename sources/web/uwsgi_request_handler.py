@@ -512,7 +512,7 @@ class VDOM_uwsgi_request_handler(object):
             self.response['code'] = '204 OK'
     #        print("cookie to response = " + str(self.__request.response_cookies().output()))
             cookie = self.remove_prefix(self.__request.response_cookies().output(), "Set-Cookie: ") 
-            self.response['response_body'].append(("set-cookie", str("%s\r" % cookie)))
+            self.response['response_body'].append(("Set-Cookie", str("%s\r" % cookie)))
             return None
         elif code:
             self.send_error(code, self.responses[code][0])
@@ -529,7 +529,7 @@ class VDOM_uwsgi_request_handler(object):
 
   #      print("cookie to response = " + str(self.__request.response_cookies().output()))
         cookie = self.remove_prefix(self.__request.response_cookies().output(), "Set-Cookie: ") 
-        self.response['response_body'].append(("set-cookie", str("%s\r" % cookie)))
+        self.response['response_body'].append(("Set-Cookie", str("%s\r" % cookie)))
 
     def address_string(self):
         """Return the client address formatted for logging"""

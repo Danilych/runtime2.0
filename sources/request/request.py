@@ -59,10 +59,12 @@ class MFSt(FieldStorage):
         self.max_num_fields = max_num_fields
         if 'REQUEST_METHOD' in environ:
             method = environ['REQUEST_METHOD'].upper()
+        if 'HTTP_REQUEST_METHOD' in environ:
+            method = environ['HTTP_REQUEST_METHOD'].upper()   
         self.qs_on_post = None
         if method == 'GET' or method == 'HEAD':
-            if 'QUERY_STRING' in environ:
-                qs = environ['QUERY_STRING']
+            if 'HTTP_QUERY_STRING' in environ:
+                qs = environ['HTTP_QUERY_STRING']
             elif sys.argv[1:]:
                 qs = sys.argv[1]
             else:
@@ -164,8 +166,12 @@ class VDOM_request(object):
 #        self.__headers = VDOM_headers(headers)
         self.__headers = headers
         self.__headers_out = VDOM_headers({})
-
+        print(str(headers))
         self.__cookies = BaseCookie(headers["HTTP_COOKIE"])
+        #if "HTTP_COOKIE" in headers:
+        #    self.__cookies = BaseCookie(headers["HTTP_COOKIE"])
+        #else:
+        #    self.__cookies = []
         self.__response_cookies = BaseCookie()
         self.__environment = VDOM_environment(headers, handler)
         self.files = {}
