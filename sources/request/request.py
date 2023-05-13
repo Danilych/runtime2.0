@@ -314,14 +314,47 @@ class VDOM_request(object):
         return self.__binary
 
     def set_nocache(self):
+        print("SET NO CACHE")
         if not self.__nocache:
-            self._handler.send_response(200)
-            self._handler.send_headers()
-            self._handler.end_headers()  # TODO!
-            self.wfile.write(self.output())
+            print("!!!!!")
+
+      #     self.response['code'] = str(code)
+     #      self.response['response_body'].append(("Conenction", "close"))
+      #     self.wfile["response"].append("Error " + str(code) + " " + message)
+
+      #      self._handler.send_response(200)
+            print("1")
+            self._handler.response['code'] = str(200)
+            print("2")
+            self._handler.response['response_body'] = []
+            print("3")
+            for hh in self.headers_out().headers():
+                print("4")
+                self._handler.response['response_body'].append((str(hh), str(self.headers_out().headers()[hh])))
+#            print("Headers = " + str(self.__request.headers_out().headers()))
+#            print("My headers = " + str(self.response['response_body']))
+
+            print("5")
+            self._handler.wfile['response'] = []
+            print("6")
+            cookie = self._handler.remove_prefix(self.response_cookies().output(), "Set-Cookie: ") 
+            print("7")
+            self._handler.response['response_body'].append(("Set-Cookie", str("%s\r" % cookie)))
+            print("8")
+            self._handler.wfile['response'].append(str(self.output()))
+
+            print("SET REDIRECT FALSE")
+            self._handler.redirect_rewrite = True
+            print("HANDLER = " + str(self._handler))
+
+         #   self._handler.send_headers()
+         #   self._handler.end_headers()  # TODO!
+         #   self.wfile.write(self.output())
             #self.wfile.write('\n')
+        print("@@@@@@")
         self.__nocache = True
         self.nokeepalive = True
+
 
     def send_htmlcode(self, code=200):
         if not self.__nocache:
@@ -424,8 +457,10 @@ class VDOM_request(object):
         """add header"""
         headers = self.__headers_out.headers()
         headers[name] = value
+        print("NEW HEADER = " + str(headers))
 
     def send_file(self, filename, length, handler, content_type=None, cache_control=True):
+        print("SEND FILE")
         f_content_type = content_type if content_type else "application/octet-stream"
         self.add_header("Content-type", f_content_type)
         if content_type:
@@ -444,4 +479,4 @@ class VDOM_request(object):
 
         self.add_header("Content-Length", str(length))
         self.set_nocache()
-        self.write_handler(handler)
+  #      self.write_handler(handler)

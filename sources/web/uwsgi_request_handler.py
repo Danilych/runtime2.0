@@ -134,6 +134,7 @@ class VDOM_uwsgi_request_handler(object):
         self.client_address = client_address
         self.wfile = {'response': []}
         self.response = {'code': '', 'response_body': []}
+        self.redirect_rewrite = False
 
     def remove_prefix(self, text, prefix):
         if text.startswith(prefix):
@@ -286,7 +287,7 @@ class VDOM_uwsgi_request_handler(object):
            # self.response = {'code': '200', 'response_body': [('Content-Length', str(nlength)), ('Content-type', 'text/plain')]}
 
 
-        
+        print("FINAL RESPONSE = " + str(self.response['response_body']))
         start_response(self.response['code'], self.response['response_body'])
         return self.wfile["response"] #actually send the response if not already done.
 
@@ -529,6 +530,13 @@ class VDOM_uwsgi_request_handler(object):
     
 
     def redirect(self, to):
+
+        if self.redirect_rewrite == True:
+            print("STOP REDIRECT")
+            return
+         
+
+        print("REDIRECT")
         self.response['code'] = '302'
         self.response['response_body'] = [('Location', str(to))]
 
