@@ -433,20 +433,22 @@ class VDOM_uwsgi_request_handler(object):
         # process requested URI, call module manager
         try:
             (code, ret) = managers.module_manager.process_request(self.__request) ############
-            print("CODE = " + str(code))
-            print("ret = " + str(ret))
+          #  print("CODE = " + str(code))
+           # print("ret = " + str(ret))
             self.__request.collect_files()
         except Exception as e:
       #      print("Brrrrrrrrrrrrrrr")
+            print("EXCEPTION!!!!!!!!!!!!!")
             requestline = "<br>"
             if hasattr(self, "requestline"):
-                requestline = "<br>" + self.requestline + "<br>" + '-'*80
+                requestline = "<br>" + self.requestline + "<br>" + '-' * 80
             if not hasattr(self, "request_version"):
                 self.request_version = "HTTP/1.1"
-            fe = "".join(["<br><br>", '-'*80, requestline, "<br>Exception happened during processing of request:", 
-                          traceback.format_exc(), '-'*40])
+            fe = "".join(["<br><br>", '-' * 80, requestline, "<br>Exception happened during processing of request:",
+                          traceback.format_exc(), '-' * 40])
             self.__request.collect_files()
             self.send_error(500, excinfo=fe)
+            debug(e)
             return None
 
         # check redirect
