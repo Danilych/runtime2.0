@@ -59,7 +59,6 @@ class VDOM_session_manager(dict):
 		raise AttributeError()
 
 	def __getitem__(self, key):
-		print("GET SESSION ITEM (MANAGER)")
 		self.__sem.lock()
 		try:
 			if dict.__contains__(self, key):

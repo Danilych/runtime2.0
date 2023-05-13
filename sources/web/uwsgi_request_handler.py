@@ -132,7 +132,7 @@ class VDOM_uwsgi_request_handler(object):
         self.__connections = args["connections"]
         self.request = request
         self.client_address = client_address
-        self.wfile = []
+        self.wfile = {'response': []}
         self.response = {'code': '', 'response_body': []}
 
     def remove_prefix(self, text, prefix):

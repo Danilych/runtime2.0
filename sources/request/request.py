@@ -167,7 +167,9 @@ class VDOM_request(object):
         self.__headers = headers
         self.__headers_out = VDOM_headers({})
      #   print(str(headers))
-        self.__cookies = BaseCookie(headers["HTTP_COOKIE"])
+      #  self.__cookies = BaseCookie(headers["HTTP_COOKIE"])
+        print("HEADERS = " + str(headers))
+        self.__cookies = BaseCookie(headers.get("cookie"))
         #if "HTTP_COOKIE" in headers:
         #    self.__cookies = BaseCookie(headers["HTTP_COOKIE"])
         #else:
