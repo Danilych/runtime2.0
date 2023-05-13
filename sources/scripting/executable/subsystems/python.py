@@ -51,19 +51,10 @@ class PythonBytecode(Bytecode):
         return cls(executable, bytecode)
 
     def execute(self, context, namespace, arguments):
-        print("(40) NAMESPACE = " + str(type(namespace)) + " = " + str(namespace))
         if arguments:
             namespace["self"] = self._unavailable
             namespace.update(arguments)
-            print("1111111 = " + str(namespace))
         elif context:
             namespace["self"] = context
-            print("222222 = " + str(namespace))
         namespace.update(environment)
-        print("(4) ENVIROMENT = " + str(environment))
-        print("(4) CONTEXT = " + str(context))
-        print("(41) NAMESPACE = " + str(type(namespace)) + " = " + str(namespace))
-        print("(4) ARGS = " + str(arguments))
-        print("(4) PYTHON = " + str(self))
-        print("(4) BYTECODE = " + str(self._bytecode))
         exec(self._bytecode, namespace)

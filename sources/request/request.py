@@ -172,6 +172,7 @@ class VDOM_request(object):
         self.__cookies = BaseCookie(headers.get("cookie"))
         if "HTTP_COOKIE" in headers:
             self.__cookies = BaseCookie(headers.get("HTTP_COOKIE"))
+        
         #if "HTTP_COOKIE" in headers:
         #    self.__cookies = BaseCookie(headers["HTTP_COOKIE"])
         #else:
@@ -220,7 +221,9 @@ class VDOM_request(object):
                 debug("Error while reading socket: %s"%e)
 
         try:
+            print("ENV = " + str(env))
             args1 = cgi.parse_qs(env["QUERY_STRING"], True)
+            print("ARGS1 = " + str(args1))
             for key in args1.keys():
                 args[key] = args1[key]
         except Exception as e:

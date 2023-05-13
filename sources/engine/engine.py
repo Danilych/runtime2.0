@@ -84,9 +84,6 @@ class Engine(object):
             with profiler:
                 
                 instance = object.factory(RENDER_CONTEXT)(parent)
-                print("RENDER CONTEXT = " + str(RENDER_CONTEXT))
-                print("PARENT = " + str(parent))
-                print("INSTANCE = " + str(instance) + " === " + str(type(instance)))
                 instance.execute()
 
                 return instance.render()
