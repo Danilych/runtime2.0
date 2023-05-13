@@ -171,6 +171,7 @@ class VDOM_module_manager(object):
     def process_request(self, request_object):
         """process request"""
         script_name = request_object.environment().environment()["SCRIPT_NAME"]
+        print("Requested url = " + str(script_name))
         
  #       if "127.0.0.1" != request_object.handler().client_address[0]:
  #           debug("Requested URL: '" + script_name + "'")
@@ -340,19 +341,7 @@ class VDOM_module_manager(object):
             with start_stop_request(_a.actions):
                 result = ""
                 try:
-                    print("==========")
-                    print("target = " + str(target))
-                    print("Script name = " + script_name)
-                    print("url parts = " + str(url_parts))
-                    print("request type = " + str(request_type))
-                    print("Container id for vdom = " + str(container_id))
-                    print("Container id from id = " + obj.id)
-                    print("obj = " + str(obj))
-                    print("render type = " + str(obj.type.render_type.lower()))
-                    print("request object = " + str(request_object.environment().environment()["REQUEST_URI"].split(".")[0]))
-                    print("request app id = " + str(request_object.app_id()))
                     result = managers.engine.render(obj, render_type=obj.type.render_type.lower())
-                    print("==========")
                     # result = managers.engine.render(obj, None, obj.type.render_type.lower())
                     # CHECK: result = managers.engine.render(_a, obj, None, obj.type.render_type.lower())
                 except VDOM_exception, e:

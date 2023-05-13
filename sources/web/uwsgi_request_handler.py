@@ -222,8 +222,6 @@ class VDOM_uwsgi_request_handler(object):
         self.path = environ["PATH_INFO"]
         host = environ["HTTP_HOST"]
 
-        
-
         self.response = {'code': '', 'response_body': []}
     
         app_id = (managers.module_manager.getVHosting().virtual_hosting().get_site(host.lower()) if host else None) or managers.module_manager.getVHosting().virtual_hosting().get_def_site()
@@ -264,11 +262,33 @@ class VDOM_uwsgi_request_handler(object):
         method = getattr(self, mname)
         method()
 
+     #   nlength = 0
+      #  tempfile = []
+      #  for line in self.wfile["response"]:
+      #      tempfile.append(line)
+       #     print("()")
+       #     print(str(len(line)) + "===" + str(line))
+       #     print("()")
+       #     nlength += len(line)
+       # print("-----" + str(nlength))
+       # print("Response content length = " + str(self.response["response_body"]))
+       # if nlength == 8789:
+       #     nlength = 0
+       #     self.wfile["response"] = []
+        #    for i in range(0, max(1, len(tempfile))):
+        #        self.wfile["response"].append(tempfile[i])
+         #       nlength += len(tempfile[i])
+         #   print("actual length = " + str(nlength))
+           # self.response = {'code': '200', 'response_body': [('Content-Length', str(nlength)), ('Content-type', 'text/plain')]}
+
+
+        
         start_response(self.response['code'], self.response['response_body'])
         return self.wfile["response"] #actually send the response if not already done.
 
 
     def do_WebDAV(self):
+        print("DO_WEBDAV!!!")
         if self.__reject:
             self.send_error(503, self.responses[503][0])
             return None		
@@ -302,6 +322,7 @@ class VDOM_uwsgi_request_handler(object):
 
 
     def do_GET(self):
+        print("DO_GET!!!")
         """serve a GET request"""
         # create request object
         #debug("DO GET %s"%self)
@@ -315,6 +336,7 @@ class VDOM_uwsgi_request_handler(object):
             f.close()
 
     def do_HEAD(self):
+        print("DO_HEAD!!!")
         """serve a HEAD request"""
         # create request object
         self.create_request("get")
@@ -323,6 +345,7 @@ class VDOM_uwsgi_request_handler(object):
             f.close()
 
     def do_POST(self):
+        print("DO_POST!!!")
    #     print("===== Post triggered! =====")
         """serve a POST request"""
         # create request object
@@ -388,12 +411,14 @@ class VDOM_uwsgi_request_handler(object):
             return StringIO(data)
         # check if requested for wsdl file - then return it
         if self.__request.environment().environment()["REQUEST_URI"] == VDOM_CONFIG["WSDL-FILE-URL"]:
+            print("11111")
             wsdl = managers.module_manager.getSOAPModule().get_wsdl()
             self.response['code'] = '200'
             self.response['response_body'].append(('Content-type', 'text/xml'))
             self.response['response_body'].append(('Content-Length', str(len(wsdl))))
             return StringIO(wsdl)
         if self.__request.environment().environment()["REQUEST_URI"] == "/crossdomain.xml":
+            print("22222")
             data = """<?xml version="1.0"?>
 <cross-domain-policy>
      <allow-access-from domain="*"/>
@@ -405,10 +430,12 @@ class VDOM_uwsgi_request_handler(object):
         # management
 
         if self.__request.environment().environment()["REQUEST_URI"] == VDOM_CONFIG["MANAGEMENT-URL"]:
+            print("33333")
             self.redirect("/index.py")
             return
         # process requested URI, call module manager
         try:
+            print("44444")
             (code, ret) = managers.module_manager.process_request(self.__request) ############
  
             self.__request.collect_files()
@@ -459,10 +486,8 @@ class VDOM_uwsgi_request_handler(object):
 
             self.wfile['response'] = []
             
-
-            print("Cookies to response = " + str(self.__request.response_cookies().output()))
             cookie = self.remove_prefix(self.__request.response_cookies().output(), "Set-Cookie: ") 
-            self.response['response_body'].append(("Set-Cookie", str("%s\r\n" % cookie)))
+            self.response['response_body'].append(("Set-Cookie", str("%s\r" % cookie)))
             
 
             #print(str(self.__request.headers().headers()))
@@ -491,7 +516,7 @@ class VDOM_uwsgi_request_handler(object):
             self.response['code'] = '204 OK'
     #        print("cookie to response = " + str(self.__request.response_cookies().output()))
             cookie = self.remove_prefix(self.__request.response_cookies().output(), "Set-Cookie: ") 
-            self.response['response_body'].append(("set-cookie", str("%s\r\n" % cookie)))
+            self.response['response_body'].append(("set-cookie", str("%s\r" % cookie)))
             return None
         elif code:
             self.send_error(code, self.responses[code][0])
@@ -508,7 +533,7 @@ class VDOM_uwsgi_request_handler(object):
 
   #      print("cookie to response = " + str(self.__request.response_cookies().output()))
         cookie = self.remove_prefix(self.__request.response_cookies().output(), "Set-Cookie: ") 
-        self.response['response_body'].append(("set-cookie", str("%s\r\n" % cookie)))
+        self.response['response_body'].append(("set-cookie", str("%s\r" % cookie)))
 
     def address_string(self):
         """Return the client address formatted for logging"""
@@ -516,6 +541,7 @@ class VDOM_uwsgi_request_handler(object):
         return host 
 
     def do_SOAP(self):
+        print("DO_SOAP")
         global _contexts
         status = 500
 
