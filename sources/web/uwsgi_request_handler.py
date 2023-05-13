@@ -411,14 +411,12 @@ class VDOM_uwsgi_request_handler(object):
             return StringIO(data)
         # check if requested for wsdl file - then return it
         if self.__request.environment().environment()["REQUEST_URI"] == VDOM_CONFIG["WSDL-FILE-URL"]:
-            print("11111")
             wsdl = managers.module_manager.getSOAPModule().get_wsdl()
             self.response['code'] = '200'
             self.response['response_body'].append(('Content-type', 'text/xml'))
             self.response['response_body'].append(('Content-Length', str(len(wsdl))))
             return StringIO(wsdl)
         if self.__request.environment().environment()["REQUEST_URI"] == "/crossdomain.xml":
-            print("22222")
             data = """<?xml version="1.0"?>
 <cross-domain-policy>
      <allow-access-from domain="*"/>
@@ -430,12 +428,10 @@ class VDOM_uwsgi_request_handler(object):
         # management
 
         if self.__request.environment().environment()["REQUEST_URI"] == VDOM_CONFIG["MANAGEMENT-URL"]:
-            print("33333")
             self.redirect("/index.py")
             return
         # process requested URI, call module manager
         try:
-            print("44444")
             (code, ret) = managers.module_manager.process_request(self.__request) ############
  
             self.__request.collect_files()
