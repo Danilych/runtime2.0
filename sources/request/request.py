@@ -335,13 +335,13 @@ class VDOM_request(object):
 #            print("My headers = " + str(self.response['response_body']))
 
             print("5")
-            self._handler.wfile['response'] = []
             print("6")
-            cookie = self._handler.remove_prefix(self.response_cookies().output(), "Set-Cookie: ") 
+           # cookie = self._handler.remove_prefix(self.response_cookies().output(), "Set-Cookie: ") 
             print("7")
-            self._handler.response['response_body'].append(("Set-Cookie", str("%s\r" % cookie)))
+           # self._handler.response['response_body'].append(("Set-Cookie", str("%s\r" % cookie)))
             print("8")
-            self._handler.wfile['response'].append(str(self.output()))
+            self.wfile["response"]
+            self._handler.wfile["response"] = str(self.output())
 
             print("SET REDIRECT FALSE")
             self._handler.redirect_rewrite = True
