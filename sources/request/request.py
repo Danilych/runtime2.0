@@ -80,6 +80,7 @@ class VDOM_request(object):
 
         try:
             args1 = cgi.parse_qs(env["QUERY_STRING"], True)
+            print("ARGS1 = " + str(args1))
             for key in args1.keys():
                 args[key] = args1[key]
         except Exception as e:
@@ -110,6 +111,8 @@ class VDOM_request(object):
                 sid = managers.session_manager.create_session()
         #debug("Session ID "+str(sid))
         self.__cookies["sid"] = sid
+        print("SESSION SID = " + str(sid))
+        print("ARGS GUID = " + str(args["guid"]))
 
         #if sid not in args.get('sid', []):
         self.__response_cookies["sid"] = sid
