@@ -341,6 +341,9 @@ class VDOM_module_manager(object):
                 result = ""
                 try:
                 #    print("render start")
+                    print("OBJ = " + str(obj))
+                    print("OBJ (id) = " + str(obj.id))
+                    print("OBJ (render type) = " + str(obj.type.render_type.lower()))
                     result = managers.engine.render(obj, render_type=obj.type.render_type.lower())
                #     print("render result = " + str(result))
                     # result = managers.engine.render(obj, None, obj.type.render_type.lower())
