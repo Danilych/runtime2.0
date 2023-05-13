@@ -17,13 +17,18 @@ guid_regex=re.compile("[0-9A-Z]{8}-[0-9A-Z]{4}-[0-9A-Z]{4}-[0-9A-Z]{4}-[0-9A-Z]{
 
 @contextmanager
 def start_stop_request(actions):
+
+    print("ACTION = " + str(actions) + " === " + str(type(actions)))
+
     on_request_start = actions.get("requestonstart")
+    print("ON REQUEST START = " + str(on_request_start))
     if on_request_start and on_request_start.source_code:
         managers.engine.execute(on_request_start)
 
     yield
 
     on_request_stop = actions.get("requestonstop")
+    print("ON REQUEST STOP = " + str(on_request_stop))
     if on_request_stop and on_request_stop.source_code:
         managers.engine.execute(on_request_stop)
 
