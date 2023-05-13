@@ -79,7 +79,7 @@ class VDOM_request(object):
                 debug("Error while reading socket: %s"%e)
 
         try:
-            print("ENV = " + str(env))
+        #    print("ENV = " + str(env))
             args1 = cgi.parse_qs(env["QUERY_STRING"], True)
             print("ARGS1 = " + str(args1))
             for key in args1.keys():
@@ -112,7 +112,7 @@ class VDOM_request(object):
                 sid = managers.session_manager.create_session()
         #debug("Session ID "+str(sid))
         self.__cookies["sid"] = sid
-        print("SESSION SID = " + str(sid))
+    #    print("SESSION SID = " + str(sid))
 
         #if sid not in args.get('sid', []):
         self.__response_cookies["sid"] = sid
@@ -284,9 +284,12 @@ class VDOM_request(object):
         """add header"""
         headers = self.__headers_out.headers()
         headers[name] = value
+        print("NEW HEADER = " + str(headers))
 
     def send_file(self, filename, length, handler, content_type=None, cache_control=True):
+        print("SEND FILE")
         f_content_type = content_type if content_type else "application/octet-stream"
+        print("NEW CONTENT TYPE = " + str(f_content_type))
         self.add_header("Content-type", f_content_type)
         if content_type:
             self.add_header("Content-Disposition", "inline; filename=\"%s\""%filename)
