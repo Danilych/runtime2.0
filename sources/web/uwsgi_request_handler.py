@@ -290,7 +290,7 @@ class VDOM_uwsgi_request_handler(object):
         print("FINAL RESPONSE = " + str(self.response['response_body']))
         start_response(self.response['code'], self.response['response_body'])
         print("RESPONSE LENGTH = " + str(len(self.wfile["response"])))
-        print("RESPONSE BODY = " + str(self.wfile["response"]))
+     #   print("RESPONSE BODY = " + str(self.wfile["response"]))
         return self.wfile["response"] #actually send the response if not already done.
 
 
