@@ -343,6 +343,7 @@ class VDOM_http_request_handler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         #debug("Creating request object")
         args = {}
         args["headers"] = self.headers
+        print("HEADERS = " + str(self.headers))
         args["handler"] = self
         args["method"] = method
         self.__request = VDOM_request(args)

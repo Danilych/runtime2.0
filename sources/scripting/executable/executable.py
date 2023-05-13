@@ -157,11 +157,6 @@ class Executable(object):
         normally = False
         managers.script_manager.watch()
         try:
-            print("(3) CONTEXT = " + str(context))
-            print("(3) NAMESPACE = " + str(namespace))
-            print("(3) ARGS = " + str(arguments))
-            print("(3) EXEC = " + str(self))
-            print("(3) EXEC BYTECODE = " + str(self.bytecode))
             self.bytecode.execute(context, namespace, arguments)
             normally = True  # complete before exception was raised
             managers.script_manager.ignore()  # and cancel exception

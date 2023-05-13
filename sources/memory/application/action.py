@@ -141,10 +141,6 @@ class MemoryAction(MemoryActionSketch):
         else:
             # statistics.increase("action.execute")
             if self.scripting_language == PYTHON_LANGUAGE:
-                print("(2) CONTEXT = " + str(context))
-                print("(2) NAMESPACE = " + str(namespace))
-                print("(2) ARGS = " + str(arguments))
-                print("(2) MEMORY ACTION = " + str(self))
                 return super(MemoryAction, self).execute(context=context, namespace=namespace, arguments=arguments)
             else:
                 if namespace is None:

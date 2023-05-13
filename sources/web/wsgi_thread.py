@@ -14,7 +14,6 @@ class WebServer(SmartThread):
     def main(self):
         log.write("Start %s\n" % self.name)
         server_address = (VDOM_CONFIG["SERVER-ADDRESS"], VDOM_CONFIG["SERVER-PORT"])
-        print("++++++++++++++++++++++++++")
         self.__server = VDOM_http_server(server_address, VDOM_http_request_handler)
         msg = "%s listening on port %s" % (VDOM_http_request_handler.server_version, VDOM_CONFIG["SERVER-PORT"])
         log.write(msg, "Web server thread")
