@@ -343,7 +343,9 @@ class VDOM_module_manager(object):
                 result = ""
                 try:
                 #    print("render start")
+                    print("_+_+_+_+_+_+_+_")
                     result = managers.engine.render(obj, render_type=obj.type.render_type.lower())
+                    print("_+_+_+_+_+_+_+_")
                #     print("render result = " + str(result))
                     # result = managers.engine.render(obj, None, obj.type.render_type.lower())
                     # CHECK: result = managers.engine.render(_a, obj, None, obj.type.render_type.lower())

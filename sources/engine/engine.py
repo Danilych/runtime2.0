@@ -76,18 +76,34 @@ class Engine(object):
         if settings.DETAILED_LOGGING:
             log.write("Render %s" % object)
             
+        print("11111111111")
         previous = self.select(object.application)
+        print("11111111111")
+        print("222222222")
         managers.script_manager.constrain(settings.RENDER_TIMEOUT)
+        print("222222222")
         try:
             with profiler:
+                print("3333333333")
                 instance = object.factory(RENDER_CONTEXT)(parent)
-                instance.execute()
+                print("3333333333")
+                print("4444444444 = " + str(instance) + " === " + str(type(instance)))
+                try:
+                    instance.execute()
+                except Exception as e:
+                    print("EXCEPTION RENDER = " + str(e))
+                print("4444444444")
+                print("5555555555")
                 return instance.render()
         except RenderTermination:
             return ""
         finally:
+            print("6666666666")
             managers.script_manager.revoke()
+            print("6666666666")
+            print("7777777777")
             self.select(previous)
+            print("7777777777")
             # statistics.show("Render %s" % object)
 
     @contextmanager
