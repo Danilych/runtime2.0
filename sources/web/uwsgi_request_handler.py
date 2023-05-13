@@ -15,6 +15,8 @@ from wsgiref.util import guess_scheme
 import managers
 import settings
 
+from time import time
+
 from request.request import VDOM_request
 from storage.storage import VDOM_config
 from version import *
@@ -22,6 +24,7 @@ from version import *
 from soap.wsdl import methods as soap_methods
 from utils.exception import VDOM_exception
 from utils.pages import compose_page, compose_trace
+from version import SERVER_NAME, SERVER_VERSION
 #from server import VDOM_WSGI_Vhosting
 #from server.uwsgi_vhosting import VDOM_WSGI_Vhosting
 
@@ -129,7 +132,7 @@ class VDOM_uwsgi_request_handler(object):
         self.__connections = args["connections"]
         self.request = request
         self.client_address = client_address
-        self.wfile = {"response":[]}
+        self.wfile = []
         self.response = {'code': '', 'response_body': []}
 
     def remove_prefix(self, text, prefix):
