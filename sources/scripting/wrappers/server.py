@@ -324,6 +324,5 @@ class VDOM_server(object):
     # mailer=property(lambda self: managers.email_manager)
     mailer = property(lambda self: self._mailer)
     guid = property(_get_guid)
-    print("VDOM_SERVER GUID = " + str(guid))
     vscript = property(lambda self: self._vscript)
     javascript = property(_load_javascript)

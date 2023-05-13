@@ -336,7 +336,6 @@ def set_vcard_license(sid, skey, serial, reboot, _SOAPContext):
 
 
 def create_guid(sid, skey, _SOAPContext):
-    print("CREATE GUID")
     return proxy([managers.soap_server.create_guid, sid, skey])
 
 
