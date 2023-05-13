@@ -159,9 +159,12 @@ class VDOMObject(object):
 
     def execute(self, namespace=None):
         action = self._action
+        print("(1) ACTION = " + str(action))
         if action:
             if settings.DETAILED_LOGGING:
                 log.write("Execute %s" % action)
+            print("(1) CONTEXT = " + str(self))
+            print("(1) NAMESPACE = " + str(namespace))
             action.execute(context=self, namespace=namespace)
 
     def compute(self):
