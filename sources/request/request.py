@@ -79,6 +79,7 @@ class VDOM_request(object):
                 debug("Error while reading socket: %s"%e)
 
         try:
+            print("ENV = " + str(env))
             args1 = cgi.parse_qs(env["QUERY_STRING"], True)
             print("ARGS1 = " + str(args1))
             for key in args1.keys():
@@ -112,7 +113,6 @@ class VDOM_request(object):
         #debug("Session ID "+str(sid))
         self.__cookies["sid"] = sid
         print("SESSION SID = " + str(sid))
-        print("ARGS GUID = " + str(args["guid"]))
 
         #if sid not in args.get('sid', []):
         self.__response_cookies["sid"] = sid
