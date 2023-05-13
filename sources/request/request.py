@@ -232,17 +232,23 @@ class VDOM_request(object):
         if "sid" in args:
             #debug("Got session from arguments "+str(args["sid"]))
             sid = args["sid"][0]
+            print("Args sid = " + str(sid))
         elif "sid" in self.__cookies:
+
             #debug("Got session from cookies "+cookies["sid"].value)
             sid = self.__cookies["sid"].value
+            print("Cookie sid = " + str(sid))
         if sid == "":
             sid = managers.session_manager.create_session()
+            print("Create session = " + str(sid))
             #debug("Created session " + sid)
         else:
+            print("Check for existing sid")
             x = managers.session_manager[sid]
             if x is None:
                 #debug("Session " + sid + " expired")
                 sid = managers.session_manager.create_session()
+                print("Create new sid = " + str(sid))
         #debug("Session ID "+str(sid))
         self.__cookies["sid"] = sid
 

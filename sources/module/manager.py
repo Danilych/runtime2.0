@@ -342,9 +342,9 @@ class VDOM_module_manager(object):
             with start_stop_request(_a.actions):
                 result = ""
                 try:
-                    print("render start")
+                #    print("render start")
                     result = managers.engine.render(obj, render_type=obj.type.render_type.lower())
-                    print("render result = " + str(result))
+               #     print("render result = " + str(result))
                     # result = managers.engine.render(obj, None, obj.type.render_type.lower())
                     # CHECK: result = managers.engine.render(_a, obj, None, obj.type.render_type.lower())
                 except VDOM_exception, e:
