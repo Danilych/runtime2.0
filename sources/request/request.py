@@ -87,7 +87,9 @@ class VDOM_request(object):
 
         self.fault_type_http_code = 500
         if "user-agent" in self.__headers.headers():
+            print("HAS USER AGENT")
             if "adobeair" in self.__headers.headers()["user-agent"].lower():
+                print("ADOBE USER AGENT")
                 self.fault_type_http_code = 200
 
         # session

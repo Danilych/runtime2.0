@@ -43,6 +43,7 @@ def console_debug(data):
 
 
 def set_virtual_card(user, password, guid):
+    print("SET VIRTUAL CARD")
     shost, sl, sp = ("partner.vdom-box-international.com", "card", "card")
 
     f = open('/etc/opt/virtcard', 'w')

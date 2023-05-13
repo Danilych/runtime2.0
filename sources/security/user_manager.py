@@ -106,6 +106,7 @@ class VDOM_user_manager:
 				self.sync()
 
 	def get_user_by_id(self, id):
+		print("GET USER BY ID")
 		"""Returns user with uid identifier or None"""
 		return self.users.get(id)
 
@@ -143,6 +144,7 @@ class VDOM_user_manager:
 		return None
 
 	def user_exists(self, login):
+		print("USER EXISTS")
 		"""Answers True if logins exists in system"""
 		if login in self.users_by_name and isinstance(self.users_by_name[login], VDOM_user):
 			return True

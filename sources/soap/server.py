@@ -220,6 +220,7 @@ class VDOM_web_services_server(object):
 # session methods =================================================================================
 
     def open_session(self, name, pwd_md5):
+        print("OPEN SESSION")
         """open session with the server"""
         self.__sem.lock()
         try:
@@ -2394,6 +2395,7 @@ class VDOM_web_services_server(object):
             raise SOAPpy.faultType(object_id_error, "Object not found", _("<Error><ObjectID>%s</ObjectID></Error>") % objid)
 
     def set_server_action(self, sid, skey, appid, objid, actionid, actionvalue):
+        print("SET SERVER ACTION")
         """set server action"""
         if not self.__check_session(sid, skey):
             return self.__session_key_error()

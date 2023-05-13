@@ -146,6 +146,7 @@ class VDOM_request(object):
         return managers.request_manager.current.dyn_libraries
 
     def uploaded_file(self, guid):
+        print("UPLOAD = " + str(guid))
         u_file = managers.session_manager.current.files.pop(guid, None)
         return Attachment(u_file) if u_file else None
 

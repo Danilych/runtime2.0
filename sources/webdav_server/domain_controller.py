@@ -17,6 +17,7 @@ class VDOM_DigestHandler(BaseMiddleware):
 	
 class VDOM_HTTPAuthenticator(HTTPAuthenticator):
 	def computeDigestResponse(self, username, realm, password, method, uri, nonce, cnonce, qop, nc):
+		print("VDOM HTTP AUTH")
 		md5hA1 = self._domaincontroller.getDigest(realm, username)
 		A2 = method + ":" + uri
 		if qop:
@@ -30,6 +31,7 @@ class VDOM_HTTPAuthenticator(HTTPAuthenticator):
 		
 
 def authAppUser(app_id, obj_id, user, password):
+	print("AUTH APP USER")
 	try:
 		xml_data = """{"user": "%s","password": "%s"}""" % (user, password)
 		return managers.dispatcher.dispatch_action(app_id, obj_id, "authentication", "",xml_data)
@@ -38,6 +40,7 @@ def authAppUser(app_id, obj_id, user, password):
 		return False
 
 def authGetDigest(app_id, obj_id, user):
+	print("AUTH DIGEST")
 	try:
 		xml_data = json.dumps({"user":user})
 		return managers.dispatcher.dispatch_action(app_id, obj_id, "getDigest", "",xml_data)
@@ -69,6 +72,7 @@ class VDOM_domain_controller(object):
 		return obj.id
 
 	def requireAuthentication(self, realmname, environ):
+		print("CHECK AUTH")
 		session = managers.request_manager.current.session()
 		return "current_user" not in session and "dav_user" not in session
 
@@ -79,6 +83,7 @@ class VDOM_domain_controller(object):
 		return ""
 
 	def authDomainUser(self, realmname, username, password, environ):
+		print("AUTHDOMAIN")
 		#request = VDOM_webdav_request(environ)
 		#managers.request_manager.current = request
 		obj_id = realmname
