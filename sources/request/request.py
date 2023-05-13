@@ -221,7 +221,7 @@ class VDOM_request(object):
                 debug("Error while reading socket: %s"%e)
 
         try:
-            print("ENV = " + str(env))
+    #        print("ENV = " + str(env))
             args1 = cgi.parse_qs(env["HTTP_QUERY_STRING"], True)
             print("ARGS1 = " + str(args1))
             for key in args1.keys():

@@ -326,6 +326,7 @@ class VDOM_uwsgi_request_handler(object):
 
 
     def do_GET(self):
+        print("DO GET")
         """serve a GET request"""
         # create request object
         #debug("DO GET %s"%self)
@@ -347,6 +348,7 @@ class VDOM_uwsgi_request_handler(object):
             f.close()
 
     def do_POST(self):
+        print("DO POST")
    #     print("===== Post triggered! =====")
         """serve a POST request"""
         # create request object
