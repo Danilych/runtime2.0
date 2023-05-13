@@ -433,7 +433,8 @@ class VDOM_uwsgi_request_handler(object):
         # process requested URI, call module manager
         try:
             (code, ret) = managers.module_manager.process_request(self.__request) ############
- 
+            print("CODE = " + str(code))
+            print("ret = " + str(ret))
             self.__request.collect_files()
         except Exception as e:
       #      print("Brrrrrrrrrrrrrrr")

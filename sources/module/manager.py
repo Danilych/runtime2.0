@@ -267,6 +267,7 @@ class VDOM_module_manager(object):
         request_type = url_parts[0].rpartition(".")[2] if '.' in url_parts[0] else 'vdom'
         
         request_object.request_type = request_type
+        print("request type = " + str(request_type))
  #       print("request type = " + str(request_object.request_type))
         # this acts as Communication Dispatcher
         if "vdom" == request_type:  # VDOM container request
@@ -341,7 +342,9 @@ class VDOM_module_manager(object):
             with start_stop_request(_a.actions):
                 result = ""
                 try:
+                    print("render start")
                     result = managers.engine.render(obj, render_type=obj.type.render_type.lower())
+                    print("render result = " + str(result))
                     # result = managers.engine.render(obj, None, obj.type.render_type.lower())
                     # CHECK: result = managers.engine.render(_a, obj, None, obj.type.render_type.lower())
                 except VDOM_exception, e:
