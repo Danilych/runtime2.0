@@ -55,3 +55,11 @@ on_prepare = (lambda: managers.memory.applications.default) if settings.PRELOAD_
 #print("=======================")
 application = myapplication
 
+
+
+# 1) VDOM_SERVER in (4) NAMESPACE
+# 2) packages ./scripting/packages --- in wsgi (4) namespace
+# 3) class_noacl_node_interface instead of class_proshare_zip in (3) namespace in scripting
+#
+#
+

@@ -218,6 +218,7 @@ class VDOM_uwsgi_request_handler(object):
         return env
 
     def handle_uwsgi_request(self, environ, start_response):
+        print(" ============ NEW REQUEST ============")
             
         self.command = environ['REQUEST_METHOD']
         mname = 'do_' + self.command
