@@ -11,10 +11,12 @@ class VDOM_session(dict):
 	"""session class"""
 
 	def __init__(self, sid):
+		print("SESSION INIT = " + str(sid))
 		"""session constructor"""
 		dict.__init__(self)
 
 		self.__id = sid or managers.session_manager.get_unique_sid()
+		print("SESSION ID = " + str(self.__id))
 		self.context={}
 		self.on_start_executed = False
 		self.__user = ""
@@ -97,6 +99,7 @@ class VDOM_session(dict):
 		raise VDOM_exception_sec("Authentication failed")
 
 	def __get_user(self):
+		print("SESSION GET USER = " + str(self.__user))
 		return self.__user
 
 	user = property(__get_user)
