@@ -88,7 +88,6 @@ class VDOM_session(dict):
 
 	def get(self, key, default=None):
 		self.update()
-		print("==== GET (2) ====")
 		if not isinstance(key, basestring):
 			raise TypeError()
 		print("GET (2) SESSION ITEM = " + str(key) + " === " + str(dict.get(self, key, default)))

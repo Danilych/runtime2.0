@@ -347,11 +347,13 @@ class VDOM_module_manager(object):
                #     print("render result = " + str(result))
                     # result = managers.engine.render(obj, None, obj.type.render_type.lower())
                     # CHECK: result = managers.engine.render(_a, obj, None, obj.type.render_type.lower())
-                except VDOM_exception, e:
+                except VDOM_exception as e:
+                    print("EXCEPTION 1!!!!!!!!!")
                     debug("Render exception: " + str(e))
                     show_exception_trace(caption="Module Manager: Render exception", locals=True)
                     return (None, str(e))
                 except Exception as ee:
+                    print("EXCEPTION 2!!!!!!!!!")
                     show_exception_trace(caption="Module Manager: Render exception", locals=True)
                     action = _a.actions.get("requestonerror")
                     if action and action.source_code:
