@@ -168,6 +168,26 @@ class VDOM_uwsgi_request_handler(object):
         #print _str
         #cgi.escape( str )		
         return self.wfile.append
+    
+    def parsetype(self):
+        env = self.__request.environment().environment().copy()
+        str = env.get('CONTENT_TYPE')
+        str = env.get('Content-Type')
+        if str is None:
+            str = 'text/plain'
+        if ';' in str:
+            i = str.index(';')
+            self.plisttext = str[i:]
+            str = str[:i]
+        else:
+            self.plisttext = ''
+        fields = str.split('/')
+        for i in range(len(fields)):
+            fields[i] = fields[i].strip().lower()
+        return ('/'.join(fields))
+       # self.maintype = fields[0]
+       # self.subtype = '/'.join(fields[1:])
+
 
     def get_environ(self):
         env = self.__request.environment().environment().copy()
@@ -195,12 +215,12 @@ class VDOM_uwsgi_request_handler(object):
             env['REMOTE_HOST'] = host
         env['REMOTE_ADDR'] = self.client_address[0]
 
-        if self.headers.typeheader is None:
-            env['CONTENT_TYPE'] = self.headers.type
-        else:
-            env['CONTENT_TYPE'] = self.headers.typeheader
+        env['CONTENT_TYPE'] = self.parsetype()
+        print("NEW CONTENT TYPE = " + str(env['CONTENT_TYPE']))
 
-        length = self.headers.getheader('Content-Length')
+        print("HEADERS TO = " + str(self.headers))
+        length = self.headers.get('Content-Length')
+        length = self.headers.get('CONTENT_LENGTH')
         if length:
             env['CONTENT_LENGTH'] = length
         script_name = env.get('SCRIPT_NAME')
