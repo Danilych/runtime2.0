@@ -216,9 +216,9 @@ class VDOM_uwsgi_request_handler(object):
         env['REMOTE_ADDR'] = self.client_address[0]
 
         env['CONTENT_TYPE'] = self.parsetype()
-        print("NEW CONTENT TYPE = " + str(env['CONTENT_TYPE']))
+      #  print("NEW CONTENT TYPE = " + str(env['CONTENT_TYPE']))
 
-        print("HEADERS TO = " + str(self.headers))
+      #  print("HEADERS TO = " + str(self.headers))
         length = self.headers.get('Content-Length')
         length = self.headers.get('CONTENT_LENGTH')
         if length:
@@ -227,16 +227,18 @@ class VDOM_uwsgi_request_handler(object):
         if script_name:
             env['SCRIPT_NAME'] = script_name.rstrip("/")
 
-        for h in self.headers.headers:
-            k,v = h.split(':',1)
-            k=k.replace('-','_').upper(); v=v.strip()
-            if k in env:
-                continue                    # skip content length, type,etc.
-            if 'HTTP_'+k in env:
-                if 'HTTP_'+k not in self.__request.environment().environment():
-                    env['HTTP_'+k] += ','+v     # comma-separate multiple headers
-            else:
-                env['HTTP_'+k] = v
+       # for h in self.headers.headers:
+      #      k,v = h.split(':',1)
+      #      k=k.replace('-','_').upper(); v=v.strip()
+      #      if k in env:
+       #         continue                    # skip content length, type,etc.
+      #      if 'HTTP_'+k in env:
+      #          if 'HTTP_'+k not in self.__request.environment().environment():
+      #              env['HTTP_'+k] += ','+v     # comma-separate multiple headers
+      #      else:
+      #          env['HTTP_'+k] = v
+        env.update(self.headers)
+        print("FINAL HEADERS = " + str(env))
         return env
 
     def handle_uwsgi_request(self, environ, start_response):
