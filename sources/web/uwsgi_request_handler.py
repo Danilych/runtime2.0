@@ -140,7 +140,7 @@ class VDOM_uwsgi_request_handler(object):
         if text.startswith(prefix):
             return text[len(prefix):]
         return text
-
+    '''
     def start_response(self, status, response_headers, exc_info=None):
         if exc_info:
             try:
@@ -167,7 +167,8 @@ class VDOM_uwsgi_request_handler(object):
         #_str = '\n'.join( traceback.format_stack() )
         #print _str
         #cgi.escape( str )		
-        return self.wfile.append
+        return #self.wfile["response"].append
+    '''
     
     def parsetype(self):
         env = self.__request.environment().environment().copy()
@@ -238,17 +239,17 @@ class VDOM_uwsgi_request_handler(object):
       #      else:
       #          env['HTTP_'+k] = v
         env.update(self.headers)
-        print("FINAL HEADERS = " + str(env))
+     #   print("FINAL HEADERS = " + str(env))
         return env
 
     def handle_uwsgi_request(self, environ, start_response):
-        print(" ============ NEW REQUEST ============")
             
         self.command = environ['REQUEST_METHOD']
         mname = 'do_' + self.command
         self.headers = environ
         self.path = environ["PATH_INFO"]
         host = environ["HTTP_HOST"]
+        self.startresponse = start_response
 
         self.response = {'code': '', 'response_body': []}
     
@@ -310,15 +311,14 @@ class VDOM_uwsgi_request_handler(object):
            # self.response = {'code': '200', 'response_body': [('Content-Length', str(nlength)), ('Content-type', 'text/plain')]}
 
 
-        print("FINAL RESPONSE = " + str(self.response['response_body']))
+   #     print("FINAL RESPONSE = " + str(self.response['response_body']))
         start_response(self.response['code'], self.response['response_body'])
-        print("RESPONSE LENGTH = " + str(len(self.wfile["response"])))
+   #     print("RESPONSE LENGTH = " + str(len(self.wfile["response"])))
      #   print("RESPONSE BODY = " + str(self.wfile["response"]))
         return self.wfile["response"] #actually send the response if not already done.
 
 
     def do_WebDAV(self):
-        print("DO WEBDAV")
         if self.__reject:
             self.send_error(503, self.responses[503][0])
             return None		
@@ -346,13 +346,14 @@ class VDOM_uwsgi_request_handler(object):
                 self.send_error(404, self.responses[404][0])
                 return
         #print "<<<%s %s"%(environ["REQUEST_METHOD"], environ["PATH_INFO"])
-        application(environ, self.start_response)
+        result = application(environ, self.startresponse)
+        for v in result:
+            self.wfile["response"].append(v)
  #       for v in application(environ, self.start_response):
  #           self.wfile["response"].append(v)
 
 
     def do_GET(self):
-        print("DO GET")
         """serve a GET request"""
         # create request object
         #debug("DO GET %s"%self)
@@ -374,7 +375,6 @@ class VDOM_uwsgi_request_handler(object):
             f.close()
 
     def do_POST(self):
-        print("DO POST")
    #     print("===== Post triggered! =====")
         """serve a POST request"""
         # create request object
@@ -558,11 +558,8 @@ class VDOM_uwsgi_request_handler(object):
     def redirect(self, to):
 
         if self.redirect_rewrite == True:
-            print("STOP REDIRECT")
             return
          
-
-        print("REDIRECT")
         self.response['code'] = '302'
         self.response['response_body'] = [('Location', str(to))]
 
