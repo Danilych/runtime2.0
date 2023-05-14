@@ -172,15 +172,16 @@ class VDOM_uwsgi_request_handler(object):
     def get_environ(self):
         env = self.__request.environment().environment().copy()
         #env = {}
-        env['wsgi.input']        = self.rfile
-        env['wsgi.errors']       = sys.stderr
-        env['wsgi.version']      = (1, 0)
-        env['wsgi.run_once']     = False
-        env['wsgi.url_scheme']   = guess_scheme(env)
-        env['wsgi.multithread']  = True
-        env['wsgi.multiprocess'] = True
-        env['SERVER_PROTOCOL'] = self.request_version
-        env['REQUEST_METHOD'] = self.command
+    #    print("CURRENT ENV = " + str(env))
+        env['wsgi.input']        = env['HTTP_WSGI.INPUT']
+        env['wsgi.errors']       = env['HTTP_WSGI.ERRORS']
+        env['wsgi.version']      = env['HTTP_WSGI.VERSION']
+        env['wsgi.run_once']     = env['HTTP_WSGI.RUN_ONCE']
+        env['wsgi.url_scheme']   = env['HTTP_WSGI.URL_SCHEME']
+        env['wsgi.multithread']  = env['HTTP_WSGI.MULTITHREAD']
+        env['wsgi.multiprocess'] = env['HTTP_WSGI.MULTIPROCESS']
+        env['SERVER_PROTOCOL'] = env['SERVER_PROTOCOL']
+        env['REQUEST_METHOD'] = env['REQUEST_METHOD']
         if '?' in self.path:
             path,query = self.path.split('?',1)
         else:
@@ -199,7 +200,7 @@ class VDOM_uwsgi_request_handler(object):
         else:
             env['CONTENT_TYPE'] = self.headers.typeheader
 
-        length = self.headers.getheader('content-length')
+        length = self.headers.getheader('Content-Length')
         if length:
             env['CONTENT_LENGTH'] = length
         script_name = env.get('SCRIPT_NAME')
@@ -295,7 +296,7 @@ class VDOM_uwsgi_request_handler(object):
 
 
     def do_WebDAV(self):
-
+        print("DO WEBDAV")
         if self.__reject:
             self.send_error(503, self.responses[503][0])
             return None		
