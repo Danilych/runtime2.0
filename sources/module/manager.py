@@ -176,9 +176,6 @@ class VDOM_module_manager(object):
  #       if "127.0.0.1" != request_object.handler().client_address[0]:
  #           debug("Requested URL: '" + script_name + "'")
         # dirty HACK!!!
- #       print("===========================")
- #       print(str(request_object))
-  #      print("===========================")
         if script_name.lower().startswith("/images/"):
   #          print("Dirty hack 1 = " + str("../images/" + script_name.split("/")[-1]))
   #         print("Dirty hack 2 = " + str(script_name.split(".")[-1].lower()))
@@ -203,14 +200,6 @@ class VDOM_module_manager(object):
                 request_object.environment().environment()["REQUEST_URI"] = "/%s.res" % app.icon
               #  pathIcon = str(os.path.join(os.getcwd()[0:-7], managers.file_manager.locate(category = file_access.RESOURCE, owner = resource.application_id, name = resource.id)[3:])))
     #  print("getting /" + app.id + "/%s.res" % app.icon)
-              #  try:
-              #      print("++++++++")
-                    #print("Dirs = " + str(os.listdir("../resources")))
-              #      stats = os.stat("../resources/" + app.id + "/" + app.icon)
-                    
-              #      print("file size is " + str(stats.st_size))
-              #  except Exception as e:
-              #      print("read file error = " + str(e))
      #           module = VDOM_module_resource()
      #           return (None, module.run(request_object, "res"))
                 return (25, str(os.getcwd()[0:-7] + "resources/") + str(request_object.app_id()) + str(request_object.environment().environment()["REQUEST_URI"].split(".")[0]))
@@ -295,6 +284,7 @@ class VDOM_module_manager(object):
             _a = managers.memory.applications[request_object.app_id()]
             #check for both guid, low case and original case
             obj = _a.objects.get(container_id) or _a.objects.catalog.get(container_id) or _a.objects.catalog.get(url_parts[0])
+            print("OBJ = " + str(obj))
             # CHECK: if not obj:
             # CHECK:    for _i in _a.objects:
             # CHECK:        if _a.objects[_i].name == container_id:
@@ -326,6 +316,7 @@ class VDOM_module_manager(object):
             request_object.add_header("Content-type", obj.type.http_content_type.lower())
 
             request_object.container_id = obj.id
+            print("CONTAINER ID = " + str(request_object.container_id))
             
  #           debug("Container id: " + obj.id)
 
@@ -342,7 +333,9 @@ class VDOM_module_manager(object):
                 result = ""
                 try:
                 #    print("render start")
+                    print("RENDER TYPE = " + str(obj.type.render_type.lower()))
                     result = managers.engine.render(obj, render_type=obj.type.render_type.lower())
+                    print("RESULT = " + str(result))
                #     print("render result = " + str(result))
                     # result = managers.engine.render(obj, None, obj.type.render_type.lower())
                     # CHECK: result = managers.engine.render(_a, obj, None, obj.type.render_type.lower())

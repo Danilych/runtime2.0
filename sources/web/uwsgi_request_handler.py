@@ -241,6 +241,7 @@ class VDOM_uwsgi_request_handler(object):
 
     def do_GET(self):
         """serve a GET request"""
+        print("DO GET")
         # create request object
         #debug("DO GET %s"%self)
         self.create_request("get")
