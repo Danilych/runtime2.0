@@ -1,15 +1,10 @@
 """server request handler module"""
-import sys, os, posixpath, urllib, shutil, mimetypes, thread, re, socket, threading, time, SOAPpy, traceback, select, cgi
+import sys, urllib, thread, socket, time, SOAPpy, traceback
 import io
 import uwsgi
-if sys.platform.startswith("freebsd"):
-    import vdomlib
 
 import BaseHTTPServer
 from cStringIO import StringIO
-import xml.sax.saxutils
-#import webdav_server
-#from wsgidav.wsgidav_app import WsgiDAVApp
 from wsgiref.util import guess_scheme
 
 import managers
@@ -20,33 +15,9 @@ from time import time
 from request.request import VDOM_request
 from storage.storage import VDOM_config
 from version import *
-#import soap.SOAPBuilder
 from soap.wsdl import methods as soap_methods
-from utils.exception import VDOM_exception
 from utils.pages import compose_page, compose_trace
 from version import SERVER_NAME, SERVER_VERSION
-#from server import VDOM_WSGI_Vhosting
-#from server.uwsgi_vhosting import VDOM_WSGI_Vhosting
-
-# A class to describe how header messages are handled
-class HeaderHandler:
-    # Initially fail out if there are any problems.
-    def __init__(self, header, attrs):
-        for i in header.__dict__.keys():
-            if i[0] == "_":
-                continue
-
-            d = getattr(header, i)
-
-            try:
-                fault = int(attrs[id(d)][(NS.ENV, 'mustUnderstand')])
-            except:
-                fault = 0
-
-            if fault:
-                raise faultType, ("%s:MustUnderstand" % NS.ENV_T,
-                                  "Required Header Misunderstood",
-                                  "%s" % i)
 
 # for the soap handler
 _contexts = dict()
@@ -125,8 +96,6 @@ class VDOM_uwsgi_request_handler(object):
 
     def __init__(self, request, client_address, args=None):
         """constructor"""
-        self.__reject = args["reject"]
-        self.__deny = args["deny"]
         self.__card = args["card"]
         self.__limit = args["limit"]
         self.__connections = args["connections"]
@@ -140,35 +109,6 @@ class VDOM_uwsgi_request_handler(object):
         if text.startswith(prefix):
             return text[len(prefix):]
         return text
-    '''
-    def start_response(self, status, response_headers, exc_info=None):
-        if exc_info:
-            try:
-                raise exc_info[0], exc_info[1], exc_info[2]
-                # do stuff w/exc_info here
-            finally:
-                exc_info = None    # Avoid circular ref.
-        status_code = int(status.split(' ')[0])
-        status_message = status[status.find(' ')+1:]
-        
-        self.response['code'] = '200'
-        self.wfile["response"].append(status_message)
- 
-        for header in response_headers:
-            if header[0] != 'Date':
-                self.response[header[0]] =  header[1]
-
-        cookies = self.__request.cookies()
-        if "sid" in cookies:
-            cookies["sid"]["path"] = "/"
-            self.wfile["response"].append(status_message)
-
-        #print response_headers
-        #_str = '\n'.join( traceback.format_stack() )
-        #print _str
-        #cgi.escape( str )		
-        return #self.wfile["response"].append
-    '''
     
     def parsetype(self):
         env = self.__request.environment().environment().copy()
@@ -186,23 +126,12 @@ class VDOM_uwsgi_request_handler(object):
         for i in range(len(fields)):
             fields[i] = fields[i].strip().lower()
         return ('/'.join(fields))
-       # self.maintype = fields[0]
-       # self.subtype = '/'.join(fields[1:])
-
 
     def get_environ(self):
         env = self.__request.environment().environment().copy()
-        #env = {}
-    #    print("CURRENT ENV = " + str(env))
-        env['wsgi.input']        = env['HTTP_WSGI.INPUT']
-        env['wsgi.errors']       = env['HTTP_WSGI.ERRORS']
-        env['wsgi.version']      = env['HTTP_WSGI.VERSION']
-        env['wsgi.run_once']     = env['HTTP_WSGI.RUN_ONCE']
-        env['wsgi.url_scheme']   = env['HTTP_WSGI.URL_SCHEME']
-        env['wsgi.multithread']  = env['HTTP_WSGI.MULTITHREAD']
-        env['wsgi.multiprocess'] = env['HTTP_WSGI.MULTIPROCESS']
-        env['SERVER_PROTOCOL'] = env['SERVER_PROTOCOL']
-        env['REQUEST_METHOD'] = env['REQUEST_METHOD']
+        print("NORMAL HEADERS = " + str(self.__request.headers()))
+        print("ENV HEADERS = " + str(env))
+        
         if '?' in self.path:
             path,query = self.path.split('?',1)
         else:
@@ -217,9 +146,7 @@ class VDOM_uwsgi_request_handler(object):
         env['REMOTE_ADDR'] = self.client_address[0]
 
         env['CONTENT_TYPE'] = self.parsetype()
-      #  print("NEW CONTENT TYPE = " + str(env['CONTENT_TYPE']))
 
-      #  print("HEADERS TO = " + str(self.headers))
         length = self.headers.get('Content-Length')
         length = self.headers.get('CONTENT_LENGTH')
         if length:
@@ -228,18 +155,7 @@ class VDOM_uwsgi_request_handler(object):
         if script_name:
             env['SCRIPT_NAME'] = script_name.rstrip("/")
 
-       # for h in self.headers.headers:
-      #      k,v = h.split(':',1)
-      #      k=k.replace('-','_').upper(); v=v.strip()
-      #      if k in env:
-       #         continue                    # skip content length, type,etc.
-      #      if 'HTTP_'+k in env:
-      #          if 'HTTP_'+k not in self.__request.environment().environment():
-      #              env['HTTP_'+k] += ','+v     # comma-separate multiple headers
-      #      else:
-      #          env['HTTP_'+k] = v
         env.update(self.headers)
-     #   print("FINAL HEADERS = " + str(env))
         return env
 
     def handle_uwsgi_request(self, environ, start_response):
@@ -256,27 +172,25 @@ class VDOM_uwsgi_request_handler(object):
         app_id = (managers.module_manager.getVHosting().virtual_hosting().get_site(host.lower()) if host else None) or managers.module_manager.getVHosting().virtual_hosting().get_def_site()
         if not app_id:
             app_id = managers.memory.applications.default.id if managers.memory.applications.default else None
+
         self.wsgidav_app = None
         if app_id:
+            print("11111")
             try:
+                print("22222")
                 #if app_id not in managers.memory.applications:
                 appl = managers.memory.applications[app_id]
                 self.wsgidav_app = getattr(appl, 'wsgidav_app', None)
             except KeyError as e:
                 debug(e)			
             else:
-            #realm = environ["PATH_INFO"].strip("/").split("/").pop(0)
-            #objects_list = appl.search_objects_by_name(realm)
-            #for o in objects_list:
-                #if managers.webdav_manager.get_webdav_share_path(appl.id, o.id) != None:
-                    #self.wsgidav_app = appl.wsgidav_app
-                    #mname = 'do_WebDAV'
-                    #break
+                print("33333")
                 realm = self.path.strip("/").split("/").pop(0)
                 if managers.webdav_manager.check_webdav_share_path(appl.id, realm):
                     mname = 'do_WebDAV'
 
         if self.command not in ("GET", "POST"):
+            print("44444")
             mname = 'do_WebDAV'
 
         if mname == 'do_WebDAV' and self.wsgidav_app is None:
@@ -291,37 +205,11 @@ class VDOM_uwsgi_request_handler(object):
         method = getattr(self, mname)
         method()
 
-     #   nlength = 0
-      #  tempfile = []
-      #  for line in self.wfile["response"]:
-      #      tempfile.append(line)
-       #     print("()")
-       #     print(str(len(line)) + "===" + str(line))
-       #     print("()")
-       #     nlength += len(line)
-       # print("-----" + str(nlength))
-       # print("Response content length = " + str(self.response["response_body"]))
-       # if nlength == 8789:
-       #     nlength = 0
-       #     self.wfile["response"] = []
-        #    for i in range(0, max(1, len(tempfile))):
-        #        self.wfile["response"].append(tempfile[i])
-         #       nlength += len(tempfile[i])
-         #   print("actual length = " + str(nlength))
-           # self.response = {'code': '200', 'response_body': [('Content-Length', str(nlength)), ('Content-type', 'text/plain')]}
-
-
-   #     print("FINAL RESPONSE = " + str(self.response['response_body']))
         start_response(self.response['code'], self.response['response_body'])
-   #     print("RESPONSE LENGTH = " + str(len(self.wfile["response"])))
-     #   print("RESPONSE BODY = " + str(self.wfile["response"]))
-        return self.wfile["response"] #actually send the response if not already done.
+        return self.wfile["response"] #send the final response
 
 
     def do_WebDAV(self):
-        if self.__reject:
-            self.send_error(503, self.responses[503][0])
-            return None		
         self.create_request(self.command.lower())
         environ = self.get_environ()
         application = self.wsgidav_app
@@ -345,12 +233,10 @@ class VDOM_uwsgi_request_handler(object):
             else:
                 self.send_error(404, self.responses[404][0])
                 return
-        #print "<<<%s %s"%(environ["REQUEST_METHOD"], environ["PATH_INFO"])
+  
         result = application(environ, self.startresponse)
         for v in result:
             self.wfile["response"].append(v)
- #       for v in application(environ, self.start_response):
- #           self.wfile["response"].append(v)
 
 
     def do_GET(self):
@@ -385,7 +271,6 @@ class VDOM_uwsgi_request_handler(object):
             if self.__card:
                 self.do_SOAP()
             return
- #       print("===== Post triggered (on request) ! =====")
         
         f = self.on_request("post")
         if f:
@@ -406,10 +291,8 @@ class VDOM_uwsgi_request_handler(object):
         args["handler"] = self
         args["vhosting"] = managers.module_manager.getVHosting().virtual_hosting()
         args["method"] = method
-#        print("==========================")
         self.__request = VDOM_request(args)
         self.__request.number_of_connections = self.__connections
-        #debug("Creating request object complete")
         # put request to the manager
         managers.request_manager.current = self.__request
 
@@ -420,12 +303,6 @@ class VDOM_uwsgi_request_handler(object):
         """request handling code the method <method>"""
         #debug("ON REQUEST %s"%self)
         #check if we should send 503 or 403 errors
-        if self.__reject:
-            self.send_error(503, self.responses[503][0])
-            return None
-        if self.__deny:
-            self.send_error(403, self.responses[403][0])
-            return None
         if not self.__card:
             data = _("Please insert your card")
             self.response['code'] = '200'
@@ -462,11 +339,8 @@ class VDOM_uwsgi_request_handler(object):
         # process requested URI, call module manager
         try:
             (code, ret) = managers.module_manager.process_request(self.__request) ############
-          #  print("CODE = " + str(code))
-           # print("ret = " + str(ret))
             self.__request.collect_files()
         except Exception as e:
-      #      print("Brrrrrrrrrrrrrrr")
             requestline = "<br>"
             if hasattr(self, "requestline"):
                 requestline = "<br>" + self.requestline + "<br>" + '-' * 80
@@ -505,32 +379,13 @@ class VDOM_uwsgi_request_handler(object):
             else:
                 self.__request.add_header("Connection", "Keep-Alive")
             for hh in self.__request.headers_out().headers():
-                
-#                print("test header = " + str(hh) + " : " + str(self.__request.headers_out().headers()[hh]))
                 self.response['response_body'].append((str(hh), str(self.__request.headers_out().headers()[hh])))
-#            print("Headers = " + str(self.__request.headers_out().headers()))
-#            print("My headers = " + str(self.response['response_body']))
 
             self.wfile['response'] = []
-           # self.wfile['response'].append("test")
             
             cookie = self.remove_prefix(self.__request.response_cookies().output(), "Set-Cookie: ") 
             self.response['response_body'].append(("Set-Cookie", str("%s\r" % cookie)))
-            
 
-            #print(str(self.__request.headers().headers()))
-            # cookies
-            #if len(self.__request.cookies())>0:
-            #	for key in self.__request.cookies():
-            #		self.__request.add_header("Set-cookie",self.__request.cookies()[key].output())
-                #self.__request.add_header("Set-cookie",self.__request.cookies().output())
-            #if len(self.__request.cookies().cookies()) > 0:
-                #self.__request.add_header("Set-cookie", self.__request.cookies().get_string())
-
-#            response['response_body'] = self.__request.headers_out().headers().items()
-            
-#            self.send_headers()
-#            self.end_headers()
             if isinstance(ret, (file, io.IOBase)):
                 if sys.platform.startswith("freebsd"):
 #                    vdomlib.sendres(self.wfile.fileno(), ret.fileno(), int(ret_len))
@@ -542,7 +397,6 @@ class VDOM_uwsgi_request_handler(object):
                 return StringIO(ret)
         elif "" == ret:
             self.response['code'] = '204 OK'
-    #        print("cookie to response = " + str(self.__request.response_cookies().output()))
             cookie = self.remove_prefix(self.__request.response_cookies().output(), "Set-Cookie: ") 
             self.response['response_body'].append(("Set-Cookie", str("%s\r" % cookie)))
             return None
@@ -562,8 +416,6 @@ class VDOM_uwsgi_request_handler(object):
          
         self.response['code'] = '302'
         self.response['response_body'] = [('Location', str(to))]
-
-  #      print("cookie to response = " + str(self.__request.response_cookies().output()))
         cookie = self.remove_prefix(self.__request.response_cookies().output(), "Set-Cookie: ") 
         self.response['response_body'].append(("Set-Cookie", str("%s\r" % cookie)))
 
@@ -739,9 +591,6 @@ class VDOM_uwsgi_request_handler(object):
                 status = self.__request.fault_type_http_code
             else:
                 try:
-                    if header:
-                        x = HeaderHandler(header, attrs)
-
                     fr = 1
 
                     # call context book keeping
@@ -999,6 +848,25 @@ class VDOM_uwsgi_request_handler(object):
         if self.command != "HEAD" and content:
             self.wfile["response"].append(str(content))
 
+    def date_time_string(self, timestamp=None):
+        """Return the current date and time formatted for a message header."""
+
+        weekdayname = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+
+        monthname = [None,
+                    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+        if timestamp is None:
+            timestamp = time.time()
+        year, month, day, hh, mm, ss, wd, y, z = time.gmtime(timestamp)
+        s = "%s, %02d %3s %4d %02d:%02d:%02d GMT" % (
+                weekdayname[wd],
+                day, monthname[month], year,
+                hh, mm, ss)
+        return s
+
     def version_string(self):
         """Return the server software version string."""
-        return "VDOM v2 server " + VDOM_server_version + ' ' + self.sys_version
+        sys_version = "Python/" + sys.version.split()[0]
+        return "VDOM v2 server " + SERVER_VERSION + ' ' + sys_version

@@ -59,12 +59,10 @@ class MFSt(FieldStorage):
         self.max_num_fields = max_num_fields
         if 'REQUEST_METHOD' in environ:
             method = environ['REQUEST_METHOD'].upper()
-        if 'HTTP_REQUEST_METHOD' in environ:
-            method = environ['HTTP_REQUEST_METHOD'].upper()   
         self.qs_on_post = None
         if method == 'GET' or method == 'HEAD':
-            if 'HTTP_QUERY_STRING' in environ:
-                qs = environ['HTTP_QUERY_STRING']
+            if 'QUERY_STRING' in environ:
+                qs = environ['QUERY_STRING']
             elif sys.argv[1:]:
                 qs = sys.argv[1]
             else:
@@ -78,12 +76,12 @@ class MFSt(FieldStorage):
             if method == 'POST':
                 # Set default content-type for POST to what's traditional
                 headers['content-type'] = "application/x-www-form-urlencoded"
-            if 'HTTP_CONTENT_TYPE' in environ:
-                headers['content-type'] = environ['HTTP_CONTENT_TYPE']
-            if 'HTTP_QUERY_STRING' in environ:
-                self.qs_on_post = environ['HTTP_QUERY_STRING']
-            if 'HTTP_CONTENT_LENGTH' in environ:
-                headers['content-length'] = environ['HTTP_CONTENT_LENGTH']
+            if 'CONTENT_TYPE' in environ:
+                headers['content-type'] = environ['CONTENT_TYPE']
+            if 'QUERY_STRING' in environ:
+                self.qs_on_post = environ['QUERY_STRING']
+            if 'CONTENT_LENGTH' in environ:
+                headers['content-length'] = environ['CONTENT_LENGTH']
         self.fp = fp or sys.stdin
         self.headers = headers
         self.outerboundary = outerboundary
@@ -188,12 +186,13 @@ class VDOM_request(object):
 #        print(str(self.__headers.header('CONTENT_LENGTH', push=False))) 
 #        print("+_+_+_+_+_+_+_+_")
         #parse request data depenging on the request method
+        print("REQUEST ENV = " + str(env))
         if arguments["method"] == "post":
             try:
-                if env["HTTP_CONTENT_TYPE"] == r'application/json':
+                if env["CONTENT_TYPE"] == r'application/json':
                     import json
                     try:
-                        request_body_size = int(env.get('HTTP_CONTENT_LENGTH', 0))
+                        request_body_size = int(env.get('CONTENT_LENGTH', 0))
                     except ValueError:
                         request_body_size = 0
 
@@ -222,7 +221,7 @@ class VDOM_request(object):
 
         try:
     #        print("ENV = " + str(env))
-            args1 = cgi.parse_qs(env["HTTP_QUERY_STRING"], True)
+            args1 = cgi.parse_qs(env["QUERY_STRING"], True)
             for key in args1.keys():
                 args[key] = args1[key]
         except Exception as e:

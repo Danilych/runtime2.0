@@ -10,8 +10,8 @@ class VDOM_environment:
 		""" Constructor """
 		self.__environment = {}
 		for k in headers.keys():
-			if 'HTTP_' not in k:
-				self.__environment["HTTP_%s" % k.upper()] = str(headers[k])
+#			if 'HTTP_' not in k:
+				self.__environment[k] = str(headers[k])
 
 		self.__environment["REQUEST_METHOD"] = str(handler.command)
 		self.__environment["DOCUMENT_ROOT"] = str(os.getcwd())
