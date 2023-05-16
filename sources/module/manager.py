@@ -172,6 +172,7 @@ class VDOM_module_manager(object):
     def process_request(self, request_object):
         """process request"""
         script_name = request_object.environment().environment()["SCRIPT_NAME"]
+        print("REQUEST MANAGER = " + str(request_object.headers()))
         
  #       if "127.0.0.1" != request_object.handler().client_address[0]:
  #           debug("Requested URL: '" + script_name + "'")
