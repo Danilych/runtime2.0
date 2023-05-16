@@ -129,8 +129,6 @@ class VDOM_uwsgi_request_handler(object):
 
     def get_environ(self):
         env = self.__request.environment().environment().copy()
-        print("NORMAL HEADERS = " + str(self.__request.headers()))
-        print("ENV HEADERS = " + str(env))
         
         if '?' in self.path:
             path,query = self.path.split('?',1)
@@ -175,16 +173,13 @@ class VDOM_uwsgi_request_handler(object):
 
         self.wsgidav_app = None
         if app_id:
-            print("11111")
             try:
-                print("22222")
                 #if app_id not in managers.memory.applications:
                 appl = managers.memory.applications[app_id]
                 self.wsgidav_app = getattr(appl, 'wsgidav_app', None)
             except KeyError as e:
                 debug(e)			
             else:
-                print("33333")
                 realm = self.path.strip("/").split("/").pop(0)
                 if managers.webdav_manager.check_webdav_share_path(appl.id, realm):
                     mname = 'do_WebDAV'

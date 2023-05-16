@@ -336,7 +336,6 @@ class VDOM_module_manager(object):
                 #    print("render start")
                     print("RENDER TYPE = " + str(obj.type.render_type.lower()))
                     result = managers.engine.render(obj, render_type=obj.type.render_type.lower())
-                    print("RESULT = " + str(result))
                #     print("render result = " + str(result))
                     # result = managers.engine.render(obj, None, obj.type.render_type.lower())
                     # CHECK: result = managers.engine.render(_a, obj, None, obj.type.render_type.lower())
