@@ -51,7 +51,7 @@ class VDOM_wsgi_request_handler(object):
     server_version = SERVER_NAME
 
     def __init__(self, request, client_address, server, args=None):
-        print("================================================2")
+
         """constructor"""
         self.__reject = args["reject"]
         self.__deny = args["deny"]

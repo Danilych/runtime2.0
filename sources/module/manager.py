@@ -172,7 +172,6 @@ class VDOM_module_manager(object):
     def process_request(self, request_object):
         """process request"""
         script_name = request_object.environment().environment()["SCRIPT_NAME"]
-        print("REQUEST MANAGER = " + str(request_object.headers()))
         
  #       if "127.0.0.1" != request_object.handler().client_address[0]:
  #           debug("Requested URL: '" + script_name + "'")
@@ -285,7 +284,6 @@ class VDOM_module_manager(object):
             _a = managers.memory.applications[request_object.app_id()]
             #check for both guid, low case and original case
             obj = _a.objects.get(container_id) or _a.objects.catalog.get(container_id) or _a.objects.catalog.get(url_parts[0])
-            print("OBJ = " + str(obj))
             # CHECK: if not obj:
             # CHECK:    for _i in _a.objects:
             # CHECK:        if _a.objects[_i].name == container_id:
@@ -317,7 +315,6 @@ class VDOM_module_manager(object):
             request_object.add_header("Content-type", obj.type.http_content_type.lower())
 
             request_object.container_id = obj.id
-            print("CONTAINER ID = " + str(request_object.container_id))
             
  #           debug("Container id: " + obj.id)
 
@@ -333,8 +330,6 @@ class VDOM_module_manager(object):
             with start_stop_request(_a.actions):
                 result = ""
                 try:
-                #    print("render start")
-                    print("RENDER TYPE = " + str(obj.type.render_type.lower()))
                     result = managers.engine.render(obj, render_type=obj.type.render_type.lower())
                #     print("render result = " + str(result))
                     # result = managers.engine.render(obj, None, obj.type.render_type.lower())

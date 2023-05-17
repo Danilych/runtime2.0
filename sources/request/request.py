@@ -180,13 +180,8 @@ class VDOM_request(object):
         self.files = {}
         args = {}
         env = self.__environment.environment()
-#        print("+_+_+_+_+_+_+_+_")
-#        print(str(self.__headers.headers()))
-#        print("+_+_+_+_+_+_+_+_")
-#        print(str(self.__headers.header('CONTENT_LENGTH', push=False))) 
-#        print("+_+_+_+_+_+_+_+_")
+
         #parse request data depenging on the request method
-        print("REQUEST ENV = " + str(env))
         if arguments["method"] == "post":
             try:
                 if env["CONTENT_TYPE"] == r'application/json':

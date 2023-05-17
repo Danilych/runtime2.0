@@ -185,7 +185,6 @@ class VDOM_uwsgi_request_handler(object):
                     mname = 'do_WebDAV'
 
         if self.command not in ("GET", "POST"):
-            print("44444")
             mname = 'do_WebDAV'
 
         if mname == 'do_WebDAV' and self.wsgidav_app is None:
@@ -236,7 +235,6 @@ class VDOM_uwsgi_request_handler(object):
 
     def do_GET(self):
         """serve a GET request"""
-        print("DO GET")
         # create request object
         #debug("DO GET %s"%self)
         self.create_request("get")
