@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Application>
+	<Information>
+		<ID>5cae388e-a1da-4b1d-9170-6aa3b451b4ac</ID>
+		<Name>MinioTestApp</Name>
+		<Version>1</Version>
+		<Active>1</Active>
+		<Index>01dda61b-34de-4e18-b68c-264af3a6df37</Index>
+		<Icon>a20d0897-8e9c-40f6-b944-faf87e48336f</Icon>
+		<ScriptingLanguage>python</ScriptingLanguage>
+		<DefaultLanguage>en-US</DefaultLanguage>
+		<CurrentLanguage>en-US</CurrentLanguage>
+	</Information>
+	<Objects>
+		<Object ID="01dda61b-34de-4e18-b68c-264af3a6df37" Name="StorageTestWebApp" Type="2330fe83-8cd6-4ed5-907d-11874e7ebcf4">
+			<Attributes>
+				<Attribute Name="position">center</Attribute>
+				<Attribute Name="bgrepeat">no-repeat</Attribute>
+			</Attributes>
+			<Objects>
+				<Object ID="3cb53656-d237-45a6-a649-2da293e2d364" Name="sampleText" Type="73a54f2e-4001-4676-93a0-804048a57081">
+					<Attributes>
+						<Attribute Name="top">25</Attribute>
+						<Attribute Name="fontsize">16</Attribute>
+						<Attribute Name="value">SampleText</Attribute>
+						<Attribute Name="left">9</Attribute>
+					</Attributes>
+				</Object>
+				<Object ID="33ac71a4-3183-439e-81bc-15e463a5769d" Name="form1" Type="34f6ee59-9c50-4503-97c1-86c4e86bd1b7">
+					<Attributes>
+						<Attribute Name="top">41</Attribute>
+						<Attribute Name="enctype">multipart/form-data</Attribute>
+						<Attribute Name="target">01dda61b-34de-4e18-b68c-264af3a6df37</Attribute>
+						<Attribute Name="left">9</Attribute>
+					</Attributes>
+					<Objects>
+						<Object ID="943137e0-659f-4198-88ad-7abf03fc33a1" Name="uploader1" Type="823833ac-0f63-431c-82e7-0a502af21c65">
+							<Attributes>
+								<Attribute Name="top">79</Attribute>
+								<Attribute Name="left">114</Attribute>
+							</Attributes>
+						</Object>
+						<Object ID="fb15e5fc-f344-4fa7-8f2e-7f6484f9c60a" Name="formbutton1" Type="5be544cb-3d6b-4b75-ae79-b071fbe46094">
+							<Attributes>
+								<Attribute Name="top">131</Attribute>
+								<Attribute Name="left">114</Attribute>
+								<Attribute Name="style"><![CDATA[#%(id)s {
+text-align:center !important;
+background:#fff url("/f704b515-d69d-24d9-5e81-8dc0984592fa.png") !important;
+background-repeat:repeat-x;
+background-position:bottom center;
+text-decoration:none;
+line-height:25px;
+border:1px solid #c5c5c5;
+border-radius: 6px;
+-moz-border-radius:6px;
+-webkit-border-radius: 6px;
+-o-border-radius:6px;
+-ms-border-radius: 6px;
+cursor:pointer;
+outline:none !important;
+height:26px !important;
+box-shadow:inset 0px 0px 3px #fff;
+-moz-box-shadow:inset 0px 0px 3px #fff;
+-webkit-box-shadow:inset 0px 0px 3px #fff;
+-o-box-shadow:inset 0px 0px 3px #fff;
+-ms-box-shadow:inset 0px 0px 3px #fff;
+-webkit-transition: all 0.7s ease;
+-moz-transition: all 0.7s ease;
+-o-transition: all 0.7s ease;
+line-height:22px !important;
+font-size:14px !important;
+color:#000;
+font-family:Arial,sans-serif;
+}
+#%(id)s:hover {
+box-shadow:inset 0px 0px 6px #fff;
+-moz-box-shadow:inset 0px 0px 6px #fff;
+-webkit-box-shadow:inset 0px 0px 6px #fff;
+-o-box-shadow:inset 0px 0px 6px #fff;
+-ms-box-shadow:inset 0px 0px 6px #fff;
+border:1px solid #a8a8a8;
+}]]></Attribute>
+								<Attribute Name="skin">1</Attribute>
+							</Attributes>
+						</Object>
+					</Objects>
+				</Object>
+			</Objects>
+		</Object>
+	</Objects>
+	<Structure>
+		<Object ID="01dda61b-34de-4e18-b68c-264af3a6df37" Top="0" Left="0" State="0"/>
+	</Structure>
+</Application>

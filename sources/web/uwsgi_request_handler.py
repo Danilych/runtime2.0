@@ -94,12 +94,11 @@ class VDOM_uwsgi_request_handler(object):
         505: ('HTTP Version Not Supported', 'Cannot fulfill request.'),
         }
 
-    def __init__(self, request, client_address, args=None):
+    def __init__(self, client_address, args=None):
         """constructor"""
         self.__card = args["card"]
         self.__limit = args["limit"]
         self.__connections = args["connections"]
-        self.request = request
         self.client_address = client_address
         self.wfile = {'response': []}
         self.response = {'code': '', 'response_body': []}
@@ -127,7 +126,7 @@ class VDOM_uwsgi_request_handler(object):
             fields[i] = fields[i].strip().lower()
         return ('/'.join(fields))
 
-    def get_environ(self):
+    def get_environ_webdav(self):
         env = self.__request.environment().environment().copy()
         
         if '?' in self.path:
@@ -137,7 +136,7 @@ class VDOM_uwsgi_request_handler(object):
 
         env['PATH_INFO'] = urllib.unquote(path)
         env['QUERY_STRING'] = query
-
+        
         host = self.address_string()
         if host != self.client_address[0]:
             env['REMOTE_HOST'] = host
@@ -145,28 +144,27 @@ class VDOM_uwsgi_request_handler(object):
 
         env['CONTENT_TYPE'] = self.parsetype()
 
-        length = self.headers.get('Content-Length')
-        length = self.headers.get('CONTENT_LENGTH')
+        length = self.__request.headers().get('Content-Length')
+        length = self.__request.headers().get('CONTENT_LENGTH')
         if length:
             env['CONTENT_LENGTH'] = length
         script_name = env.get('SCRIPT_NAME')
         if script_name:
             env['SCRIPT_NAME'] = script_name.rstrip("/")
 
-        env.update(self.headers)
+        env.update(self.__request.headers())
         return env
 
     def handle_uwsgi_request(self, environ, start_response):
             
         self.command = environ['REQUEST_METHOD']
         mname = 'do_' + self.command
-        self.headers = environ
         self.path = environ["PATH_INFO"]
-        host = environ["HTTP_HOST"]
         self.startresponse = start_response
 
         self.response = {'code': '', 'response_body': []}
-    
+
+        host = environ["HTTP_HOST"]
         app_id = (managers.module_manager.getVHosting().virtual_hosting().get_site(host.lower()) if host else None) or managers.module_manager.getVHosting().virtual_hosting().get_def_site()
         if not app_id:
             app_id = managers.memory.applications.default.id if managers.memory.applications.default else None
@@ -196,16 +194,15 @@ class VDOM_uwsgi_request_handler(object):
             start_response(self.response['code'], self.response['response_body'])
             return self.wfile["response"]
         
+        self.create_request(self.command.lower(), environ)
         method = getattr(self, mname)
         method()
 
         start_response(self.response['code'], self.response['response_body'])
         return self.wfile["response"] #send the final response
 
-
     def do_WebDAV(self):
-        self.create_request(self.command.lower())
-        environ = self.get_environ()
+        environ = self.get_environ_webdav()
         application = self.wsgidav_app
         if not application:
             self.send_error(404, self.responses[404][0])
@@ -232,13 +229,11 @@ class VDOM_uwsgi_request_handler(object):
         for v in result:
             self.wfile["response"].append(v)
 
-
     def do_GET(self):
         """serve a GET request"""
         # create request object
         #debug("DO GET %s"%self)
-        self.create_request("get")
-        f = self.on_request("get")
+        f = self.on_request()
         if f:
             sys.setcheckinterval(0)
             for line in f:
@@ -249,8 +244,7 @@ class VDOM_uwsgi_request_handler(object):
     def do_HEAD(self):
         """serve a HEAD request"""
         # create request object
-        self.create_request("get")
-        f = self.on_request("get")
+        f = self.on_request()
         if f:
             f.close()
 
@@ -259,14 +253,13 @@ class VDOM_uwsgi_request_handler(object):
         """serve a POST request"""
         # create request object
         #debug("DO POST %s"%self)
-        self.create_request("post")
         # if POST to SOAP-POST-URL call do_SOAP
         if self.__request.environment().environment()["REQUEST_URI"] == VDOM_CONFIG["SOAP-POST-URL"]:
             if self.__card:
                 self.do_SOAP()
             return
         
-        f = self.on_request("post")
+        f = self.on_request()
         if f:
             sys.setcheckinterval(0)
             for line in f:
@@ -274,14 +267,14 @@ class VDOM_uwsgi_request_handler(object):
             sys.setcheckinterval(100)
             f.close()
 
-    def create_request(self, method):
+    def create_request(self, method, headers):
         """initialize request, <method> is either 'post' or 'get'"""
         #debug("CREATE REQUEST %s"%self)
         #import gc
         #debug("\nGarbage: "+str(len(gc.garbage))+"\n")
         #debug("Creating request object")
         args = {}
-        args["headers"] = self.headers
+        args["headers"] = headers
         args["handler"] = self
         args["vhosting"] = managers.module_manager.getVHosting().virtual_hosting()
         args["method"] = method
@@ -293,7 +286,7 @@ class VDOM_uwsgi_request_handler(object):
  #       if "127.0.0.1" != self.client_address[0]:
  #           debug("Session is " + self.__request.sid)
 
-    def on_request(self, method):
+    def on_request(self):
         """request handling code the method <method>"""
         #debug("ON REQUEST %s"%self)
         #check if we should send 503 or 403 errors
@@ -401,8 +394,6 @@ class VDOM_uwsgi_request_handler(object):
             self.send_error(404, self.responses[404][0])
             return None
         
-    
-
     def redirect(self, to):
 
         if self.redirect_rewrite == True:
@@ -422,13 +413,13 @@ class VDOM_uwsgi_request_handler(object):
         global _contexts
         status = 500
 
-        VDOM_debug = 0
+        #VDOM_debug = 0
         dumpSOAPIn = 0
         dumpSOAPOut = 0
         dumpHeadersIn = 0
         dumpHeadersOut = 0
 
-        cf = VDOM_config()
+        #cf = VDOM_config()
         #No more alot of debug while soap
         #if "1" == cf.get_opt("DEBUG"):       
         #	VDOM_debug = 1
@@ -442,7 +433,7 @@ class VDOM_uwsgi_request_handler(object):
                 s = 'Incoming HTTP headers'
                 SOAPpy.debugHeader(s)
                 debug(self.raw_requestline.strip())
-                debug("\n".join(map (lambda x: x.strip(), self.headers)))
+                debug("\n".join(map (lambda x: x.strip(), self.__request.headers())))
                 SOAPpy.debugFooter(s)
             data = self.__request.postdata
             if dumpSOAPIn:
@@ -593,15 +584,15 @@ class VDOM_uwsgi_request_handler(object):
                     # and it won't be necessary here
                     # for now we're doing both
 
-                    if "SOAPAction".lower() not in self.headers.keys() or self.headers["SOAPAction"] == "\"\"":
-                        self.headers["SOAPAction"] = method
+                    if "SOAPAction".lower() not in self.__request.headers().keys() or self.__request.headers()["SOAPAction"] == "\"\"":
+                        self.__request.headers()["SOAPAction"] = method
 
                     thread_id = thread.get_ident()
                     _contexts[thread_id] = SOAPpy.SOAPContext(header, body,
                                                               attrs, data,
                                                               socket.fromfd(uwsgi.connection_fd(), socket.AF_INET, socket.SOCK_STREAM),
-                                                              self.headers,
-                                                              self.headers["SOAPAction"])
+                                                              self.__request.headers(),
+                                                              self.__request.headers()["SOAPAction"])
 
                     # Do an authorization check
                     if a != None:
@@ -818,7 +809,7 @@ class VDOM_uwsgi_request_handler(object):
         self.__last_date_time_string = BaseHTTPServer.BaseHTTPRequestHandler.date_time_string(self)
         return self.__last_date_time_string
     
-    def send_error(self, code, message=None, excinfo=None):
+    def send_error(self, code, message=None):
         """ send error """
         try:
             short, explanation=self.responses[code]

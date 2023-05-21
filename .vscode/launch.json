@@ -1,0 +1,40 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Python: manage.py deploy",
+            "type": "python",
+            "request": "launch",
+            "program": "manage.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "/home/nixion/VDOM2/runtime2.0/sources",
+            "args": [
+                "deploy"
+            ]
+        },
+        {
+            "name": "Python: manage.py install",
+            "type": "python",
+            "request": "launch",
+            "program": "manage.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "/home/nixion/VDOM2/runtime2.0/sources",
+            "args": [
+                "install",
+                "application.xml"
+            ]
+        }
+    ]
+}

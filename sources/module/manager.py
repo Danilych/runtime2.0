@@ -160,14 +160,14 @@ class VDOM_module_manager(object):
     """Module Manager class"""
 
     def __init__(self):
-        self._vhsoting = wsgiVhosting()
-        self._soapModule = SOAP_module()
+        self.__vhsoting = wsgiVhosting()
+        self.__soapModule = SOAP_module()
 
     def getVHosting(self):
-        return self._vhsoting
+        return self.__vhsoting
     
     def getSOAPModule(self):
-        return self._soapModule
+        return self.__soapModule
 
     def process_request(self, request_object):
         """process request"""

@@ -256,24 +256,23 @@ class VDOM_request(object):
         self._handler = handler
         self.app_vhname = env["HTTP_HOST"].lower()
         vh = arguments["vhosting"]
-        self.__app_id = vh.get_site(self.app_vhname)
-        if not self.__app_id:
-            self.__app_id = vh.get_def_site()
+        self.application_id = vh.get_site(self.app_vhname)
+        if not self.application_id:
+            self.application_id = vh.get_def_site()
         self.__stdout = StringIO()
         self.action_result = uStringIO()
         self.wholeAnswer = None
-        self.application_id = self.__app_id
 
         self.sid = sid
         self.method = arguments["method"]
-        self.vdom = None  # MemoryInterface(self) #CHECK: Not used??
+   #     self.vdom = None  # MemoryInterface(self) #CHECK: Not used??
 
-        self.args = self.__arguments
+     #   self.args = self.__arguments
         self.__app = None
-        if self.__app_id:
-            self.__session.context["application_id"] = self.__app_id
+        if self.application_id:
+            self.__session.context["application_id"] = self.application_id
             try:
-                self.__app = managers.memory.applications[self.__app_id]
+                self.__app = managers.memory.applications[self.application_id]
             except:
                 sys.excepthook(*sys.exc_info())
 
@@ -323,7 +322,7 @@ class VDOM_request(object):
 
            # cookie = self._handler.remove_prefix(self.response_cookies().output(), "Set-Cookie: ") 
            # self._handler.response['response_body'].append(("Set-Cookie", str("%s\r" % cookie)))
-            self.wfile["response"]
+ #           self.wfile["response"]
             self._handler.wfile["response"] = str(self.output())
 
             self._handler.redirect_rewrite = True
@@ -339,19 +338,17 @@ class VDOM_request(object):
 
     def send_htmlcode(self, code=200):
         if not self.__nocache:
-            self._handler.send_response(code)
-            self._handler.send_headers()
-            self._handler.end_headers()
-            self.wfile.write(self.output())
+            self._handler.response['code'] = str(code)
+            self.wfile["response"].append(self.output())
+  #          self.wfile.write(self.output())
         self.__nocache = True
         self.nokeepalive = True
 
     def set_application_id(self, application_id):
-        self.__app_id = application_id
         self.application_id = application_id
         # try: self.__app = managers.xml_manager.get_application(self.__app_id)
         try:
-            self.__app = managers.memory.applications[self.__app_id]
+            self.__app = managers.memory.applications[self.application_id]
         except:
             sys.excepthook(*sys.exc_info())
 
@@ -359,7 +356,8 @@ class VDOM_request(object):
         """save output"""
         if string:
             if self.__nocache:
-                self.wfile.write(string)
+                self.wfile["response"].append(string)
+            #    self.wfile.write(string)
                 #self.wfile.write('\n')
             else:
                 self.__stdout.write(string)
@@ -391,7 +389,7 @@ class VDOM_request(object):
     def set_session_id(self, sid):
         old_sid = self.__session.id()
         self.__cookies["sid"] = sid
-        self.args.arguments()["sid"] = sid
+        self.__arguments.arguments()["sid"] = sid
         self.__session = managers.session_manager[sid]
         managers.session_manager.remove_session(old_sid)
 
@@ -428,7 +426,7 @@ class VDOM_request(object):
 
     def app_id(self):
         """get application identifier"""
-        return self.__app_id
+        return self.application_id
 
     def redirect(self, to):
         """specify redirection to some url"""
