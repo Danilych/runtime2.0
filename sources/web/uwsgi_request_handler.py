@@ -202,6 +202,7 @@ class VDOM_uwsgi_request_handler(object):
         return self.wfile["response"] #send the final response
 
     def do_WebDAV(self):
+        print("DO WEBDAV")
         environ = self.get_environ_webdav()
         application = self.wsgidav_app
         if not application:
@@ -809,7 +810,7 @@ class VDOM_uwsgi_request_handler(object):
         self.__last_date_time_string = BaseHTTPServer.BaseHTTPRequestHandler.date_time_string(self)
         return self.__last_date_time_string
     
-    def send_error(self, code, message=None):
+    def send_error(self, code, message=None, excinfo=None):
         """ send error """
         try:
             short, explanation=self.responses[code]
