@@ -81,7 +81,6 @@ class VDOM_request(object):
         try:
         #    print("ENV = " + str(env))
             args1 = cgi.parse_qs(env["QUERY_STRING"], True)
-            print("ARGS1 = " + str(args1))
             for key in args1.keys():
                 args[key] = args1[key]
         except Exception as e:
@@ -284,12 +283,9 @@ class VDOM_request(object):
         """add header"""
         headers = self.__headers_out.headers()
         headers[name] = value
-        print("NEW HEADER = " + str(headers))
 
     def send_file(self, filename, length, handler, content_type=None, cache_control=True):
-        print("SEND FILE")
         f_content_type = content_type if content_type else "application/octet-stream"
-        print("NEW CONTENT TYPE = " + str(f_content_type))
         self.add_header("Content-type", f_content_type)
         if content_type:
             self.add_header("Content-Disposition", "inline; filename=\"%s\""%filename)

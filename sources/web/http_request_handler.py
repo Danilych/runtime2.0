@@ -289,7 +289,6 @@ class VDOM_http_request_handler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             self.wfile.write(v)
 
     def do_GET(self):
-        print("DO GET")
         """serve a GET request"""
         # create request object
         #debug("DO GET %s"%self)
@@ -318,7 +317,6 @@ class VDOM_http_request_handler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             f.close()
 
     def do_POST(self):
-        print("DO POST")
         """serve a POST request"""
         # create request object
         #debug("DO POST %s"%self)
@@ -445,7 +443,6 @@ class VDOM_http_request_handler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 # self.__request.add_header("Set-cookie",self.__request.cookies().output())
             # if len(self.__request.cookies().cookies()) > 0:
                 #self.__request.add_header("Set-cookie", self.__request.cookies().get_string())
-            print("REDIRECT RET")
             self.send_headers()
             self.end_headers()
             # if isinstance(ret, file):
@@ -474,8 +471,6 @@ class VDOM_http_request_handler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         """send all headers"""
         headers = self.__request.headers_out().headers()
         cookies = self.__request.response_cookies().output()
-        print("HEADERS OUT = " + str(headers))
-        print("COOKIE OUT = " + str(cookies))
         #debug("Outgoing headers---")
         # for h in headers:
         #   debug(h + ": " + headers[h])
@@ -503,7 +498,6 @@ class VDOM_http_request_handler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
     def redirect(self, to):
         self.send_response(302)
-        print("REDIRECT")
         # if len(self.__request.cookies)>0:
         #   for key in self.__request.cookies():
         #           self.__request.add_header("Set-cookie",self.__request.cookies()[key].output())
